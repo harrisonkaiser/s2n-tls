@@ -17,10 +17,10 @@ SEND_BUFFER_SIZE_HUGE = 512 * K_BYTES
 
 SEND_BUFFER_SIZES = [
     SEND_BUFFER_SIZE_MIN,
-    SEND_BUFFER_SIZE_MIN_RECOMMENDED,
-    SEND_BUFFER_SIZE_MULTI_RECORD,
-    SEND_BUFFER_SIZE_PREFER_THROUGHPUT,
-    SEND_BUFFER_SIZE_HUGE
+    #SEND_BUFFER_SIZE_MIN_RECOMMENDED,
+    #SEND_BUFFER_SIZE_MULTI_RECORD,
+    #SEND_BUFFER_SIZE_PREFER_THROUGHPUT,
+    #SEND_BUFFER_SIZE_HUGE
 ]
 
 FRAGMENT_PREFERENCE = [
@@ -63,7 +63,7 @@ def is_subsequence(s, t):
 
 @pytest.mark.uncollect_if(func=invalid_test_parameters)
 @pytest.mark.parametrize("cipher", ALL_TEST_CIPHERS, ids=get_parameter_name)
-@pytest.mark.parametrize("other_provider", [GnuTLS, OpenSSL, S2N], ids=get_parameter_name)
+@pytest.mark.parametrize("other_provider", [GnuTLS], ids=get_parameter_name)
 @pytest.mark.parametrize("provider", [S2N], ids=get_parameter_name)
 @pytest.mark.parametrize("protocol", PROTOCOLS, ids=get_parameter_name)
 @pytest.mark.parametrize("certificate", TEST_CERTS, ids=get_parameter_name)
@@ -75,9 +75,9 @@ def test_s2n_buffered_send_server(managed_process, cipher, other_provider, provi
     # Handshake                    | Handshake
     #  Handshake finish indicated
     #  by the client send marker
-    # Send Server Send Marker      | Receive the Server Send Marker "CLIENTSENT"
+    # Send Server Send Marker      | Receive the Server Send Marker
     #                              | Send Data Bytes to Client (stresses the send buffer - center of test)
-    #                              | Send Client Close Marker "SERVERSENT"
+    #                              | Send Client Close Marker
     # Close                        | Close
 
     starting_client_send_marker = other_provider.get_send_marker()
@@ -121,6 +121,8 @@ def test_s2n_buffered_send_server(managed_process, cipher, other_provider, provi
         # the server should close without error
         # but there is otherwise nothing of interest on stdout 
         results.assert_success()
+
+    assert(False)
 
 
 @pytest.mark.uncollect_if(func=invalid_test_parameters)
