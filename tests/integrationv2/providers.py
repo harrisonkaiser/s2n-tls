@@ -730,8 +730,6 @@ class GnuTLS(Provider):
             "gnutls-cli",
             "--port", str(self.options.port),
             self.options.host,
-            "--debug", "9999",
-            "--verbose"
         ]
 
         if self.options.cert and self.options.key:
