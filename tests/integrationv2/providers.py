@@ -729,7 +729,7 @@ class GnuTLS(Provider):
         cmd_line = [
             "gnutls-cli",
             "--port", str(self.options.port),
-            self.options.host,
+            self.options.host
         ]
 
         if self.options.cert and self.options.key:
