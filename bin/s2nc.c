@@ -466,7 +466,7 @@ int main(int argc, char *const *argv)
             npn = true;
             break;
         case OPT_BUFFERED_SEND:
-            long int send_buffer_size_long = strtol(optarg, 0, 10);
+            long send_buffer_size_long = strtol(optarg, 0, 10);
             if (send_buffer_size_long > UINT32_MAX || send_buffer_size_long < 0) {
                 fprintf(stderr, "<buffer size> must be a positive 32 bit value\n");
                 exit(1);
