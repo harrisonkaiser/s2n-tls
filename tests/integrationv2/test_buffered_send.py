@@ -105,7 +105,6 @@ def test_s2n_server_buffered_send(managed_process, cipher, provider, protocol, c
     client = managed_process(provider, provider_client_options, close_marker=CLOSE_MARKER)
 
     for results in client.get_results():
-        # for small buffer sizes the received data will not be contiguous on stdout
         assert SEND_DATA_STRING in str(results.stdout)
         results.assert_success()
 
