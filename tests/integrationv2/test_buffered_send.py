@@ -154,8 +154,7 @@ def test_s2n_client_buffered_send(managed_process, cipher, provider, protocol, c
 
     server = managed_process(provider, provider_server_options,
         close_marker=CLOSE_MARKER)
-    client = managed_process(S2N, s2n_client_options,
-        send_marker=[S2N.get_send_marker()])
+    client = managed_process(S2N, s2n_client_options)
 
     for results in client.get_results():
         results.assert_success()
