@@ -5,15 +5,12 @@ from common import ProviderOptions, data_bytes
 from fixtures import managed_process # lgtm [py/unused-import]
 from providers import Provider, S2N, OpenSSL, GnuTLS
 from utils import invalid_test_parameters, get_parameter_name, to_bytes, to_string
-import string
-import random
-# make random reproducible
-random.seed(1)
 
 SEND_DATA_SIZE = 2 ** 14
 
 # CLOSE_MARKER must a substring of SEND_DATA exactly once, and must be its suffix
-CLOSE_MARKER = "".join(random.choices(string.ascii_uppercase + string.digits, k=20))
+CLOSE_MARKER = "unique-suffix-close-marker"
+
 SEND_DATA = data_bytes(SEND_DATA_SIZE-len(CLOSE_MARKER)) + to_bytes(CLOSE_MARKER)
 SEND_DATA_STRING = to_string(SEND_DATA)
 
