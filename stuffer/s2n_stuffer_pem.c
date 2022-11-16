@@ -20,21 +20,21 @@
 
 #include "utils/s2n_safety.h"
 
-#define S2N_PEM_DELIMTER_CHAR               '-'
-#define S2N_PEM_DELIMITER_MIN_COUNT         1
-#define S2N_PEM_DELIMITER_MAX_COUNT         64
-#define S2N_PEM_BEGIN_TOKEN                 "BEGIN "
-#define S2N_PEM_END_TOKEN                   "END "
-#define S2N_PEM_PKCS1_RSA_PRIVATE_KEY       "RSA PRIVATE KEY"
-#define S2N_PEM_PKCS1_EC_PRIVATE_KEY        "EC PRIVATE KEY"
-#define S2N_PEM_PKCS8_PRIVATE_KEY           "PRIVATE KEY"
-#define S2N_PEM_DH_PARAMETERS               "DH PARAMETERS"
-#define S2N_PEM_EC_PARAMETERS               "EC PARAMETERS"
-#define S2N_PEM_CERTIFICATE                 "CERTIFICATE"
-#define S2N_PEM_CRL                         "X509 CRL"
+#define S2N_PEM_DELIMTER_CHAR '-'
+#define S2N_PEM_DELIMITER_MIN_COUNT 1
+#define S2N_PEM_DELIMITER_MAX_COUNT 64
+#define S2N_PEM_BEGIN_TOKEN "BEGIN "
+#define S2N_PEM_END_TOKEN "END "
+#define S2N_PEM_PKCS1_RSA_PRIVATE_KEY "RSA PRIVATE KEY"
+#define S2N_PEM_PKCS1_EC_PRIVATE_KEY "EC PRIVATE KEY"
+#define S2N_PEM_PKCS8_PRIVATE_KEY "PRIVATE KEY"
+#define S2N_PEM_DH_PARAMETERS "DH PARAMETERS"
+#define S2N_PEM_EC_PARAMETERS "EC PARAMETERS"
+#define S2N_PEM_CERTIFICATE "CERTIFICATE"
+#define S2N_PEM_CRL "X509 CRL"
 
-static int s2n_stuffer_pem_read_encapsulation_line(struct s2n_stuffer *pem, const char* encap_marker, const char *keyword) {
-
+static int s2n_stuffer_pem_read_encapsulation_line(struct s2n_stuffer *pem, const char *encap_marker, const char *keyword)
+{
     /* Skip any number of Chars until a "-" is reached */
     POSIX_GUARD(s2n_stuffer_skip_to_char(pem, S2N_PEM_DELIMTER_CHAR));
 
@@ -52,7 +52,7 @@ static int s2n_stuffer_pem_read_encapsulation_line(struct s2n_stuffer *pem, cons
 
     /* Check for missing newline between dashes case: "-----END CERTIFICATE----------BEGIN CERTIFICATE-----" */
     if (strncmp(encap_marker, S2N_PEM_END_TOKEN, strlen(S2N_PEM_END_TOKEN)) == 0
-            && s2n_stuffer_peek_check_for_str(pem, S2N_PEM_BEGIN_TOKEN) == S2N_SUCCESS) {
+        && s2n_stuffer_peek_check_for_str(pem, S2N_PEM_BEGIN_TOKEN) == S2N_SUCCESS) {
         /* Rewind stuffer by 1 byte before BEGIN, so that next read will find the dash before the BEGIN */
         POSIX_GUARD(s2n_stuffer_rewind_read(pem, 1));
     }
@@ -74,7 +74,7 @@ static int s2n_stuffer_pem_read_end(struct s2n_stuffer *pem, const char *keyword
 static int s2n_stuffer_pem_read_contents(struct s2n_stuffer *pem, struct s2n_stuffer *asn1)
 {
     s2n_stack_blob(base64__blob, 64, 64);
-    struct s2n_stuffer base64_stuffer = {0};
+    struct s2n_stuffer base64_stuffer = { 0 };
     POSIX_GUARD(s2n_stuffer_init(&base64_stuffer, &base64__blob));
 
     while (1) {
@@ -89,7 +89,7 @@ static int s2n_stuffer_pem_read_contents(struct s2n_stuffer *pem, struct s2n_stu
         /* Else, move read pointer forward by 1 byte since we will be consuming it. */
         pem->read_cursor += 1;
 
-         /* Skip non-base64 characters */
+        /* Skip non-base64 characters */
         if (!s2n_is_base64_char(c)) {
             continue;
         }
@@ -102,7 +102,6 @@ static int s2n_stuffer_pem_read_contents(struct s2n_stuffer *pem, struct s2n_stu
 
         /* Copy next char to base64_stuffer */
         POSIX_GUARD(s2n_stuffer_write_bytes(&base64_stuffer, (uint8_t *) &c, 1));
-
     };
 
     /* Flush any remaining bytes to asn1 */
@@ -126,7 +125,8 @@ static int s2n_stuffer_data_from_pem(struct s2n_stuffer *pem, struct s2n_stuffer
     return S2N_SUCCESS;
 }
 
-int s2n_stuffer_private_key_from_pem(struct s2n_stuffer *pem, struct s2n_stuffer *asn1) {
+int s2n_stuffer_private_key_from_pem(struct s2n_stuffer *pem, struct s2n_stuffer *asn1)
+{
     POSIX_PRECONDITION(s2n_stuffer_validate(pem));
     POSIX_PRECONDITION(s2n_stuffer_validate(asn1));
     int rc;
@@ -166,7 +166,8 @@ int s2n_stuffer_certificate_from_pem(struct s2n_stuffer *pem, struct s2n_stuffer
     return s2n_stuffer_data_from_pem(pem, asn1, S2N_PEM_CERTIFICATE);
 }
 
-int s2n_stuffer_crl_from_pem(struct s2n_stuffer *pem, struct s2n_stuffer *asn1) {
+int s2n_stuffer_crl_from_pem(struct s2n_stuffer *pem, struct s2n_stuffer *asn1)
+{
     return s2n_stuffer_data_from_pem(pem, asn1, S2N_PEM_CRL);
 }
 

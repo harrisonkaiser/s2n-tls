@@ -64,7 +64,7 @@ static const uint8_t b64_inverse[256] = {
 
 bool s2n_is_base64_char(unsigned char c)
 {
-    return (b64_inverse[*((uint8_t*)(&c))] != 255);
+    return (b64_inverse[*((uint8_t *) (&c))] != 255);
 }
 
 /**
