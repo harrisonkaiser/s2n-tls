@@ -14,7 +14,7 @@ jobs:
         with:
           style: file
           extra-args: -Wcast-qual -pedantic -Wall -Werror -Wimplicit -Wunused -Wcomment -Wchar-subscripts -Wuninitialized -Wshadow  -Wcast-align -Wwrite-strings -Wno-missing-braces -I./ -I$./api -I$./include
-          tidy-checks: bugprone-*,performance-*,readability-*,portability-*,modernize-*,clang-analyzer-*
+          tidy-checks: ''
 
       - name: Fail fast?!
         if: steps.linter.outputs.checks-failed > 0
