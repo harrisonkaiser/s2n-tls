@@ -14,6 +14,7 @@ jobs:
         with:
           style: file
           extra-args: -std=c99 --pedantic -Wall -Wextra
+          tidy-checks: bugprone-*,performance-*,readability-*,portability-*,modernize-*,clang-analyzer-*
 
       - name: Fail fast?!
         if: steps.linter.outputs.checks-failed > 0
