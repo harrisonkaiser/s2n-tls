@@ -1,17 +1,20 @@
-name: clang-format
-on: [push, pull_request]
+name: cpp-linter
+
+on: pull_request
+
 jobs:
-  formatting-check:
-    name: Clang Format Check
+  cpp-linter:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        path:
-          - 'stuffer'
     steps:
-      - uses: actions/checkout@v2
-      - name: Run clang-format style check for C/C++ programs.
-        uses: jidicula/clang-format-action@v4.9.0
+      - uses: actions/checkout@v3
+      - uses: cpp-linter/cpp-linter-action@v2
+        id: linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          clang-format-version: '13'
-          check-path: ${{ matrix.path }}
+          style: file
+          extra-args: -std=c99 --pedantic -Wall -Wextra
+
+      - name: Fail fast?!
+        if: steps.linter.outputs.checks-failed > 0
+        run: exit 1
