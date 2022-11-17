@@ -15,7 +15,7 @@ jobs:
           style: file
           extra-args: -Wcast-qual -pedantic -Wall -Werror -Wimplicit -Wunused -Wcomment -Wchar-subscripts -Wuninitialized -Wshadow  -Wcast-align -Wwrite-strings -Wno-missing-braces -I./ -I$./api -I$./include
           tidy-checks: ''
-          lines-changed-only: true
+          lines-changed-only: diff
 
       - name: Run clang-format and clang-tidy checks
         if: steps.linter.outputs.checks-failed > 0
