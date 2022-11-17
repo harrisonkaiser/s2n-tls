@@ -13,7 +13,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           style: file
-          extra-args: -Wcast-qual -pedantic -Wall -Werror -Wimplicit -Wunused -Wcomment -Wchar-subscripts -Wuninitialized -Wshadow  -Wcast-align -Wwrite-strings -Wno-missing-braces -I${{ GITHUB_WORKSPACE }}/ -I${{ GITHUB_WORKSPACE }}/api -I${{ GITHUB_WORKSPACE }}/include
+          extra-args: -Wcast-qual -pedantic -Wall -Werror -Wimplicit -Wunused -Wcomment -Wchar-subscripts -Wuninitialized -Wshadow  -Wcast-align -Wwrite-strings -Wno-missing-braces -I./ -I$./api -I$./include
           tidy-checks: bugprone-*,performance-*,readability-*,portability-*,modernize-*,clang-analyzer-*
 
       - name: Fail fast?!
