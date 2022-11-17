@@ -1,5 +1,5 @@
 ---
-Checks:          'bugprone-*,performance-*,readability-*,portability-*,modernize-*,clang-analyzer-*'
+Checks:          'bugprone-*,performance-*,readability-*,portability-*,modernize-*,clang-analyzer-*,-modernize-macro-to-enum'
 WarningsAsErrors: true
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
