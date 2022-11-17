@@ -13,12 +13,11 @@
  * permissions and limitations under the License.
  */
 
+#include "stuffer/s2n_stuffer.h"
+
 #include <sys/param.h>
 
 #include "error/s2n_errno.h"
-
-#include "stuffer/s2n_stuffer.h"
-
 #include "utils/s2n_blob.h"
 #include "utils/s2n_mem.h"
 #include "utils/s2n_safety.h"
@@ -138,9 +137,12 @@ int s2n_stuffer_resize(struct s2n_stuffer *stuffer, const uint32_t size)
 
     if (size < stuffer->blob.size) {
         POSIX_CHECKED_MEMSET(stuffer->blob.data + size, S2N_WIPE_PATTERN, (stuffer->blob.size - size));
-        if (stuffer->read_cursor > size) stuffer->read_cursor = size;
-        if (stuffer->write_cursor > size) stuffer->write_cursor = size;
-        if (stuffer->high_water_mark > size) stuffer->high_water_mark = size;
+        if (stuffer->read_cursor > size)
+            stuffer->read_cursor = size;
+        if (stuffer->write_cursor > size)
+            stuffer->write_cursor = size;
+        if (stuffer->high_water_mark > size)
+            stuffer->high_water_mark = size;
         stuffer->blob.size = size;
         POSIX_POSTCONDITION(s2n_stuffer_validate(stuffer));
         return S2N_SUCCESS;

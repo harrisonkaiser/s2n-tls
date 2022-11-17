@@ -7,7 +7,5 @@ FormatStyle:     file
 CheckOptions:
   - key:             readability-function-cognitive-complexity.IgnoreMacros
     value:           true
-  - key:             readability-braces-around-statements.ShortStatementLines
-    value:           '1'
   - key:             IgnoreMacros
     value:           '1'

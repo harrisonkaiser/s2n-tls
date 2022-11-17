@@ -14,10 +14,9 @@
  */
 
 #include <string.h>
+
 #include "error/s2n_errno.h"
-
 #include "stuffer/s2n_stuffer.h"
-
 #include "utils/s2n_safety.h"
 
 #define S2N_PEM_DELIMTER_CHAR '-'

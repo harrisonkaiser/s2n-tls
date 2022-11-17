@@ -14,9 +14,7 @@
  */
 
 #include "error/s2n_errno.h"
-
 #include "stuffer/s2n_stuffer.h"
-
 #include "utils/s2n_annotations.h"
 #include "utils/s2n_safety.h"
 
