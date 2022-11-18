@@ -21,7 +21,4 @@
 
 #include <assert.h>
 
-void abort()
-{
-    assert(0);
-}
+void abort() { assert(0); }

@@ -14,8 +14,10 @@
  */
 
 #include "api/s2n.h"
+
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
+
 #include "utils/s2n_result.h"
 
 /* Get access to s2n_handshake_read_io */
@@ -74,8 +76,7 @@ int main(int argc, char **argv)
             EXPECT_EQUAL(blocking_handler_count, 1);
 
             /* Only wrote one record/message */
-            EXPECT_EQUAL(
-                s2n_stuffer_data_available(&io_buffer), S2N_TLS_RECORD_HEADER_LENGTH + TLS_HANDSHAKE_HEADER_LENGTH);
+            EXPECT_EQUAL(s2n_stuffer_data_available(&io_buffer), S2N_TLS_RECORD_HEADER_LENGTH + TLS_HANDSHAKE_HEADER_LENGTH);
 
             EXPECT_SUCCESS(s2n_connection_free(conn));
         }

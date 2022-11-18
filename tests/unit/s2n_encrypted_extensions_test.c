@@ -13,18 +13,22 @@
  * permissions and limitations under the License.
  */
 
-#include "crypto/s2n_rsa_signing.h"
-#include "error/s2n_errno.h"
 #include "s2n_test.h"
-#include "stuffer/s2n_stuffer.h"
 #include "testlib/s2n_testlib.h"
+
+#include "crypto/s2n_rsa_signing.h"
+
+#include "tls/s2n_tls.h"
+#include "tls/s2n_tls13.h"
+
 #include "tls/extensions/s2n_extension_type.h"
 #include "tls/extensions/s2n_server_alpn.h"
 #include "tls/extensions/s2n_server_max_fragment_length.h"
 #include "tls/extensions/s2n_server_server_name.h"
 #include "tls/extensions/s2n_server_supported_versions.h"
-#include "tls/s2n_tls.h"
-#include "tls/s2n_tls13.h"
+
+#include "error/s2n_errno.h"
+#include "stuffer/s2n_stuffer.h"
 #include "utils/s2n_safety.h"
 
 int main(int argc, char **argv)
@@ -175,8 +179,8 @@ int main(int argc, char **argv)
         s2n_blocked_status blocked = S2N_NOT_BLOCKED;
 
         struct s2n_cert_chain_and_key *chain_and_key;
-        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-            &chain_and_key, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
+                S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
 
         struct s2n_config *config;
         EXPECT_NOT_NULL(config = s2n_config_new());

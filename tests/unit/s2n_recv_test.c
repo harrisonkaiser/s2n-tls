@@ -13,15 +13,16 @@
  * permissions and limitations under the License.
  */
 
-#include "api/s2n.h"
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
+
+#include "api/s2n.h"
 
 bool s2n_custom_recv_fn_called = false;
 
 int s2n_expect_concurrent_error_recv_fn(void *io_context, uint8_t *buf, uint32_t len)
 {
-    struct s2n_connection *conn = (struct s2n_connection *) io_context;
+    struct s2n_connection *conn = (struct s2n_connection*) io_context;
     s2n_custom_recv_fn_called = true;
 
     s2n_blocked_status blocked = 0;
@@ -34,11 +35,13 @@ int main(int argc, char **argv)
 {
     BEGIN_TEST();
 
-    DEFER_CLEANUP(struct s2n_cert_chain_and_key * chain_and_key, s2n_cert_chain_and_key_ptr_free);
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-        &chain_and_key, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+    DEFER_CLEANUP(struct s2n_cert_chain_and_key *chain_and_key,
+            s2n_cert_chain_and_key_ptr_free);
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
+            S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
 
-    DEFER_CLEANUP(struct s2n_config *config = s2n_config_new(), s2n_config_ptr_free);
+    DEFER_CLEANUP(struct s2n_config *config = s2n_config_new(),
+            s2n_config_ptr_free);
     EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(config, chain_and_key));
     EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, "default_tls13"));
     EXPECT_SUCCESS(s2n_config_disable_x509_verification(config));
@@ -60,9 +63,11 @@ int main(int argc, char **argv)
         {
             s2n_blocked_status blocked = 0;
 
-            DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+            DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
+                    s2n_connection_ptr_free);
             EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
-            DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
+            DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
+                    s2n_connection_ptr_free);
             EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
             struct s2n_test_io_pair io_pair = { 0 };
@@ -96,9 +101,11 @@ int main(int argc, char **argv)
         {
             s2n_blocked_status blocked = 0;
 
-            DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+            DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
+                    s2n_connection_ptr_free);
             EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
-            DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
+            DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
+                    s2n_connection_ptr_free);
             EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
             /* Use stuffers for IO so that we can trigger a block on a read */
@@ -119,7 +126,8 @@ int main(int argc, char **argv)
 
             /* Try to read the data, but block */
             uint8_t output[sizeof(test_data)] = { 0 };
-            EXPECT_FAILURE_WITH_ERRNO(s2n_recv(server_conn, output, sizeof(test_data), &blocked), S2N_ERR_IO_BLOCKED);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_recv(server_conn, output, sizeof(test_data), &blocked),
+                    S2N_ERR_IO_BLOCKED);
 
             /* conn->in contains data, but s2n_peek reports no data available */
             EXPECT_TRUE(s2n_stuffer_data_available(&server_conn->in));
@@ -130,9 +138,11 @@ int main(int argc, char **argv)
         {
             s2n_blocked_status blocked = 0;
 
-            DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+            DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
+                    s2n_connection_ptr_free);
             EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
-            DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
+            DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
+                    s2n_connection_ptr_free);
             EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
             /* Use stuffers for IO so that we can trigger a block on a read */
@@ -155,7 +165,8 @@ int main(int argc, char **argv)
 
             /* Try to read the KeyUpdate message, but block */
             uint8_t output[1] = { 0 };
-            EXPECT_FAILURE_WITH_ERRNO(s2n_recv(server_conn, output, sizeof(output), &blocked), S2N_ERR_IO_BLOCKED);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_recv(server_conn, output, sizeof(output), &blocked),
+                    S2N_ERR_IO_BLOCKED);
 
             /* conn->in contains data, but s2n_peek reports no data available */
             EXPECT_TRUE(s2n_stuffer_data_available(&server_conn->in));
@@ -171,13 +182,14 @@ int main(int argc, char **argv)
 
         /* Setup bad recv callback */
         EXPECT_SUCCESS(s2n_connection_set_recv_cb(conn, s2n_expect_concurrent_error_recv_fn));
-        EXPECT_SUCCESS(s2n_connection_set_recv_ctx(conn, (void *) conn));
+        EXPECT_SUCCESS(s2n_connection_set_recv_ctx(conn, (void*) conn));
         EXPECT_SUCCESS(s2n_connection_set_blinding(conn, S2N_SELF_SERVICE_BLINDING));
 
         uint8_t test_data[100] = { 0 };
         s2n_blocked_status blocked = 0;
         s2n_custom_recv_fn_called = false;
-        EXPECT_FAILURE_WITH_ERRNO(s2n_recv(conn, test_data, sizeof(test_data), &blocked), S2N_ERR_IO);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_recv(conn, test_data, sizeof(test_data), &blocked),
+                S2N_ERR_IO);
         EXPECT_TRUE(s2n_custom_recv_fn_called);
 
         /* Cleanup */

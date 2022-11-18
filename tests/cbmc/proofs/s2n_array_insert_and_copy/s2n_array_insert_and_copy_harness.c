@@ -13,11 +13,12 @@
  * permissions and limitations under the License.
  */
 
-#include <assert.h>
-#include <cbmc_proof/make_common_datastructures.h>
-
 #include "utils/s2n_array.h"
 #include "utils/s2n_result.h"
+
+#include <cbmc_proof/make_common_datastructures.h>
+
+#include <assert.h>
 
 void s2n_array_insert_and_copy_harness()
 {
@@ -36,7 +37,7 @@ void s2n_array_insert_and_copy_harness()
 
     /* Operation under verification. */
     if (s2n_result_is_ok(s2n_array_insert_and_copy(array, idx, element))) {
-        /*
+       /*
         * In the case s2n_array_insert_and_copy is successful, we can ensure the array isn't empty
         * and index is within bounds.
         */

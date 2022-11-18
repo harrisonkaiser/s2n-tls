@@ -13,16 +13,18 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/s2n_async_pkey.h"
+#include "s2n_test.h"
+
+#include "testlib/s2n_testlib.h"
 
 #include "api/s2n.h"
+
 #include "error/s2n_errno.h"
-#include "s2n_test.h"
-#include "testlib/s2n_testlib.h"
-#include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_security_policies.h"
+#include "tls/s2n_cipher_suites.h"
 #include "utils/s2n_safety.h"
+#include "tls/s2n_async_pkey.h"
 
 struct s2n_async_pkey_op *pkey_op = NULL;
 
@@ -37,7 +39,7 @@ const uint32_t test_decrypted_size = sizeof(test_decrypted_data);
 
 uint8_t offload_callback_count = 0;
 
-typedef int(async_handler)(struct s2n_connection *conn);
+typedef int (async_handler)(struct s2n_connection *conn);
 
 /* Declaring a flag to check if sign operation is called at least once for all cipher_suites
  * while performing handshake through handler (async_handler_sign_with_different_pkey_and_apply) */
@@ -99,8 +101,8 @@ static int async_handler_sign_with_different_pkey_and_apply(struct s2n_connectio
     if (type == S2N_ASYNC_SIGN) {
         /* Create new chain and key, and modify current server conn */
         struct s2n_cert_chain_and_key *chain_and_key_2 = NULL;
-        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-            &chain_and_key_2, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key_2,
+                S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
 
         /* Change server conn cert data */
         EXPECT_NOT_NULL(conn->handshake_params.our_chain_and_key);
@@ -241,7 +243,7 @@ int async_pkey_signature_callback(struct s2n_connection *conn, struct s2n_async_
     EXPECT_SUCCESS(s2n_hash_digest(&digest, expected_digest.data, expected_digest.size));
     EXPECT_SUCCESS(s2n_hash_free(&digest));
 
-    /* Make sure that s2n_async_pkey_op_get_input can be called multiple times, and the returned values are the same. */
+    /* Make sure that s2n_async_pkey_op_get_input can be called multiple times, and the returned values are the same. */ 
     EXPECT_SUCCESS(s2n_async_pkey_op_get_input(op, input1.data, input1.size));
     EXPECT_SUCCESS(s2n_async_pkey_op_get_input(op, input2.data, input2.size));
 
@@ -277,7 +279,7 @@ int async_pkey_decrypt_callback(struct s2n_connection *conn, struct s2n_async_pk
     struct s2n_blob input_buffer2 = { 0 };
     EXPECT_SUCCESS(s2n_alloc(&input_buffer2, input_size));
 
-    /* Make sure that s2n_async_pkey_op_get_input can be called multiple times, and the returned values are the same. */
+    /* Make sure that s2n_async_pkey_op_get_input can be called multiple times, and the returned values are the same. */ 
     EXPECT_SUCCESS(s2n_async_pkey_op_get_input(op, input_buffer1.data, input_buffer1.size));
     EXPECT_BYTEARRAY_EQUAL(input_buffer1.data, test_encrypted_data, test_encrypted_size);
 
@@ -336,7 +338,7 @@ int async_pkey_invalid_input_callback(struct s2n_connection *conn, struct s2n_as
     uint8_t placeholder_buffer[] = { 0x0, 0x0, 0x0, 0x0 };
 
     /* Buffer too small to contain data. */
-    EXPECT_FAILURE(s2n_async_pkey_op_get_input(op, placeholder_buffer, input_size - 1));
+    EXPECT_FAILURE(s2n_async_pkey_op_get_input(op, placeholder_buffer, input_size-1));
 
     EXPECT_FAILURE(s2n_async_pkey_op_set_output(op, NULL, test_signature_size));
     offload_callback_count++;
@@ -346,14 +348,13 @@ int async_pkey_invalid_input_callback(struct s2n_connection *conn, struct s2n_as
 
 int async_pkey_invalid_complete(struct s2n_connection *conn, struct s2n_blob *signature)
 {
-    FAIL_MSG(
-        "Invalid async pkey callback was invoked. The callback should never be invoked if there was an earlier"
-        " failure in the async_pkey_op.");
+    FAIL_MSG("Invalid async pkey callback was invoked. The callback should never be invoked if there was an earlier"
+            " failure in the async_pkey_op.");
     return S2N_FAILURE;
 }
 
 static int s2n_test_bad_sign(const struct s2n_pkey *pub_key, s2n_signature_algorithm sig_alg,
-    struct s2n_hash_state *digest, struct s2n_blob *signature)
+        struct s2n_hash_state *digest, struct s2n_blob *signature)
 {
     /* Just write all zeroes.
      * This could accidentally be the correct signature, but it's very unlikely.
@@ -371,12 +372,12 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_read_test_pem(S2N_DEFAULT_TEST_DHPARAMS, dhparams_pem, S2N_MAX_TEST_PEM_SIZE));
 
     DEFER_CLEANUP(struct s2n_cert_chain_and_key *chain_and_key = NULL, s2n_cert_chain_and_key_ptr_free);
-    EXPECT_SUCCESS(
-        s2n_test_cert_chain_and_key_new(&chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
+            S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
 
     DEFER_CLEANUP(struct s2n_cert_chain_and_key *ecdsa_chain_and_key = NULL, s2n_cert_chain_and_key_ptr_free);
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-        &ecdsa_chain_and_key, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&ecdsa_chain_and_key,
+            S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
 
     /* Run all tests for 2 cipher suites to test both sign and decrypt operations */
     struct s2n_cipher_suite *test_cipher_suites[] = {
@@ -516,7 +517,7 @@ int main(int argc, char **argv)
             EXPECT_SUCCESS(s2n_connection_set_io_pair(server_conn, &io_pair));
 
             EXPECT_FAILURE_WITH_ERRNO(
-                try_handshake(server_conn, client_conn, async_handler_free_pkey_op), S2N_ERR_ASYNC_BLOCKED);
+                    try_handshake(server_conn, client_conn, async_handler_free_pkey_op), S2N_ERR_ASYNC_BLOCKED);
 
             /* Free the data */
             EXPECT_SUCCESS(s2n_connection_free(server_conn));
@@ -622,8 +623,7 @@ int main(int argc, char **argv)
         EXPECT_NOT_NULL(conn);
         conn->config->async_pkey_cb = async_pkey_signature_callback;
 
-        EXPECT_FALSE(
-            s2n_result_is_ok(s2n_async_pkey_sign(conn, S2N_SIGNATURE_ECDSA, &digest, s2n_async_sign_complete)));
+        EXPECT_FALSE(s2n_result_is_ok(s2n_async_pkey_sign(conn, S2N_SIGNATURE_ECDSA, &digest, s2n_async_sign_complete)));
         EXPECT_TRUE(s2n_errno == S2N_ERR_ASYNC_BLOCKED);
         EXPECT_EQUAL(1, offload_callback_count);
 
@@ -648,8 +648,7 @@ int main(int argc, char **argv)
          * If we filled this with the decrypted data, we would not know if the decryption happened in the callback. */
         EXPECT_SUCCESS(s2n_blob_init(&decrypted_data, test_encrypted_data, test_encrypted_size));
 
-        EXPECT_FALSE(s2n_result_is_ok(
-            s2n_async_pkey_decrypt(conn, &encrypted_data, &decrypted_data, s2n_async_decrypt_complete)));
+        EXPECT_FALSE(s2n_result_is_ok(s2n_async_pkey_decrypt(conn, &encrypted_data, &decrypted_data, s2n_async_decrypt_complete)));
         EXPECT_TRUE(s2n_errno == S2N_ERR_ASYNC_BLOCKED);
         EXPECT_EQUAL(3, offload_callback_count);
 
@@ -666,8 +665,7 @@ int main(int argc, char **argv)
         EXPECT_NOT_NULL(conn);
         conn->config->async_pkey_cb = async_pkey_invalid_input_callback;
 
-        EXPECT_FALSE(
-            s2n_result_is_ok(s2n_async_pkey_sign(conn, S2N_SIGNATURE_ECDSA, &digest, async_pkey_invalid_complete)));
+        EXPECT_FALSE(s2n_result_is_ok(s2n_async_pkey_sign(conn, S2N_SIGNATURE_ECDSA, &digest, async_pkey_invalid_complete)));
         EXPECT_TRUE(s2n_errno == S2N_ERR_ASYNC_CALLBACK_FAILED);
         EXPECT_EQUAL(5, offload_callback_count);
 

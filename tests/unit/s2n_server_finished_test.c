@@ -13,9 +13,10 @@
  * permissions and limitations under the License.
  */
 
-#include "api/s2n.h"
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
+
+#include "api/s2n.h"
 #include "tls/s2n_tls.h"
 
 int main(int argc, char **argv)
@@ -41,7 +42,7 @@ int main(int argc, char **argv)
 
         EXPECT_SUCCESS(s2n_server_finished_send(server_conn));
         EXPECT_SUCCESS(s2n_stuffer_copy(&server_conn->handshake.io, &client_conn->handshake.io,
-            s2n_stuffer_data_available(&server_conn->handshake.io)));
+                s2n_stuffer_data_available(&server_conn->handshake.io)));
         EXPECT_SUCCESS(s2n_server_finished_recv(client_conn));
 
         EXPECT_EQUAL(server_conn->server, server_conn->secure);
@@ -65,7 +66,7 @@ int main(int argc, char **argv)
 
         EXPECT_SUCCESS(s2n_server_finished_send(server_conn));
         EXPECT_SUCCESS(s2n_stuffer_copy(&server_conn->handshake.io, &client_conn->handshake.io,
-            s2n_stuffer_data_available(&server_conn->handshake.io)));
+                s2n_stuffer_data_available(&server_conn->handshake.io)));
         EXPECT_FAILURE_WITH_ERRNO(s2n_client_finished_recv(client_conn), S2N_ERR_BAD_MESSAGE);
     }
 
@@ -87,7 +88,7 @@ int main(int argc, char **argv)
 
         EXPECT_SUCCESS(s2n_server_finished_send(server_conn));
         EXPECT_SUCCESS(s2n_stuffer_copy(&server_conn->handshake.io, &client_conn->handshake.io,
-            s2n_stuffer_data_available(&server_conn->handshake.io)));
+                s2n_stuffer_data_available(&server_conn->handshake.io)));
         EXPECT_FAILURE_WITH_ERRNO(s2n_client_finished_recv(client_conn), S2N_ERR_SAFETY);
     }
 

@@ -14,12 +14,11 @@
  */
 
 #include "utils/s2n_asn1_time.h"
-
-#include <ctype.h>
-#include <time.h>
-
 #include "utils/s2n_result.h"
 #include "utils/s2n_safety.h"
+
+#include <time.h>
+#include <ctype.h>
 
 typedef enum parser_state {
     ON_YEAR_DIGIT_1 = 0,
@@ -46,20 +45,18 @@ typedef enum parser_state {
     PARSE_ERROR
 } parser_state;
 
-static inline long get_gmt_offset(struct tm *t)
-{
+static inline long get_gmt_offset(struct tm *t) {
+
 /* See: https://sourceware.org/git/?p=glibc.git;a=blob;f=include/features.h;h=ba272078cf2263ec88e039fda7524c136a4a7953;hb=HEAD */
-#if defined(__USE_MISC) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__ANDROID__) || defined(ANDROID) \
-    || defined(__APPLE__) && defined(__MACH__)
+#if defined(__USE_MISC) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__ANDROID__) || defined(ANDROID) || defined(__APPLE__) && defined(__MACH__)
     return t->tm_gmtoff;
 #else
     return t->__tm_gmtoff;
 #endif
 }
 
-static inline void get_current_timesettings(long *gmt_offset, int *is_dst)
-{
-    struct tm time_ptr = { 0 };
+static inline void get_current_timesettings(long *gmt_offset, int *is_dst) {
+    struct tm time_ptr = {0};
     time_t raw_time;
     time(&raw_time);
     localtime_r(&raw_time, &time_ptr);
@@ -67,18 +64,13 @@ static inline void get_current_timesettings(long *gmt_offset, int *is_dst)
     *is_dst = time_ptr.tm_isdst;
 }
 
-#define PARSE_DIGIT(c, d)                          \
-    do {                                           \
-        RESULT_ENSURE(isdigit(c), S2N_ERR_SAFETY); \
-        d = c - '0';                               \
-    } while (0)
+#define PARSE_DIGIT(c, d)  do { RESULT_ENSURE(isdigit(c), S2N_ERR_SAFETY); d = c - '0'; } while(0)
 
 /* this is just a standard state machine for ASN1 date format... nothing special.
  * just do a character at a time and change the state per character encountered.
  * when finished the above time structure should be filled in along with some
  * crazy timezone info we'll need shortly afterwards.*/
-static S2N_RESULT process_state(parser_state *state, char current_char, struct parser_args *args)
-{
+static S2N_RESULT process_state(parser_state *state, char current_char, struct parser_args *args) {
     switch (*state) {
         case ON_YEAR_DIGIT_1:
             PARSE_DIGIT(current_char, args->current_digit);
@@ -240,8 +232,8 @@ static S2N_RESULT process_state(parser_state *state, char current_char, struct p
     }
 }
 
-S2N_RESULT s2n_asn1_time_to_nano_since_epoch_ticks(const char *asn1_time, uint32_t len, uint64_t *ticks)
-{
+S2N_RESULT s2n_asn1_time_to_nano_since_epoch_ticks(const char *asn1_time, uint32_t len, uint64_t *ticks) {
+
     /* figure out if we are on something other than UTC since timegm is not supported everywhere. */
     long gmt_offset_current = 0;
     int is_dst = 0;

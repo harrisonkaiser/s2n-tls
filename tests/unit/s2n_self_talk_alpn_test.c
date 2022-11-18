@@ -13,17 +13,21 @@
  * permissions and limitations under the License.
  */
 
-#include <fcntl.h>
-#include <stdint.h>
+#include "s2n_test.h"
+
+#include "testlib/s2n_testlib.h"
+
 #include <sys/wait.h>
 #include <unistd.h>
+#include <stdint.h>
+#include <fcntl.h>
 
 #include "api/s2n.h"
-#include "s2n_test.h"
-#include "testlib/s2n_testlib.h"
+
+
+#include "utils/s2n_safety.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_handshake.h"
-#include "utils/s2n_safety.h"
 
 int mock_nanoseconds_since_epoch(void *data, uint64_t *nanoseconds)
 {
@@ -68,8 +72,9 @@ int mock_client(int writefd, int readfd, const char **protocols, int count, cons
     }
 
     const char *got = s2n_get_application_protocol(client_conn);
-    if ((got != NULL && expected == NULL) || (got == NULL && expected != NULL)
-        || (got != NULL && expected != NULL && strcmp(expected, got) != 0)) {
+    if ((got != NULL && expected == NULL) ||
+        (got == NULL && expected != NULL) ||
+        (got != NULL && expected != NULL && strcmp(expected, got) != 0)) {
         result = 2;
     }
 
@@ -77,12 +82,12 @@ int mock_client(int writefd, int readfd, const char **protocols, int count, cons
         for (int j = 0; j < i; j++) {
             buffer[j] = 33;
         }
-
+        
         s2n_send(client_conn, buffer, i, &blocked);
     }
 
-    int shutdown_rc = -1;
-    if (!result) {
+    int shutdown_rc= -1;
+    if(!result) {
         do {
             shutdown_rc = s2n_shutdown(client_conn, &blocked);
         } while (shutdown_rc != 0);
@@ -174,7 +179,7 @@ int main(int argc, char **argv)
     EXPECT_EQUAL(s2n_get_application_protocol(conn), NULL);
 
     for (int i = 1; i < 0xffff; i += 100) {
-        char *ptr = buffer;
+        char * ptr = buffer;
         int size = i;
 
         do {
@@ -183,7 +188,7 @@ int main(int argc, char **argv)
 
             size -= bytes_read;
             ptr += bytes_read;
-        } while (size);
+        } while(size);
 
         for (int j = 0; j < i; j++) {
             EXPECT_EQUAL(buffer[j], 33);
@@ -235,7 +240,7 @@ int main(int argc, char **argv)
     EXPECT_STRING_EQUAL(s2n_get_application_protocol(conn), protocols[0]);
 
     for (int i = 1; i < 0xffff; i += 100) {
-        char *ptr = buffer;
+        char * ptr = buffer;
         int size = i;
 
         do {
@@ -244,7 +249,7 @@ int main(int argc, char **argv)
 
             size -= bytes_read;
             ptr += bytes_read;
-        } while (size);
+        } while(size);
 
         for (int j = 0; j < i; j++) {
             EXPECT_EQUAL(buffer[j], 33);
@@ -293,7 +298,7 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_negotiate(conn, &blocked));
 
     for (int i = 1; i < 0xffff; i += 100) {
-        char *ptr = buffer;
+        char * ptr = buffer;
         int size = i;
 
         do {
@@ -302,7 +307,7 @@ int main(int argc, char **argv)
 
             size -= bytes_read;
             ptr += bytes_read;
-        } while (size);
+        } while(size);
 
         for (int j = 0; j < i; j++) {
             EXPECT_EQUAL(buffer[j], 33);

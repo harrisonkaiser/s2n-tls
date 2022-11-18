@@ -40,15 +40,15 @@ void s2n_stuffer_reserve_uint16_harness()
     /* Operation under verification. */
     if (s2n_stuffer_reserve_uint16(stuffer, reservation) == S2N_SUCCESS) {
         assert(stuffer->write_cursor == old_stuffer.write_cursor + sizeof(uint16_t));
-        assert(
-            stuffer->high_water_mark == MAX(old_stuffer.write_cursor + sizeof(uint16_t), old_stuffer.high_water_mark));
+        assert(stuffer->high_water_mark
+               == MAX(old_stuffer.write_cursor + sizeof(uint16_t), old_stuffer.high_water_mark));
         assert(reservation->length == sizeof(uint16_t));
         if (old_stuffer.blob.size > 0) {
             size_t idx;
-            __CPROVER_assume(
-                idx >= reservation->write_cursor && idx < (reservation->write_cursor + reservation->length));
-            assert(stuffer->blob.data[idx] == S2N_WIPE_PATTERN);
-            assert(reservation->stuffer->blob.data[idx] == S2N_WIPE_PATTERN);
+            __CPROVER_assume(idx >= reservation->write_cursor
+                             && idx < (reservation->write_cursor + reservation->length));
+            assert(stuffer->blob.data[ idx ] == S2N_WIPE_PATTERN);
+            assert(reservation->stuffer->blob.data[ idx ] == S2N_WIPE_PATTERN);
         }
         assert(stuffer == reservation->stuffer);
         assert(s2n_result_is_ok(s2n_stuffer_validate(stuffer)));

@@ -13,16 +13,20 @@
  * permissions and limitations under the License.
  */
 
-#include "crypto/s2n_tls13_keys.h"
+#include "s2n_test.h"
+#include "testlib/s2n_testlib.h"
 
 #include <string.h>
 
-#include "crypto/s2n_hkdf.h"
-#include "crypto/s2n_hmac.h"
-#include "s2n_test.h"
-#include "stuffer/s2n_stuffer.h"
 #include "testlib/s2n_testlib.h"
+#include "stuffer/s2n_stuffer.h"
+
+#include "crypto/s2n_hmac.h"
+#include "crypto/s2n_hkdf.h"
+#include "crypto/s2n_tls13_keys.h"
+
 #include "tls/s2n_tls13_handshake.h"
+
 #include "utils/s2n_blob.h"
 #include "utils/s2n_safety.h"
 

@@ -13,21 +13,22 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/extensions/s2n_server_renegotiation_info.h"
+#include "s2n_test.h"
+#include "testlib/s2n_testlib.h"
 
 #include <stdint.h>
 
-#include "s2n_test.h"
-#include "stuffer/s2n_stuffer.h"
-#include "testlib/s2n_testlib.h"
 #include "tls/s2n_config.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_tls.h"
 #include "tls/s2n_tls13.h"
+#include "tls/extensions/s2n_server_renegotiation_info.h"
+
+#include "stuffer/s2n_stuffer.h"
 #include "utils/s2n_safety.h"
 
-S2N_RESULT s2n_server_renegotiation_info_extension_write(struct s2n_stuffer *out, const uint8_t *client_verify_data,
-    const uint8_t *server_verify_data, uint8_t verify_data_len)
+S2N_RESULT s2n_server_renegotiation_info_extension_write(struct s2n_stuffer *out,
+        const uint8_t *client_verify_data, const uint8_t *server_verify_data, uint8_t verify_data_len)
 {
     RESULT_GUARD_POSIX(s2n_stuffer_growable_alloc(out, verify_data_len * 3));
 
@@ -45,8 +46,8 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_disable_tls13_in_test());
 
     DEFER_CLEANUP(struct s2n_cert_chain_and_key *chain_and_key = NULL, s2n_cert_chain_and_key_ptr_free);
-    EXPECT_SUCCESS(
-        s2n_test_cert_chain_and_key_new(&chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
+            S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
 
     DEFER_CLEANUP(struct s2n_config *config = s2n_config_new(), s2n_config_ptr_free);
     EXPECT_NOT_NULL(config);
@@ -136,9 +137,11 @@ int main(int argc, char **argv)
      *# behave as described in this specification.
      */
     {
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
 
         DEFER_CLEANUP(struct s2n_stuffer extension = { 0 }, s2n_stuffer_free);
@@ -172,7 +175,7 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_stuffer_write_uint8(&extension, 0));
 
         EXPECT_FAILURE_WITH_ERRNO(s2n_server_renegotiation_info_extension.recv(client_conn, &extension),
-            S2N_ERR_NON_EMPTY_RENEGOTIATION_INFO);
+                S2N_ERR_NON_EMPTY_RENEGOTIATION_INFO);
         EXPECT_EQUAL(client_conn->secure_renegotiation, 0);
 
         EXPECT_SUCCESS(s2n_stuffer_free(&extension));
@@ -198,7 +201,7 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_stuffer_write_uint8(&extension, 5));
 
         EXPECT_FAILURE_WITH_ERRNO(s2n_server_renegotiation_info_extension.recv(client_conn, &extension),
-            S2N_ERR_NON_EMPTY_RENEGOTIATION_INFO);
+                S2N_ERR_NON_EMPTY_RENEGOTIATION_INFO);
         EXPECT_EQUAL(client_conn->secure_renegotiation, 0);
 
         EXPECT_SUCCESS(s2n_stuffer_free(&extension));
@@ -213,7 +216,8 @@ int main(int argc, char **argv)
      *#    secure renegotiation; set secure_renegotiation flag to FALSE.
      */
     {
-        DEFER_CLEANUP(struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(conn);
         EXPECT_SUCCESS(s2n_server_renegotiation_info_extension.if_missing(conn));
         EXPECT_FALSE(conn->secure_renegotiation);
@@ -228,10 +232,12 @@ int main(int argc, char **argv)
      *#    client MUST abort the handshake.
      */
     {
-        DEFER_CLEANUP(struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(conn);
         conn->handshake.renegotiation = true;
-        EXPECT_FAILURE_WITH_ERRNO(s2n_server_renegotiation_info_extension.if_missing(conn), S2N_ERR_NO_RENEGOTIATION);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_server_renegotiation_info_extension.if_missing(conn),
+                S2N_ERR_NO_RENEGOTIATION);
     }
 
     /* Test: recv during renegotiation handshake
@@ -245,14 +251,17 @@ int main(int argc, char **argv)
      *#    abort the handshake.
      */
     {
-        DEFER_CLEANUP(struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(conn);
         conn->handshake.renegotiation = true;
         conn->secure_renegotiation = true;
 
         /* Setup verify_data */
-        EXPECT_MEMCPY_SUCCESS(conn->handshake.client_finished, client_verify_data, sizeof(client_verify_data));
-        EXPECT_MEMCPY_SUCCESS(conn->handshake.server_finished, server_verify_data, sizeof(server_verify_data));
+        EXPECT_MEMCPY_SUCCESS(conn->handshake.client_finished,
+                client_verify_data, sizeof(client_verify_data));
+        EXPECT_MEMCPY_SUCCESS(conn->handshake.server_finished,
+                server_verify_data, sizeof(server_verify_data));
         conn->handshake.finished_len = verify_data_len;
         uint8_t renegotiation_info_len = verify_data_len * 2;
 
@@ -260,12 +269,12 @@ int main(int argc, char **argv)
         {
             /* Write valid verify_data */
             DEFER_CLEANUP(struct s2n_stuffer extension = { 0 }, s2n_stuffer_free);
-            EXPECT_OK(s2n_server_renegotiation_info_extension_write(
-                &extension, client_verify_data, server_verify_data, verify_data_len));
+            EXPECT_OK(s2n_server_renegotiation_info_extension_write(&extension,
+                    client_verify_data, server_verify_data, verify_data_len));
 
             conn->secure_renegotiation = false;
-            EXPECT_FAILURE_WITH_ERRNO(
-                s2n_server_renegotiation_info_extension.recv(conn, &extension), S2N_ERR_NO_RENEGOTIATION);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_server_renegotiation_info_extension.recv(conn, &extension),
+                    S2N_ERR_NO_RENEGOTIATION);
         }
 
         /* Turn on secure renegotiation for the rest of the tests */
@@ -275,8 +284,8 @@ int main(int argc, char **argv)
         {
             /* Write valid verify_data */
             DEFER_CLEANUP(struct s2n_stuffer extension = { 0 }, s2n_stuffer_free);
-            EXPECT_OK(s2n_server_renegotiation_info_extension_write(
-                &extension, client_verify_data, server_verify_data, verify_data_len));
+            EXPECT_OK(s2n_server_renegotiation_info_extension_write(&extension,
+                    client_verify_data, server_verify_data, verify_data_len));
 
             EXPECT_SUCCESS(s2n_server_renegotiation_info_extension.recv(conn, &extension));
         }
@@ -285,52 +294,52 @@ int main(int argc, char **argv)
         {
             /* Write valid verify_data */
             DEFER_CLEANUP(struct s2n_stuffer extension = { 0 }, s2n_stuffer_free);
-            EXPECT_OK(s2n_server_renegotiation_info_extension_write(
-                &extension, client_verify_data, server_verify_data, verify_data_len));
+            EXPECT_OK(s2n_server_renegotiation_info_extension_write(&extension,
+                    client_verify_data, server_verify_data, verify_data_len));
 
             /* Modify length */
             EXPECT_SUCCESS(s2n_stuffer_rewrite(&extension));
             EXPECT_SUCCESS(s2n_stuffer_write_uint8(&extension, renegotiation_info_len - 1));
             EXPECT_SUCCESS(s2n_stuffer_skip_write(&extension, renegotiation_info_len));
 
-            EXPECT_FAILURE_WITH_ERRNO(
-                s2n_server_renegotiation_info_extension.recv(conn, &extension), S2N_ERR_BAD_MESSAGE);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_server_renegotiation_info_extension.recv(conn, &extension),
+                    S2N_ERR_BAD_MESSAGE);
         }
 
         /* Receive incorrect length: too large */
         {
             /* Write valid verify_data */
             DEFER_CLEANUP(struct s2n_stuffer extension = { 0 }, s2n_stuffer_free);
-            EXPECT_OK(s2n_server_renegotiation_info_extension_write(
-                &extension, client_verify_data, server_verify_data, verify_data_len));
+            EXPECT_OK(s2n_server_renegotiation_info_extension_write(&extension,
+                    client_verify_data, server_verify_data, verify_data_len));
 
             /* Modify length */
             EXPECT_SUCCESS(s2n_stuffer_rewrite(&extension));
             EXPECT_SUCCESS(s2n_stuffer_write_uint8(&extension, renegotiation_info_len + 1));
             EXPECT_SUCCESS(s2n_stuffer_skip_write(&extension, renegotiation_info_len));
 
-            EXPECT_FAILURE_WITH_ERRNO(
-                s2n_server_renegotiation_info_extension.recv(conn, &extension), S2N_ERR_BAD_MESSAGE);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_server_renegotiation_info_extension.recv(conn, &extension),
+                    S2N_ERR_BAD_MESSAGE);
         }
 
         /* Receive incorrect client_verify_data */
         {
             DEFER_CLEANUP(struct s2n_stuffer extension = { 0 }, s2n_stuffer_free);
-            EXPECT_OK(s2n_server_renegotiation_info_extension_write(
-                &extension, server_verify_data, server_verify_data, verify_data_len));
+            EXPECT_OK(s2n_server_renegotiation_info_extension_write(&extension,
+                    server_verify_data, server_verify_data, verify_data_len));
 
-            EXPECT_FAILURE_WITH_ERRNO(
-                s2n_server_renegotiation_info_extension.recv(conn, &extension), S2N_ERR_BAD_MESSAGE);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_server_renegotiation_info_extension.recv(conn, &extension),
+                    S2N_ERR_BAD_MESSAGE);
         }
 
         /* Receive incorrect server_verify_data */
         {
             DEFER_CLEANUP(struct s2n_stuffer extension = { 0 }, s2n_stuffer_free);
-            EXPECT_OK(s2n_server_renegotiation_info_extension_write(
-                &extension, client_verify_data, client_verify_data, verify_data_len));
+            EXPECT_OK(s2n_server_renegotiation_info_extension_write(&extension,
+                    client_verify_data, client_verify_data, verify_data_len));
 
-            EXPECT_FAILURE_WITH_ERRNO(
-                s2n_server_renegotiation_info_extension.recv(conn, &extension), S2N_ERR_BAD_MESSAGE);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_server_renegotiation_info_extension.recv(conn, &extension),
+                    S2N_ERR_BAD_MESSAGE);
         }
 
         /* Receive initial handshake extension */
@@ -341,8 +350,8 @@ int main(int argc, char **argv)
             conn->handshake.renegotiation = false;
             EXPECT_SUCCESS(s2n_server_renegotiation_info_extension.send(conn, &extension));
             conn->handshake.renegotiation = true;
-            EXPECT_FAILURE_WITH_ERRNO(
-                s2n_server_renegotiation_info_extension.recv(conn, &extension), S2N_ERR_BAD_MESSAGE);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_server_renegotiation_info_extension.recv(conn, &extension),
+                    S2N_ERR_BAD_MESSAGE);
         }
     }
 
@@ -355,20 +364,26 @@ int main(int argc, char **argv)
      *#    the ServerHello.
      */
     {
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         client_conn->handshake.renegotiation = true;
         client_conn->secure_renegotiation = true;
-        EXPECT_MEMCPY_SUCCESS(client_conn->handshake.client_finished, client_verify_data, sizeof(client_verify_data));
-        EXPECT_MEMCPY_SUCCESS(client_conn->handshake.server_finished, server_verify_data, sizeof(server_verify_data));
+        EXPECT_MEMCPY_SUCCESS(client_conn->handshake.client_finished,
+                client_verify_data, sizeof(client_verify_data));
+        EXPECT_MEMCPY_SUCCESS(client_conn->handshake.server_finished,
+                server_verify_data, sizeof(server_verify_data));
         client_conn->handshake.finished_len = verify_data_len;
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         server_conn->handshake.renegotiation = true;
         server_conn->secure_renegotiation = true;
-        EXPECT_MEMCPY_SUCCESS(server_conn->handshake.client_finished, client_verify_data, sizeof(client_verify_data));
-        EXPECT_MEMCPY_SUCCESS(server_conn->handshake.server_finished, server_verify_data, sizeof(server_verify_data));
+        EXPECT_MEMCPY_SUCCESS(server_conn->handshake.client_finished,
+                client_verify_data, sizeof(client_verify_data));
+        EXPECT_MEMCPY_SUCCESS(server_conn->handshake.server_finished,
+                server_verify_data, sizeof(server_verify_data));
         server_conn->handshake.finished_len = verify_data_len;
 
         DEFER_CLEANUP(struct s2n_stuffer sent_extension = { 0 }, s2n_stuffer_free);
@@ -378,11 +393,11 @@ int main(int argc, char **argv)
 
         /* Verify matches test method */
         DEFER_CLEANUP(struct s2n_stuffer test_extension = { 0 }, s2n_stuffer_free);
-        EXPECT_OK(s2n_server_renegotiation_info_extension_write(
-            &test_extension, client_verify_data, server_verify_data, verify_data_len));
+        EXPECT_OK(s2n_server_renegotiation_info_extension_write(&test_extension,
+                client_verify_data, server_verify_data, verify_data_len));
         EXPECT_EQUAL(s2n_stuffer_data_available(&sent_extension), s2n_stuffer_data_available(&test_extension));
-        EXPECT_BYTEARRAY_EQUAL(
-            sent_extension.blob.data, test_extension.blob.data, s2n_stuffer_data_available(&sent_extension));
+        EXPECT_BYTEARRAY_EQUAL(sent_extension.blob.data, test_extension.blob.data,
+                s2n_stuffer_data_available(&sent_extension));
 
         /* Verify we can recv what we send */
         EXPECT_SUCCESS(s2n_server_renegotiation_info_extension.recv(server_conn, &sent_extension));
@@ -396,18 +411,21 @@ int main(int argc, char **argv)
      *#    includes the "renegotiation_info" extension:
      */
     {
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
         /* Send and receive the ClientHello */
         EXPECT_SUCCESS(s2n_client_hello_send(client_conn));
         EXPECT_SUCCESS(s2n_stuffer_copy(&client_conn->handshake.io, &server_conn->handshake.io,
-            s2n_stuffer_data_available(&client_conn->handshake.io)));
+                s2n_stuffer_data_available(&client_conn->handshake.io)));
         EXPECT_SUCCESS(s2n_client_hello_recv(server_conn));
 
         /* Test "renegotiation_info" extension NOT included during initial handshake */
@@ -417,7 +435,7 @@ int main(int argc, char **argv)
             server_conn->secure_renegotiation = false;
             EXPECT_SUCCESS(s2n_server_hello_send(server_conn));
             EXPECT_SUCCESS(s2n_stuffer_copy(&server_conn->handshake.io, &client_conn->handshake.io,
-                s2n_stuffer_data_available(&server_conn->handshake.io)));
+                    s2n_stuffer_data_available(&server_conn->handshake.io)));
             EXPECT_SUCCESS(s2n_server_hello_recv(client_conn));
 
             EXPECT_FALSE(client_conn->secure_renegotiation);
@@ -430,7 +448,7 @@ int main(int argc, char **argv)
             server_conn->secure_renegotiation = true;
             EXPECT_SUCCESS(s2n_server_hello_send(server_conn));
             EXPECT_SUCCESS(s2n_stuffer_copy(&server_conn->handshake.io, &client_conn->handshake.io,
-                s2n_stuffer_data_available(&server_conn->handshake.io)));
+                    s2n_stuffer_data_available(&server_conn->handshake.io)));
             EXPECT_SUCCESS(s2n_server_hello_recv(client_conn));
 
             EXPECT_TRUE(client_conn->secure_renegotiation);
@@ -450,14 +468,16 @@ int main(int argc, char **argv)
      *# specification even if the offered client version is {0x03, 0x00}.
      **/
     if (s2n_hash_is_available(S2N_HASH_MD5)) {
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
         EXPECT_SUCCESS(s2n_connection_set_cipher_preferences(client_conn, "test_all"));
         client_conn->client_protocol_version = S2N_SSLv3;
         client_conn->actual_protocol_version = S2N_SSLv3;
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
         EXPECT_SUCCESS(s2n_connection_set_cipher_preferences(server_conn, "test_all"));

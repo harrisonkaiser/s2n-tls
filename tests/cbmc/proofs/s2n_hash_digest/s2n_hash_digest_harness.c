@@ -13,10 +13,11 @@
  * permissions and limitations under the License.
  */
 
-#include <assert.h>
+#include "crypto/s2n_hash.h"
+
 #include <cbmc_proof/make_common_datastructures.h>
 
-#include "crypto/s2n_hash.h"
+#include <assert.h>
 
 int __CPROVER_file_local_s2n_hash_c_s2n_hash_set_impl(struct s2n_hash_state *);
 
@@ -25,14 +26,15 @@ void s2n_hash_digest_harness()
     /* Non-deterministic inputs. */
     struct s2n_hash_state *state = cbmc_allocate_s2n_hash_state();
     uint32_t size;
-    void *out = malloc(size);
+    void* out = malloc(size);
 
     /* Assumptions. */
     __CPROVER_assume(s2n_result_is_ok(s2n_hash_state_validate(state)));
     __CPROVER_file_local_s2n_hash_c_s2n_hash_set_impl(state);
 
     /* Operation under verification. */
-    if (s2n_hash_digest(state, out, size) == S2N_SUCCESS) {
+    if (s2n_hash_digest(state, out, size) == S2N_SUCCESS)
+    {
         /* Post-conditions. */
         assert(s2n_result_is_ok(s2n_hash_state_validate(state)));
         assert(state->hash_impl->digest != NULL);

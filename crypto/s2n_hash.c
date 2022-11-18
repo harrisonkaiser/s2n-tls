@@ -13,12 +13,13 @@
  * permissions and limitations under the License.
  */
 
-#include "crypto/s2n_hash.h"
+#include "error/s2n_errno.h"
 
-#include "crypto/s2n_fips.h"
+#include "crypto/s2n_hash.h"
 #include "crypto/s2n_hmac.h"
 #include "crypto/s2n_openssl.h"
-#include "error/s2n_errno.h"
+#include "crypto/s2n_fips.h"
+
 #include "utils/s2n_safety.h"
 
 static bool s2n_use_custom_md5_sha1()
@@ -40,7 +41,7 @@ bool s2n_hash_evp_fully_supported()
     return s2n_use_evp_impl() && !s2n_use_custom_md5_sha1();
 }
 
-const EVP_MD *s2n_hash_alg_to_evp_md(s2n_hash_algorithm alg)
+const EVP_MD* s2n_hash_alg_to_evp_md(s2n_hash_algorithm alg)
 {
     switch (alg) {
         case S2N_HASH_MD5:
@@ -68,32 +69,16 @@ int s2n_hash_digest_size(s2n_hash_algorithm alg, uint8_t *out)
 {
     POSIX_ENSURE(S2N_MEM_IS_WRITABLE_CHECK(out, sizeof(*out)), S2N_ERR_PRECONDITION_VIOLATION);
     switch (alg) {
-        case S2N_HASH_NONE:
-            *out = 0;
-            break;
-        case S2N_HASH_MD5:
-            *out = MD5_DIGEST_LENGTH;
-            break;
-        case S2N_HASH_SHA1:
-            *out = SHA_DIGEST_LENGTH;
-            break;
-        case S2N_HASH_SHA224:
-            *out = SHA224_DIGEST_LENGTH;
-            break;
-        case S2N_HASH_SHA256:
-            *out = SHA256_DIGEST_LENGTH;
-            break;
-        case S2N_HASH_SHA384:
-            *out = SHA384_DIGEST_LENGTH;
-            break;
-        case S2N_HASH_SHA512:
-            *out = SHA512_DIGEST_LENGTH;
-            break;
-        case S2N_HASH_MD5_SHA1:
-            *out = MD5_DIGEST_LENGTH + SHA_DIGEST_LENGTH;
-            break;
-        default:
-            POSIX_BAIL(S2N_ERR_HASH_INVALID_ALGORITHM);
+    case S2N_HASH_NONE:     *out = 0;                    break;
+    case S2N_HASH_MD5:      *out = MD5_DIGEST_LENGTH;    break;
+    case S2N_HASH_SHA1:     *out = SHA_DIGEST_LENGTH;    break;
+    case S2N_HASH_SHA224:   *out = SHA224_DIGEST_LENGTH; break;
+    case S2N_HASH_SHA256:   *out = SHA256_DIGEST_LENGTH; break;
+    case S2N_HASH_SHA384:   *out = SHA384_DIGEST_LENGTH; break;
+    case S2N_HASH_SHA512:   *out = SHA512_DIGEST_LENGTH; break;
+    case S2N_HASH_MD5_SHA1: *out = MD5_DIGEST_LENGTH + SHA_DIGEST_LENGTH; break;
+    default:
+        POSIX_BAIL(S2N_ERR_HASH_INVALID_ALGORITHM);
     }
     return S2N_SUCCESS;
 }
@@ -104,33 +89,17 @@ int s2n_hash_digest_size(s2n_hash_algorithm alg, uint8_t *out)
 int s2n_hash_block_size(s2n_hash_algorithm alg, uint64_t *block_size)
 {
     POSIX_ENSURE(S2N_MEM_IS_WRITABLE_CHECK(block_size, sizeof(*block_size)), S2N_ERR_PRECONDITION_VIOLATION);
-    switch (alg) {
-        case S2N_HASH_NONE:
-            *block_size = 64;
-            break;
-        case S2N_HASH_MD5:
-            *block_size = 64;
-            break;
-        case S2N_HASH_SHA1:
-            *block_size = 64;
-            break;
-        case S2N_HASH_SHA224:
-            *block_size = 64;
-            break;
-        case S2N_HASH_SHA256:
-            *block_size = 64;
-            break;
-        case S2N_HASH_SHA384:
-            *block_size = 128;
-            break;
-        case S2N_HASH_SHA512:
-            *block_size = 128;
-            break;
-        case S2N_HASH_MD5_SHA1:
-            *block_size = 64;
-            break;
-        default:
-            POSIX_BAIL(S2N_ERR_HASH_INVALID_ALGORITHM);
+    switch(alg) {
+    case S2N_HASH_NONE:       *block_size = 64;   break;
+    case S2N_HASH_MD5:        *block_size = 64;   break;
+    case S2N_HASH_SHA1:       *block_size = 64;   break;
+    case S2N_HASH_SHA224:     *block_size = 64;   break;
+    case S2N_HASH_SHA256:     *block_size = 64;   break;
+    case S2N_HASH_SHA384:     *block_size = 128;  break;
+    case S2N_HASH_SHA512:     *block_size = 128;  break;
+    case S2N_HASH_MD5_SHA1:   *block_size = 64;   break;
+    default:
+        POSIX_BAIL(S2N_ERR_HASH_INVALID_ALGORITHM);
     }
     return S2N_SUCCESS;
 }
@@ -139,19 +108,19 @@ int s2n_hash_block_size(s2n_hash_algorithm alg, uint64_t *block_size)
 bool s2n_hash_is_available(s2n_hash_algorithm alg)
 {
     switch (alg) {
-        case S2N_HASH_MD5:
-        case S2N_HASH_MD5_SHA1:
-            /* return false if in FIPS mode, as MD5 algs are not available in FIPS mode. */
-            return !s2n_is_in_fips_mode();
-        case S2N_HASH_NONE:
-        case S2N_HASH_SHA1:
-        case S2N_HASH_SHA224:
-        case S2N_HASH_SHA256:
-        case S2N_HASH_SHA384:
-        case S2N_HASH_SHA512:
-            return true;
-        case S2N_HASH_SENTINEL:
-            return false;
+    case S2N_HASH_MD5:
+    case S2N_HASH_MD5_SHA1:
+        /* return false if in FIPS mode, as MD5 algs are not available in FIPS mode. */
+        return !s2n_is_in_fips_mode();
+    case S2N_HASH_NONE:
+    case S2N_HASH_SHA1:
+    case S2N_HASH_SHA224:
+    case S2N_HASH_SHA256:
+    case S2N_HASH_SHA384:
+    case S2N_HASH_SHA512:
+        return true;
+    case S2N_HASH_SENTINEL:
+        return false;
     }
     return false;
 }
@@ -168,42 +137,40 @@ static int s2n_low_level_hash_new(struct s2n_hash_state *state)
      * being used. For the s2n_low_level_hash implementation, new is a no-op.
      */
 
-    *state = (struct s2n_hash_state){ 0 };
+    *state = (struct s2n_hash_state) { 0 };
     return S2N_SUCCESS;
 }
 
 static int s2n_low_level_hash_init(struct s2n_hash_state *state, s2n_hash_algorithm alg)
 {
     switch (alg) {
-        case S2N_HASH_NONE:
-            break;
-        case S2N_HASH_MD5:
-            POSIX_GUARD_OSSL(MD5_Init(&state->digest.low_level.md5), S2N_ERR_HASH_INIT_FAILED);
-            break;
-        case S2N_HASH_SHA1:
-            POSIX_GUARD_OSSL(SHA1_Init(&state->digest.low_level.sha1), S2N_ERR_HASH_INIT_FAILED);
-            break;
-        case S2N_HASH_SHA224:
-            POSIX_GUARD_OSSL(SHA224_Init(&state->digest.low_level.sha224), S2N_ERR_HASH_INIT_FAILED);
-            break;
-        case S2N_HASH_SHA256:
-            POSIX_GUARD_OSSL(SHA256_Init(&state->digest.low_level.sha256), S2N_ERR_HASH_INIT_FAILED);
-            break;
-        case S2N_HASH_SHA384:
-            POSIX_GUARD_OSSL(SHA384_Init(&state->digest.low_level.sha384), S2N_ERR_HASH_INIT_FAILED);
-            break;
-        case S2N_HASH_SHA512:
-            POSIX_GUARD_OSSL(SHA512_Init(&state->digest.low_level.sha512), S2N_ERR_HASH_INIT_FAILED);
-            break;
-        case S2N_HASH_MD5_SHA1:
-            POSIX_GUARD_OSSL(SHA1_Init(&state->digest.low_level.md5_sha1.sha1), S2N_ERR_HASH_INIT_FAILED);
-            ;
-            POSIX_GUARD_OSSL(MD5_Init(&state->digest.low_level.md5_sha1.md5), S2N_ERR_HASH_INIT_FAILED);
-            ;
-            break;
+    case S2N_HASH_NONE:
+        break;
+    case S2N_HASH_MD5:
+        POSIX_GUARD_OSSL(MD5_Init(&state->digest.low_level.md5), S2N_ERR_HASH_INIT_FAILED);
+        break;
+    case S2N_HASH_SHA1:
+        POSIX_GUARD_OSSL(SHA1_Init(&state->digest.low_level.sha1), S2N_ERR_HASH_INIT_FAILED);
+        break;
+    case S2N_HASH_SHA224:
+        POSIX_GUARD_OSSL(SHA224_Init(&state->digest.low_level.sha224), S2N_ERR_HASH_INIT_FAILED);
+        break;
+    case S2N_HASH_SHA256:
+        POSIX_GUARD_OSSL(SHA256_Init(&state->digest.low_level.sha256), S2N_ERR_HASH_INIT_FAILED);
+        break;
+    case S2N_HASH_SHA384:
+        POSIX_GUARD_OSSL(SHA384_Init(&state->digest.low_level.sha384), S2N_ERR_HASH_INIT_FAILED);
+        break;
+    case S2N_HASH_SHA512:
+        POSIX_GUARD_OSSL(SHA512_Init(&state->digest.low_level.sha512), S2N_ERR_HASH_INIT_FAILED);
+        break;
+    case S2N_HASH_MD5_SHA1:
+        POSIX_GUARD_OSSL(SHA1_Init(&state->digest.low_level.md5_sha1.sha1), S2N_ERR_HASH_INIT_FAILED);;
+        POSIX_GUARD_OSSL(MD5_Init(&state->digest.low_level.md5_sha1.md5), S2N_ERR_HASH_INIT_FAILED);;
+        break;
 
-        default:
-            POSIX_BAIL(S2N_ERR_HASH_INVALID_ALGORITHM);
+    default:
+        POSIX_BAIL(S2N_ERR_HASH_INVALID_ALGORITHM);
     }
 
     state->alg = alg;
@@ -218,33 +185,32 @@ static int s2n_low_level_hash_update(struct s2n_hash_state *state, const void *d
     POSIX_ENSURE(state->is_ready_for_input, S2N_ERR_HASH_NOT_READY);
 
     switch (state->alg) {
-        case S2N_HASH_NONE:
-            break;
-        case S2N_HASH_MD5:
-            POSIX_GUARD_OSSL(MD5_Update(&state->digest.low_level.md5, data, size), S2N_ERR_HASH_UPDATE_FAILED);
-            break;
-        case S2N_HASH_SHA1:
-            POSIX_GUARD_OSSL(SHA1_Update(&state->digest.low_level.sha1, data, size), S2N_ERR_HASH_UPDATE_FAILED);
-            break;
-        case S2N_HASH_SHA224:
-            POSIX_GUARD_OSSL(SHA224_Update(&state->digest.low_level.sha224, data, size), S2N_ERR_HASH_UPDATE_FAILED);
-            break;
-        case S2N_HASH_SHA256:
-            POSIX_GUARD_OSSL(SHA256_Update(&state->digest.low_level.sha256, data, size), S2N_ERR_HASH_UPDATE_FAILED);
-            break;
-        case S2N_HASH_SHA384:
-            POSIX_GUARD_OSSL(SHA384_Update(&state->digest.low_level.sha384, data, size), S2N_ERR_HASH_UPDATE_FAILED);
-            break;
-        case S2N_HASH_SHA512:
-            POSIX_GUARD_OSSL(SHA512_Update(&state->digest.low_level.sha512, data, size), S2N_ERR_HASH_UPDATE_FAILED);
-            break;
-        case S2N_HASH_MD5_SHA1:
-            POSIX_GUARD_OSSL(
-                SHA1_Update(&state->digest.low_level.md5_sha1.sha1, data, size), S2N_ERR_HASH_UPDATE_FAILED);
-            POSIX_GUARD_OSSL(MD5_Update(&state->digest.low_level.md5_sha1.md5, data, size), S2N_ERR_HASH_UPDATE_FAILED);
-            break;
-        default:
-            POSIX_BAIL(S2N_ERR_HASH_INVALID_ALGORITHM);
+    case S2N_HASH_NONE:
+        break;
+    case S2N_HASH_MD5:
+        POSIX_GUARD_OSSL(MD5_Update(&state->digest.low_level.md5, data, size), S2N_ERR_HASH_UPDATE_FAILED);
+        break;
+    case S2N_HASH_SHA1:
+        POSIX_GUARD_OSSL(SHA1_Update(&state->digest.low_level.sha1, data, size), S2N_ERR_HASH_UPDATE_FAILED);
+        break;
+    case S2N_HASH_SHA224:
+        POSIX_GUARD_OSSL(SHA224_Update(&state->digest.low_level.sha224, data, size), S2N_ERR_HASH_UPDATE_FAILED);
+        break;
+    case S2N_HASH_SHA256:
+        POSIX_GUARD_OSSL(SHA256_Update(&state->digest.low_level.sha256, data, size), S2N_ERR_HASH_UPDATE_FAILED);
+        break;
+    case S2N_HASH_SHA384:
+        POSIX_GUARD_OSSL(SHA384_Update(&state->digest.low_level.sha384, data, size), S2N_ERR_HASH_UPDATE_FAILED);
+        break;
+    case S2N_HASH_SHA512:
+        POSIX_GUARD_OSSL(SHA512_Update(&state->digest.low_level.sha512, data, size), S2N_ERR_HASH_UPDATE_FAILED);
+        break;
+    case S2N_HASH_MD5_SHA1:
+        POSIX_GUARD_OSSL(SHA1_Update(&state->digest.low_level.md5_sha1.sha1, data, size), S2N_ERR_HASH_UPDATE_FAILED);
+        POSIX_GUARD_OSSL(MD5_Update(&state->digest.low_level.md5_sha1.md5, data, size), S2N_ERR_HASH_UPDATE_FAILED);
+        break;
+    default:
+        POSIX_BAIL(S2N_ERR_HASH_INVALID_ALGORITHM);
     }
 
     POSIX_ENSURE(size <= (UINT64_MAX - state->currently_in_hash), S2N_ERR_INTEGER_OVERFLOW);
@@ -258,40 +224,39 @@ static int s2n_low_level_hash_digest(struct s2n_hash_state *state, void *out, ui
     POSIX_ENSURE(state->is_ready_for_input, S2N_ERR_HASH_NOT_READY);
 
     switch (state->alg) {
-        case S2N_HASH_NONE:
-            break;
-        case S2N_HASH_MD5:
-            POSIX_ENSURE_EQ(size, MD5_DIGEST_LENGTH);
-            POSIX_GUARD_OSSL(MD5_Final(out, &state->digest.low_level.md5), S2N_ERR_HASH_DIGEST_FAILED);
-            break;
-        case S2N_HASH_SHA1:
-            POSIX_ENSURE_EQ(size, SHA_DIGEST_LENGTH);
-            POSIX_GUARD_OSSL(SHA1_Final(out, &state->digest.low_level.sha1), S2N_ERR_HASH_DIGEST_FAILED);
-            break;
-        case S2N_HASH_SHA224:
-            POSIX_ENSURE_EQ(size, SHA224_DIGEST_LENGTH);
-            POSIX_GUARD_OSSL(SHA224_Final(out, &state->digest.low_level.sha224), S2N_ERR_HASH_DIGEST_FAILED);
-            break;
-        case S2N_HASH_SHA256:
-            POSIX_ENSURE_EQ(size, SHA256_DIGEST_LENGTH);
-            POSIX_GUARD_OSSL(SHA256_Final(out, &state->digest.low_level.sha256), S2N_ERR_HASH_DIGEST_FAILED);
-            break;
-        case S2N_HASH_SHA384:
-            POSIX_ENSURE_EQ(size, SHA384_DIGEST_LENGTH);
-            POSIX_GUARD_OSSL(SHA384_Final(out, &state->digest.low_level.sha384), S2N_ERR_HASH_DIGEST_FAILED);
-            break;
-        case S2N_HASH_SHA512:
-            POSIX_ENSURE_EQ(size, SHA512_DIGEST_LENGTH);
-            POSIX_GUARD_OSSL(SHA512_Final(out, &state->digest.low_level.sha512), S2N_ERR_HASH_DIGEST_FAILED);
-            break;
-        case S2N_HASH_MD5_SHA1:
-            POSIX_ENSURE_EQ(size, MD5_DIGEST_LENGTH + SHA_DIGEST_LENGTH);
-            POSIX_GUARD_OSSL(SHA1_Final(((uint8_t *) out) + MD5_DIGEST_LENGTH, &state->digest.low_level.md5_sha1.sha1),
-                S2N_ERR_HASH_DIGEST_FAILED);
-            POSIX_GUARD_OSSL(MD5_Final(out, &state->digest.low_level.md5_sha1.md5), S2N_ERR_HASH_DIGEST_FAILED);
-            break;
-        default:
-            POSIX_BAIL(S2N_ERR_HASH_INVALID_ALGORITHM);
+    case S2N_HASH_NONE:
+        break;
+    case S2N_HASH_MD5:
+        POSIX_ENSURE_EQ(size, MD5_DIGEST_LENGTH);
+        POSIX_GUARD_OSSL(MD5_Final(out, &state->digest.low_level.md5), S2N_ERR_HASH_DIGEST_FAILED);
+        break;
+    case S2N_HASH_SHA1:
+        POSIX_ENSURE_EQ(size, SHA_DIGEST_LENGTH);
+        POSIX_GUARD_OSSL(SHA1_Final(out, &state->digest.low_level.sha1), S2N_ERR_HASH_DIGEST_FAILED);
+        break;
+    case S2N_HASH_SHA224:
+        POSIX_ENSURE_EQ(size, SHA224_DIGEST_LENGTH);
+        POSIX_GUARD_OSSL(SHA224_Final(out, &state->digest.low_level.sha224), S2N_ERR_HASH_DIGEST_FAILED);
+        break;
+    case S2N_HASH_SHA256:
+        POSIX_ENSURE_EQ(size, SHA256_DIGEST_LENGTH);
+        POSIX_GUARD_OSSL(SHA256_Final(out, &state->digest.low_level.sha256), S2N_ERR_HASH_DIGEST_FAILED);
+        break;
+    case S2N_HASH_SHA384:
+        POSIX_ENSURE_EQ(size, SHA384_DIGEST_LENGTH);
+        POSIX_GUARD_OSSL(SHA384_Final(out, &state->digest.low_level.sha384), S2N_ERR_HASH_DIGEST_FAILED);
+        break;
+    case S2N_HASH_SHA512:
+        POSIX_ENSURE_EQ(size, SHA512_DIGEST_LENGTH);
+        POSIX_GUARD_OSSL(SHA512_Final(out, &state->digest.low_level.sha512), S2N_ERR_HASH_DIGEST_FAILED);
+        break;
+    case S2N_HASH_MD5_SHA1:
+        POSIX_ENSURE_EQ(size, MD5_DIGEST_LENGTH + SHA_DIGEST_LENGTH);
+        POSIX_GUARD_OSSL(SHA1_Final(((uint8_t *) out) + MD5_DIGEST_LENGTH, &state->digest.low_level.md5_sha1.sha1), S2N_ERR_HASH_DIGEST_FAILED);
+        POSIX_GUARD_OSSL(MD5_Final(out, &state->digest.low_level.md5_sha1.md5), S2N_ERR_HASH_DIGEST_FAILED);
+        break;
+    default:
+        POSIX_BAIL(S2N_ERR_HASH_INVALID_ALGORITHM);
     }
 
     state->currently_in_hash = 0;
@@ -361,16 +326,13 @@ static int s2n_evp_hash_init(struct s2n_hash_state *state, s2n_hash_algorithm al
 
     if (alg == S2N_HASH_MD5_SHA1 && s2n_use_custom_md5_sha1()) {
         POSIX_ENSURE_REF(state->digest.high_level.evp_md5_secondary.ctx);
-        POSIX_GUARD_OSSL(
-            EVP_DigestInit_ex(state->digest.high_level.evp.ctx, EVP_sha1(), NULL), S2N_ERR_HASH_INIT_FAILED);
-        POSIX_GUARD_OSSL(EVP_DigestInit_ex(state->digest.high_level.evp_md5_secondary.ctx, EVP_md5(), NULL),
-            S2N_ERR_HASH_INIT_FAILED);
+        POSIX_GUARD_OSSL(EVP_DigestInit_ex(state->digest.high_level.evp.ctx, EVP_sha1(), NULL), S2N_ERR_HASH_INIT_FAILED);
+        POSIX_GUARD_OSSL(EVP_DigestInit_ex(state->digest.high_level.evp_md5_secondary.ctx, EVP_md5(), NULL), S2N_ERR_HASH_INIT_FAILED);
         return S2N_SUCCESS;
     }
 
     POSIX_ENSURE_REF(s2n_hash_alg_to_evp_md(alg));
-    POSIX_GUARD_OSSL(EVP_DigestInit_ex(state->digest.high_level.evp.ctx, s2n_hash_alg_to_evp_md(alg), NULL),
-        S2N_ERR_HASH_INIT_FAILED);
+    POSIX_GUARD_OSSL(EVP_DigestInit_ex(state->digest.high_level.evp.ctx, s2n_hash_alg_to_evp_md(alg), NULL), S2N_ERR_HASH_INIT_FAILED);
     return S2N_SUCCESS;
 }
 
@@ -389,8 +351,7 @@ static int s2n_evp_hash_update(struct s2n_hash_state *state, const void *data, u
 
     if (state->alg == S2N_HASH_MD5_SHA1 && s2n_use_custom_md5_sha1()) {
         POSIX_ENSURE_REF(EVP_MD_CTX_md(state->digest.high_level.evp_md5_secondary.ctx));
-        POSIX_GUARD_OSSL(
-            EVP_DigestUpdate(state->digest.high_level.evp_md5_secondary.ctx, data, size), S2N_ERR_HASH_UPDATE_FAILED);
+        POSIX_GUARD_OSSL(EVP_DigestUpdate(state->digest.high_level.evp_md5_secondary.ctx, data, size), S2N_ERR_HASH_UPDATE_FAILED);
     }
 
     return S2N_SUCCESS;
@@ -424,21 +385,15 @@ static int s2n_evp_hash_digest(struct s2n_hash_state *state, void *out, uint32_t
         unsigned int md5_secondary_digest_size = digest_size - sha1_primary_digest_size;
 
         POSIX_ENSURE(EVP_MD_CTX_size(state->digest.high_level.evp.ctx) <= sha1_digest_size, S2N_ERR_HASH_DIGEST_FAILED);
-        POSIX_ENSURE(EVP_MD_CTX_size(state->digest.high_level.evp_md5_secondary.ctx) <= md5_secondary_digest_size,
-            S2N_ERR_HASH_DIGEST_FAILED);
+        POSIX_ENSURE(EVP_MD_CTX_size(state->digest.high_level.evp_md5_secondary.ctx) <= md5_secondary_digest_size, S2N_ERR_HASH_DIGEST_FAILED);
 
-        POSIX_GUARD_OSSL(EVP_DigestFinal_ex(state->digest.high_level.evp.ctx, ((uint8_t *) out) + MD5_DIGEST_LENGTH,
-                             &sha1_primary_digest_size),
-            S2N_ERR_HASH_DIGEST_FAILED);
-        POSIX_GUARD_OSSL(
-            EVP_DigestFinal_ex(state->digest.high_level.evp_md5_secondary.ctx, out, &md5_secondary_digest_size),
-            S2N_ERR_HASH_DIGEST_FAILED);
+        POSIX_GUARD_OSSL(EVP_DigestFinal_ex(state->digest.high_level.evp.ctx, ((uint8_t *) out) + MD5_DIGEST_LENGTH, &sha1_primary_digest_size), S2N_ERR_HASH_DIGEST_FAILED);
+        POSIX_GUARD_OSSL(EVP_DigestFinal_ex(state->digest.high_level.evp_md5_secondary.ctx, out, &md5_secondary_digest_size), S2N_ERR_HASH_DIGEST_FAILED);
         return S2N_SUCCESS;
     }
 
     POSIX_ENSURE(EVP_MD_CTX_size(state->digest.high_level.evp.ctx) <= digest_size, S2N_ERR_HASH_DIGEST_FAILED);
-    POSIX_GUARD_OSSL(
-        EVP_DigestFinal_ex(state->digest.high_level.evp.ctx, out, &digest_size), S2N_ERR_HASH_DIGEST_FAILED);
+    POSIX_GUARD_OSSL(EVP_DigestFinal_ex(state->digest.high_level.evp.ctx, out, &digest_size), S2N_ERR_HASH_DIGEST_FAILED);
     return S2N_SUCCESS;
 }
 
@@ -454,14 +409,11 @@ static int s2n_evp_hash_copy(struct s2n_hash_state *to, struct s2n_hash_state *f
     }
 
     POSIX_ENSURE_REF(to->digest.high_level.evp.ctx);
-    POSIX_GUARD_OSSL(
-        EVP_MD_CTX_copy_ex(to->digest.high_level.evp.ctx, from->digest.high_level.evp.ctx), S2N_ERR_HASH_COPY_FAILED);
+    POSIX_GUARD_OSSL(EVP_MD_CTX_copy_ex(to->digest.high_level.evp.ctx, from->digest.high_level.evp.ctx), S2N_ERR_HASH_COPY_FAILED);
 
     if (from->alg == S2N_HASH_MD5_SHA1 && s2n_use_custom_md5_sha1()) {
         POSIX_ENSURE_REF(to->digest.high_level.evp_md5_secondary.ctx);
-        POSIX_GUARD_OSSL(EVP_MD_CTX_copy_ex(to->digest.high_level.evp_md5_secondary.ctx,
-                             from->digest.high_level.evp_md5_secondary.ctx),
-            S2N_ERR_HASH_COPY_FAILED);
+        POSIX_GUARD_OSSL(EVP_MD_CTX_copy_ex(to->digest.high_level.evp_md5_secondary.ctx, from->digest.high_level.evp_md5_secondary.ctx), S2N_ERR_HASH_COPY_FAILED);
     }
 
     bool is_md5_allowed_for_fips = false;
@@ -483,8 +435,7 @@ static int s2n_evp_hash_reset(struct s2n_hash_state *state)
 
     POSIX_GUARD_OSSL(S2N_EVP_MD_CTX_RESET(state->digest.high_level.evp.ctx), S2N_ERR_HASH_WIPE_FAILED);
     if (state->alg == S2N_HASH_MD5_SHA1 && s2n_use_custom_md5_sha1()) {
-        POSIX_GUARD_OSSL(
-            S2N_EVP_MD_CTX_RESET(state->digest.high_level.evp_md5_secondary.ctx), S2N_ERR_HASH_WIPE_FAILED);
+        POSIX_GUARD_OSSL(S2N_EVP_MD_CTX_RESET(state->digest.high_level.evp_md5_secondary.ctx), S2N_ERR_HASH_WIPE_FAILED);
     }
 
     if (reset_md5_for_fips) {
@@ -584,7 +535,8 @@ int s2n_hash_init(struct s2n_hash_state *state, s2n_hash_algorithm alg)
     bool is_md5_allowed_for_fips = false;
     POSIX_GUARD_RESULT(s2n_digest_is_md5_allowed_for_fips(&state->digest.high_level.evp, &is_md5_allowed_for_fips));
 
-    if (s2n_hash_is_available(alg) || ((alg == S2N_HASH_MD5 || alg == S2N_HASH_MD5_SHA1) && is_md5_allowed_for_fips)) {
+    if (s2n_hash_is_available(alg) ||
+       ((alg == S2N_HASH_MD5 || alg == S2N_HASH_MD5_SHA1) && is_md5_allowed_for_fips)) {
         /* s2n will continue to initialize an "unavailable" hash when s2n is in FIPS mode and
          * FIPS is forcing the hash to be made available.
          */
@@ -638,7 +590,8 @@ int s2n_hash_reset(struct s2n_hash_state *state)
 
 int s2n_hash_free(struct s2n_hash_state *state)
 {
-    if (state == NULL) {
+    if (state == NULL)
+    {
         return S2N_SUCCESS;
     }
     /* Ensure that hash_impl is set, as it may have been reset for s2n_hash_state on s2n_connection_wipe.

@@ -14,6 +14,7 @@
  */
 
 #include "s2n_test.h"
+
 #include "tls/s2n_handshake.h"
 
 int main(int argc, char **argv)

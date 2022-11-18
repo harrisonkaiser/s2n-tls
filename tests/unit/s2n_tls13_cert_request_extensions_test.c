@@ -13,15 +13,16 @@
  * permissions and limitations under the License.
  */
 
-#include <stdio.h>
-#include <string.h>
-
-#include "api/s2n.h"
 #include "s2n_test.h"
+
+#include <string.h>
+#include <stdio.h>
+#include "api/s2n.h"
+
+#include "tls/extensions/s2n_server_supported_versions.h"
+#include "tls/extensions/s2n_server_signature_algorithms.h"
 #include "stuffer/s2n_stuffer.h"
 #include "testlib/s2n_testlib.h"
-#include "tls/extensions/s2n_server_signature_algorithms.h"
-#include "tls/extensions/s2n_server_supported_versions.h"
 #include "tls/s2n_tls.h"
 #include "tls/s2n_tls13.h"
 #include "utils/s2n_safety.h"

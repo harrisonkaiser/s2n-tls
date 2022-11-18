@@ -14,24 +14,23 @@
  */
 
 #include "s2n_test.h"
-#include "testlib/s2n_testlib.h"
-#include "utils/s2n_blob.h"
-#include "utils/s2n_safety.h"
 
-#define test_stack_blob_success(test_name, macro_name, requested, max) \
-    int test_name()                                                    \
-    {                                                                  \
-        macro_name(test_name##blob, requested, max);                   \
-        POSIX_ENSURE_EQ(test_name##blob.size, requested);              \
-        return 0;                                                      \
-    }
+#include "utils/s2n_safety.h"
+#include "utils/s2n_blob.h"
+#include "testlib/s2n_testlib.h"
+
+#define test_stack_blob_success(test_name, macro_name, requested, max) int test_name() {\
+macro_name(test_name ## blob, requested, max); \
+POSIX_ENSURE_EQ(test_name ## blob.size, requested); \
+return 0; \
+}
 
 test_stack_blob_success(success_equal, s2n_stack_blob, 10, 10)
 
-    test_stack_blob_success(success_equal_smaller, s2n_stack_blob, 10, 100)
 
-        int requested_bigger_than_max()
-{
+test_stack_blob_success(success_equal_smaller, s2n_stack_blob, 10, 100)
+
+int requested_bigger_than_max() {
     s2n_stack_blob(foo, 11, 10);
     /* This should never be reached due to the above failure */
     POSIX_ENSURE_EQ(foo.allocated, 0);
@@ -39,8 +38,7 @@ test_stack_blob_success(success_equal, s2n_stack_blob, 10, 10)
     return 0;
 }
 
-int successful_stack_blob()
-{
+int successful_stack_blob() {
     s2n_stack_blob(foo, 10, 10);
     POSIX_ENSURE_EQ(foo.size, 10);
     POSIX_ENSURE_EQ(foo.allocated, 0);

@@ -13,11 +13,11 @@
  * permissions and limitations under the License.
  */
 
-#include <stdlib.h>
-
 #include "api/s2n.h"
-#include "crypto/s2n_fips.h"
+#include <stdlib.h>
 #include "s2n_test.h"
+
+#include "crypto/s2n_fips.h"
 #include "tls/s2n_config.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_security_policies.h"
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 {
     BEGIN_TEST();
     EXPECT_SUCCESS(s2n_disable_tls13_in_test());
-
+    
     const struct s2n_security_policy *default_security_policy, *tls13_security_policy, *fips_security_policy;
     EXPECT_SUCCESS(s2n_find_security_policy_from_version("default_tls13", &tls13_security_policy));
     EXPECT_SUCCESS(s2n_find_security_policy_from_version("default_fips", &fips_security_policy));
@@ -249,16 +249,11 @@ int main(int argc, char **argv)
 
         conn->config->security_policy = NULL;
 
-        EXPECT_FAILURE_WITH_ERRNO(
-            s2n_connection_get_cipher_preferences(conn, &cipher_preferences), S2N_ERR_INVALID_CIPHER_PREFERENCES);
-        EXPECT_FAILURE_WITH_ERRNO(
-            s2n_connection_get_security_policy(conn, &security_policy), S2N_ERR_INVALID_SECURITY_POLICY);
-        EXPECT_FAILURE_WITH_ERRNO(
-            s2n_connection_get_kem_preferences(conn, &kem_preferences), S2N_ERR_INVALID_KEM_PREFERENCES);
-        EXPECT_FAILURE_WITH_ERRNO(s2n_connection_get_signature_preferences(conn, &signature_preferences),
-            S2N_ERR_INVALID_SIGNATURE_ALGORITHMS_PREFERENCES);
-        EXPECT_FAILURE_WITH_ERRNO(
-            s2n_connection_get_ecc_preferences(conn, &ecc_preferences), S2N_ERR_INVALID_ECC_PREFERENCES);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_connection_get_cipher_preferences(conn, &cipher_preferences), S2N_ERR_INVALID_CIPHER_PREFERENCES);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_connection_get_security_policy(conn, &security_policy), S2N_ERR_INVALID_SECURITY_POLICY);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_connection_get_kem_preferences(conn, &kem_preferences), S2N_ERR_INVALID_KEM_PREFERENCES);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_connection_get_signature_preferences(conn, &signature_preferences), S2N_ERR_INVALID_SIGNATURE_ALGORITHMS_PREFERENCES);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_connection_get_ecc_preferences(conn, &ecc_preferences), S2N_ERR_INVALID_ECC_PREFERENCES);
 
         EXPECT_SUCCESS(s2n_connection_free(conn));
     }

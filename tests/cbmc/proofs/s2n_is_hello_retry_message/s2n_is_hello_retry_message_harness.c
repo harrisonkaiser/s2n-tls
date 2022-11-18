@@ -13,8 +13,9 @@
  * permissions and limitations under the License.
  */
 
-#include <assert.h>
 #include <tls/s2n_connection.h>
+
+#include <assert.h>
 
 void s2n_is_hello_retry_message_harness()
 {
@@ -25,7 +26,7 @@ void s2n_is_hello_retry_message_harness()
     bool is_hello_retry_message = s2n_is_hello_retry_message(s2n_connection);
 
     /* Post-conditions. */
-    assert(S2N_IMPLIES(s2n_connection != NULL && s2n_result_is_ok(s2n_handshake_validate(&(s2n_connection->handshake)))
-            && s2n_conn_get_current_message_type(s2n_connection) == HELLO_RETRY_MSG,
-        is_hello_retry_message));
+    assert(S2N_IMPLIES(s2n_connection != NULL
+                       && s2n_result_is_ok(s2n_handshake_validate(&(s2n_connection->handshake)))
+                       && s2n_conn_get_current_message_type(s2n_connection) == HELLO_RETRY_MSG, is_hello_retry_message));
 }

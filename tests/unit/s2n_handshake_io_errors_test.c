@@ -14,6 +14,7 @@
  */
 
 #include "api/s2n.h"
+
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
 #include "utils/s2n_result.h"
@@ -68,13 +69,14 @@ int main(int argc, char **argv)
         EXPECT_OK(s2n_negotiate_until_message(client_conn, &blocked, SERVER_HELLO));
 
         /* Overwrite everything except the headers */
-        uint32_t content_size =
-            s2n_stuffer_data_available(&io_stuffer) - S2N_TLS_RECORD_HEADER_LENGTH - TLS_HANDSHAKE_HEADER_LENGTH;
+        uint32_t content_size = s2n_stuffer_data_available(&io_stuffer)
+                - S2N_TLS_RECORD_HEADER_LENGTH - TLS_HANDSHAKE_HEADER_LENGTH;
         EXPECT_SUCCESS(s2n_stuffer_wipe_n(&io_stuffer, content_size));
         EXPECT_SUCCESS(s2n_stuffer_skip_write(&io_stuffer, content_size));
 
         /* Read the ClientHello */
-        EXPECT_ERROR_WITH_ERRNO(s2n_negotiate_until_message(server_conn, &blocked, SERVER_HELLO), S2N_ERR_BAD_MESSAGE);
+        EXPECT_ERROR_WITH_ERRNO(s2n_negotiate_until_message(server_conn, &blocked, SERVER_HELLO),
+                S2N_ERR_BAD_MESSAGE);
 
         /* Error closes connection */
         EXPECT_TRUE(server_conn->closed);
@@ -84,6 +86,7 @@ int main(int argc, char **argv)
 
         EXPECT_SUCCESS(s2n_connection_free(client_conn));
         EXPECT_SUCCESS(s2n_connection_free(server_conn));
+
     }
 
     /* Decrypt failure closes connection and invokes blinding */
@@ -111,7 +114,8 @@ int main(int argc, char **argv)
         EXPECT_OK(s2n_connection_set_secrets(server_conn));
 
         /* Read the ClientHello */
-        EXPECT_ERROR_WITH_ERRNO(s2n_negotiate_until_message(server_conn, &blocked, SERVER_HELLO), S2N_ERR_DECRYPT);
+        EXPECT_ERROR_WITH_ERRNO(s2n_negotiate_until_message(server_conn, &blocked, SERVER_HELLO),
+                S2N_ERR_DECRYPT);
 
         /* Error closes connection */
         EXPECT_TRUE(server_conn->closed);

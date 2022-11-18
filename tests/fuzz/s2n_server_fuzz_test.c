@@ -19,16 +19,16 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <openssl/crypto.h>
-#include <openssl/err.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <openssl/crypto.h>
+#include <openssl/err.h>
+
 #include "api/s2n.h"
-#include "s2n_test.h"
 #include "stuffer/s2n_stuffer.h"
 #include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_config.h"
@@ -37,6 +37,7 @@
 #include "tls/s2n_tls.h"
 #include "tls/s2n_tls_parameters.h"
 #include "utils/s2n_safety.h"
+#include "s2n_test.h"
 
 static char certificate_chain[] =
     "-----BEGIN CERTIFICATE-----\n"
@@ -185,7 +186,7 @@ int s2n_fuzz_test(const uint8_t *buf, size_t len)
 {
     S2N_FUZZ_ENSURE_MIN_LEN(len, S2N_TLS_RECORD_HEADER_LENGTH);
 
-    struct s2n_stuffer in = { 0 };
+    struct s2n_stuffer in = {0};
     POSIX_GUARD(s2n_stuffer_alloc(&in, len));
     POSIX_GUARD(s2n_stuffer_write_bytes(&in, buf, len));
 
@@ -205,7 +206,7 @@ int s2n_fuzz_test(const uint8_t *buf, size_t len)
     do {
         s2n_negotiate(server_conn, &server_blocked);
         num_attempted_negotiations += 1;
-    } while (!server_blocked && num_attempted_negotiations < MAX_NEGOTIATION_ATTEMPTS);
+    } while(!server_blocked && num_attempted_negotiations < MAX_NEGOTIATION_ATTEMPTS);
 
     /* Clean up */
 

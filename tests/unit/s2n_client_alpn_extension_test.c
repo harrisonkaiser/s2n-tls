@@ -14,6 +14,7 @@
  */
 
 #include "s2n_test.h"
+
 #include "tls/extensions/s2n_client_alpn.h"
 
 int main(int argc, char **argv)

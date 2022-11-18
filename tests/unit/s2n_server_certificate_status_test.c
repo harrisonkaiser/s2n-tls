@@ -13,10 +13,10 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/extensions/s2n_server_certificate_status.h"
-
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
+
+#include "tls/extensions/s2n_server_certificate_status.h"
 
 const uint8_t ocsp_data[] = "OCSP DATA";
 struct s2n_cert_chain_and_key *chain_and_key;
@@ -35,8 +35,8 @@ int main(int argc, char **argv)
 {
     BEGIN_TEST();
 
-    EXPECT_SUCCESS(
-        s2n_test_cert_chain_and_key_new(&chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
+            S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
 
     /* should_send */
     {
@@ -160,12 +160,12 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_tls13_server_status_request_extension.send(conn, &stuffer));
 
         if (s2n_x509_ocsp_stapling_supported()) {
-            EXPECT_FAILURE_WITH_ERRNO(
-                s2n_tls13_server_status_request_extension.recv(conn, &stuffer), S2N_ERR_INVALID_OCSP_RESPONSE);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_tls13_server_status_request_extension.recv(conn, &stuffer),
+                    S2N_ERR_INVALID_OCSP_RESPONSE);
         } else {
             /* s2n_x509_validator_validate_cert_stapled_ocsp_response returns untrusted error if ocsp is not supported */
-            EXPECT_FAILURE_WITH_ERRNO(
-                s2n_tls13_server_status_request_extension.recv(conn, &stuffer), S2N_ERR_CERT_UNTRUSTED);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_tls13_server_status_request_extension.recv(conn, &stuffer),
+                    S2N_ERR_CERT_UNTRUSTED);
         }
 
         EXPECT_SUCCESS(s2n_connection_free(conn));

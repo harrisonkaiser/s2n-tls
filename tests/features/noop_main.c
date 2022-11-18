@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-int main()
-{
+int main() {
     return 0;
 }

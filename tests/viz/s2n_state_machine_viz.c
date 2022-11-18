@@ -13,8 +13,8 @@
  * permissions and limitations under the License.
  */
 
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "tls/s2n_handshake_io.c"
 
@@ -25,8 +25,7 @@ struct state {
     int children[MAX_STATE_TYPE];
 };
 
-int traverse_handshakes(message_type_t hs_table[S2N_HANDSHAKES_COUNT][S2N_MAX_HANDSHAKE_LENGTH], const char *version,
-    const char *destination)
+int traverse_handshakes(message_type_t hs_table[S2N_HANDSHAKES_COUNT][S2N_MAX_HANDSHAKE_LENGTH], const char *version, const char *destination)
 {
     FILE *out;
     char cmd[255];
@@ -69,13 +68,12 @@ int traverse_handshakes(message_type_t hs_table[S2N_HANDSHAKES_COUNT][S2N_MAX_HA
         }
     }
 
-/* find associated descendents of this node */
-#define print_children(state)                                       \
-    for (int c = 0; c < MAX_STATE_TYPE; c++) {                      \
-        if (!state.children[c])                                     \
-            continue;                                               \
-        fprintf(out, "    %s -> %s\n", state.name, states[c].name); \
-    }
+    /* find associated descendents of this node */
+    #define print_children(state) \
+        for (int c = 0; c < MAX_STATE_TYPE; c++) { \
+            if (!state.children[c]) continue; \
+            fprintf(out, "    %s -> %s\n", state.name, states[c].name); \
+        }
 
     /* produce dot format header */
     fprintf(out, "digraph G {\n");

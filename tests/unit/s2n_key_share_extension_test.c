@@ -13,14 +13,16 @@
  * permissions and limitations under the License.
  */
 
+#include "s2n_test.h"
+
 #include <stdint.h>
 
-#include "crypto/s2n_ecc_evp.h"
-#include "s2n_test.h"
-#include "stuffer/s2n_stuffer.h"
-#include "testlib/s2n_testlib.h"
-#include "tls/extensions/s2n_key_share.h"
 #include "tls/s2n_tls.h"
+#include "tls/extensions/s2n_key_share.h"
+#include "crypto/s2n_ecc_evp.h"
+
+#include "testlib/s2n_testlib.h"
+#include "stuffer/s2n_stuffer.h"
 #include "utils/s2n_safety.h"
 
 int main(int argc, char **argv)
@@ -53,7 +55,10 @@ int main(int argc, char **argv)
 
         struct s2n_ecc_evp_params ecc_evp_params;
         const struct s2n_ecc_named_curve bad_curve = {
-            .iana_id = 12345, .libcrypto_nid = 0, .name = test_curve->name, .share_size = test_curve->share_size
+            .iana_id = 12345,
+            .libcrypto_nid = 0,
+            .name = test_curve->name,
+            .share_size = test_curve->share_size
         };
 
         ecc_evp_params.negotiated_curve = &bad_curve;

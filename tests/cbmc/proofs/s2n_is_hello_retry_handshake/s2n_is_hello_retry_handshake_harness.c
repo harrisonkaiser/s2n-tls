@@ -13,8 +13,9 @@
  * permissions and limitations under the License.
  */
 
-#include <assert.h>
 #include <tls/s2n_connection.h>
+
+#include <assert.h>
 
 void s2n_is_hello_retry_handshake_harness()
 {
@@ -26,6 +27,5 @@ void s2n_is_hello_retry_handshake_harness()
 
     /* Post-conditions. */
     assert(S2N_IMPLIES(s2n_connection_get_protocol_version(s2n_connection) >= S2N_TLS13
-            && (s2n_connection->handshake.handshake_type & HELLO_RETRY_REQUEST),
-        is_hello_retry_handshake));
+                       && (s2n_connection->handshake.handshake_type & HELLO_RETRY_REQUEST), is_hello_retry_handshake));
 }

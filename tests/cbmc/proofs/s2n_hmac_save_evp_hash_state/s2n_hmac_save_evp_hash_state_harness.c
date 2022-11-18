@@ -13,10 +13,11 @@
  * permissions and limitations under the License.
  */
 
-#include <assert.h>
 #include <cbmc_proof/make_common_datastructures.h>
 
 #include "crypto/s2n_hmac.h"
+
+#include <assert.h>
 
 void s2n_hmac_save_evp_hash_state_harness()
 {

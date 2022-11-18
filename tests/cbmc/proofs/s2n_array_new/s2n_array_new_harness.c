@@ -13,10 +13,11 @@
  * permissions and limitations under the License.
  */
 
-#include <assert.h>
+#include "utils/s2n_array.h"
+
 #include <cbmc_proof/make_common_datastructures.h>
 
-#include "utils/s2n_array.h"
+#include <assert.h>
 
 void s2n_array_new_harness()
 {

@@ -13,10 +13,13 @@
  * permissions and limitations under the License.
  */
 
-#include "api/s2n.h"
-#include "error/s2n_errno.h"
 #include "s2n_test.h"
+
+#include "api/s2n.h"
+
 #include "testlib/s2n_testlib.h"
+
+#include "error/s2n_errno.h"
 
 int main(void)
 {

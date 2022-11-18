@@ -16,17 +16,18 @@
 /* Target Functions: s2n_tls13_cert_verify_recv s2n_get_and_validate_negotiated_signature_scheme
                      s2n_tls13_cert_read_and_verify_signature */
 
-#include <openssl/crypto.h>
-#include <openssl/err.h>
 #include <stdint.h>
 
+#include <openssl/crypto.h>
+#include <openssl/err.h>
+
 #include "api/s2n.h"
-#include "s2n_test.h"
 #include "stuffer/s2n_stuffer.h"
-#include "testlib/s2n_testlib.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_tls.h"
 #include "utils/s2n_safety.h"
+#include "s2n_test.h"
+#include "testlib/s2n_testlib.h"
 
 uint8_t *cert_chain = NULL;
 uint8_t *private_key = NULL;
@@ -46,12 +47,9 @@ int s2n_fuzz_init(int *argc, char **argv[])
     POSIX_ENSURE_REF(default_cert);
     conn_config = s2n_config_new();
     POSIX_ENSURE_REF(conn_config);
-    POSIX_GUARD(
-        s2n_read_test_pem_and_len(S2N_DEFAULT_TEST_CERT_CHAIN, cert_chain, &cert_chain_len, S2N_MAX_TEST_PEM_SIZE));
-    POSIX_GUARD(
-        s2n_read_test_pem_and_len(S2N_DEFAULT_TEST_PRIVATE_KEY, private_key, &private_key_len, S2N_MAX_TEST_PEM_SIZE));
-    POSIX_GUARD(
-        s2n_cert_chain_and_key_load_pem_bytes(default_cert, cert_chain, cert_chain_len, private_key, private_key_len));
+    POSIX_GUARD(s2n_read_test_pem_and_len(S2N_DEFAULT_TEST_CERT_CHAIN, cert_chain, &cert_chain_len, S2N_MAX_TEST_PEM_SIZE));
+    POSIX_GUARD(s2n_read_test_pem_and_len(S2N_DEFAULT_TEST_PRIVATE_KEY, private_key, &private_key_len, S2N_MAX_TEST_PEM_SIZE));
+    POSIX_GUARD(s2n_cert_chain_and_key_load_pem_bytes(default_cert, cert_chain, cert_chain_len, private_key, private_key_len));
     POSIX_GUARD(s2n_config_add_cert_chain_and_key_to_store(conn_config, default_cert));
 
     return S2N_SUCCESS;

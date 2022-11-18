@@ -13,16 +13,15 @@
  * permissions and limitations under the License.
  */
 
-void swap(int *__restrict__ left, int *__restrict__ right)
-{
+void swap(int *__restrict__ left, int *__restrict__ right) {
     int temp = *left;
     *left = *right;
     *right = temp;
 }
 
-int main()
-{
+int main() {
     int a = 1, b = 2;
     swap(&a, &b);
     return 0;
 }
+

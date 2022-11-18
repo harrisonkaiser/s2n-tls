@@ -13,9 +13,11 @@
  * permissions and limitations under the License.
  */
 
+
 #include <errno.h>
 
 #include "api/s2n.h"
+
 #include "s2n_test.h"
 #include "tls/s2n_connection.h"
 

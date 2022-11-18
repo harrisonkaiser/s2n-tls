@@ -13,14 +13,14 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/s2n_security_policies.h"
-
-#include "crypto/s2n_rsa_signing.h"
-#include "pq-crypto/s2n_pq.h"
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
-#include "tls/s2n_kem.h"
+
+#include "crypto/s2n_rsa_signing.h"
+#include "tls/s2n_security_policies.h"
 #include "tls/s2n_signature_algorithms.h"
+#include "tls/s2n_kem.h"
+#include "pq-crypto/s2n_pq.h"
 
 int main(int argc, char **argv)
 {
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
             EXPECT_TRUE(security_policy->kem_preferences->tls13_kem_group_count <= S2N_SUPPORTED_KEM_GROUPS_COUNT);
 
             /* Ensure all TLS 1.3 KEM groups in all policies are in the global list of all supported KEM groups */
-            for (size_t i = 0; i < security_policy->kem_preferences->tls13_kem_group_count; i++) {
+            for(size_t i = 0; i < security_policy->kem_preferences->tls13_kem_group_count; i++) {
                 const struct s2n_kem_group *kem_group = security_policy->kem_preferences->tls13_kem_groups[i];
 
                 bool kem_group_is_supported = false;
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
         /* TLS 1.3 Cipher suites have TLS 1.3 Signature Algorithms Test */
         bool has_tls_13_cipher = false;
-        for (size_t i = 0; i < security_policy->cipher_preferences->count; i++) {
+        for(size_t i = 0; i < security_policy->cipher_preferences->count; i++){
             if (security_policy->cipher_preferences->suites[i]->minimum_required_tls_version == S2N_TLS13) {
                 has_tls_13_cipher = true;
                 break;
@@ -66,26 +66,24 @@ int main(int argc, char **argv)
             /* Validate that s2n_tls13_default_sig_scheme() is successful on all TLS 1.3 Security Policies for all
              * TLS 1.3 Ciphers */
             {
-                struct s2n_cipher_suite tls_13_ciphers[] = { s2n_tls13_aes_128_gcm_sha256, s2n_tls13_aes_256_gcm_sha384,
-                    s2n_tls13_chacha20_poly1305_sha256 };
+                struct s2n_cipher_suite tls_13_ciphers[] = { s2n_tls13_aes_128_gcm_sha256,
+                                                             s2n_tls13_aes_256_gcm_sha384,
+                                                             s2n_tls13_chacha20_poly1305_sha256 };
 
-                for (size_t i = 0; i < s2n_array_len(tls_13_ciphers); i++) {
+                for (size_t i = 0; i < s2n_array_len(tls_13_ciphers); i ++) {
                     struct s2n_config *config = s2n_config_new();
                     EXPECT_NOT_NULL(config);
 
-                    if (security_policy_selection[policy_index].security_policy->minimum_protocol_version
-                        > s2n_get_highest_fully_supported_tls_version()) {
+                    if (security_policy_selection[policy_index].security_policy->minimum_protocol_version > s2n_get_highest_fully_supported_tls_version()) {
                         /* We purposefully do not allow users to configure Security Policies with a minimum allowed TLS
                          * versions that are greater than what libcrypto supports. */
-                        EXPECT_FAILURE(
-                            s2n_config_set_cipher_preferences(config, security_policy_selection[policy_index].version));
+                        EXPECT_FAILURE(s2n_config_set_cipher_preferences(config, security_policy_selection[policy_index].version));
                         EXPECT_SUCCESS(s2n_config_free(config));
                         continue;
                     }
 
                     struct s2n_cert_chain_and_key *default_cert;
-                    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-                        &default_cert, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+                    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&default_cert, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
 
                     EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(config, default_cert));
                     EXPECT_TRUE(config->is_rsa_cert_configured);
@@ -95,8 +93,7 @@ int main(int argc, char **argv)
                     EXPECT_NOT_NULL(client_conn);
                     EXPECT_NOT_NULL(server_conn);
 
-                    EXPECT_SUCCESS(
-                        s2n_config_set_cipher_preferences(config, security_policy_selection[policy_index].version));
+                    EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, security_policy_selection[policy_index].version));
                     EXPECT_SUCCESS(s2n_config_set_verification_ca_location(config, S2N_DEFAULT_TEST_CERT_CHAIN, NULL));
                     EXPECT_NOT_NULL(config->default_certs_by_type.certs[S2N_PKEY_TYPE_RSA]);
                     EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
@@ -107,7 +104,7 @@ int main(int argc, char **argv)
                     client_conn->secure->cipher_suite = &tls_13_ciphers[i];
                     server_conn->secure->cipher_suite = &tls_13_ciphers[i];
 
-                    struct s2n_signature_scheme chosen_scheme = { 0 };
+                    struct s2n_signature_scheme chosen_scheme = {0};
 
                     if (s2n_is_rsa_pss_signing_supported()) {
                         /* If RSA PSS signing is supported, then we should always be able to select a default Signature
@@ -130,26 +127,24 @@ int main(int argc, char **argv)
 
             /* Same as above test, but with ECDSA Certificates */
             {
-                struct s2n_cipher_suite tls_13_ciphers[] = { s2n_tls13_aes_128_gcm_sha256, s2n_tls13_aes_256_gcm_sha384,
-                    s2n_tls13_chacha20_poly1305_sha256 };
+                struct s2n_cipher_suite tls_13_ciphers[] = { s2n_tls13_aes_128_gcm_sha256,
+                                                             s2n_tls13_aes_256_gcm_sha384,
+                                                             s2n_tls13_chacha20_poly1305_sha256 };
 
-                for (size_t i = 0; i < s2n_array_len(tls_13_ciphers); i++) {
+                for (size_t i = 0; i < s2n_array_len(tls_13_ciphers); i ++) {
                     struct s2n_config *config = s2n_config_new();
                     EXPECT_NOT_NULL(config);
 
-                    if (security_policy_selection[policy_index].security_policy->minimum_protocol_version
-                        > s2n_get_highest_fully_supported_tls_version()) {
+                    if (security_policy_selection[policy_index].security_policy->minimum_protocol_version > s2n_get_highest_fully_supported_tls_version()) {
                         /* We purposefully do not allow users to configure Security Policies with a minimum allowed TLS
                          * Version of TLS 1.3, if TLS 1.3 algorithms aren't fully supported by the libcrypto we're using */
-                        EXPECT_FAILURE(
-                            s2n_config_set_cipher_preferences(config, security_policy_selection[policy_index].version));
+                        EXPECT_FAILURE(s2n_config_set_cipher_preferences(config, security_policy_selection[policy_index].version));
                         EXPECT_SUCCESS(s2n_config_free(config));
                         continue;
                     }
 
                     struct s2n_cert_chain_and_key *default_cert;
-                    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-                        &default_cert, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+                    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&default_cert, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
 
                     EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(config, default_cert));
                     EXPECT_FALSE(config->is_rsa_cert_configured);
@@ -159,10 +154,8 @@ int main(int argc, char **argv)
                     EXPECT_NOT_NULL(client_conn);
                     EXPECT_NOT_NULL(server_conn);
 
-                    EXPECT_SUCCESS(
-                        s2n_config_set_cipher_preferences(config, security_policy_selection[policy_index].version));
-                    EXPECT_SUCCESS(
-                        s2n_config_set_verification_ca_location(config, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, NULL));
+                    EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, security_policy_selection[policy_index].version));
+                    EXPECT_SUCCESS(s2n_config_set_verification_ca_location(config, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, NULL));
                     EXPECT_NOT_NULL(config->default_certs_by_type.certs[S2N_PKEY_TYPE_ECDSA]);
                     EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
                     EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
@@ -172,7 +165,7 @@ int main(int argc, char **argv)
                     client_conn->secure->cipher_suite = &tls_13_ciphers[i];
                     server_conn->secure->cipher_suite = &tls_13_ciphers[i];
 
-                    struct s2n_signature_scheme chosen_scheme = { 0 };
+                    struct s2n_signature_scheme chosen_scheme = {0};
 
                     /* If an ECDSA Certificate is configured, then we should always be able to pick a default Signature
                      * Scheme (even if RSA PSS is not supported by the libcrypto) */
@@ -189,7 +182,7 @@ int main(int argc, char **argv)
             bool has_tls_13_sig_alg = false;
             bool has_rsa_pss = false;
 
-            for (size_t i = 0; i < security_policy->signature_preferences->count; i++) {
+            for(size_t i = 0; i < security_policy->signature_preferences->count; i++) {
                 int min = security_policy->signature_preferences->signature_schemes[i]->minimum_protocol_version;
                 int max = security_policy->signature_preferences->signature_schemes[i]->maximum_protocol_version;
                 s2n_signature_algorithm sig_alg = security_policy->signature_preferences->signature_schemes[i]->sig_alg;
@@ -507,8 +500,7 @@ int main(int argc, char **argv)
 
         for (size_t i = 0; i < s2n_array_len(tls12_only_security_policy_strings); i++) {
             security_policy = NULL;
-            EXPECT_SUCCESS(
-                s2n_find_security_policy_from_version(tls12_only_security_policy_strings[i], &security_policy));
+            EXPECT_SUCCESS(s2n_find_security_policy_from_version(tls12_only_security_policy_strings[i], &security_policy));
             EXPECT_FALSE(s2n_security_policy_supports_tls13(security_policy));
         }
 
@@ -598,8 +590,7 @@ int main(int argc, char **argv)
         EXPECT_EQUAL(config->security_policy->cipher_preferences, &cipher_preferences_20210831);
         EXPECT_EQUAL(config->security_policy->kem_preferences, &kem_preferences_null);
         EXPECT_EQUAL(config->security_policy->signature_preferences, &s2n_signature_preferences_20200207);
-        EXPECT_EQUAL(config->security_policy->certificate_signature_preferences,
-            &s2n_certificate_signature_preferences_20201110);
+        EXPECT_EQUAL(config->security_policy->certificate_signature_preferences, &s2n_certificate_signature_preferences_20201110);
         EXPECT_EQUAL(config->security_policy->ecc_preferences, &s2n_ecc_preferences_20200310);
 
         EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, "20190801"));
@@ -692,8 +683,8 @@ int main(int argc, char **argv)
 
         EXPECT_FAILURE(s2n_config_set_cipher_preferences(config, NULL));
 
-        EXPECT_FAILURE_WITH_ERRNO(
-            s2n_config_set_cipher_preferences(config, "notathing"), S2N_ERR_INVALID_SECURITY_POLICY);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_config_set_cipher_preferences(config, "notathing"),
+                S2N_ERR_INVALID_SECURITY_POLICY);
 
         s2n_config_free(config);
     }
@@ -725,8 +716,7 @@ int main(int argc, char **argv)
         EXPECT_EQUAL(security_policy->cipher_preferences, &cipher_preferences_20210831);
         EXPECT_EQUAL(security_policy->kem_preferences, &kem_preferences_null);
         EXPECT_EQUAL(security_policy->signature_preferences, &s2n_signature_preferences_20200207);
-        EXPECT_EQUAL(
-            security_policy->certificate_signature_preferences, &s2n_certificate_signature_preferences_20201110);
+        EXPECT_EQUAL(security_policy->certificate_signature_preferences, &s2n_certificate_signature_preferences_20201110);
         EXPECT_EQUAL(security_policy->ecc_preferences, &s2n_ecc_preferences_20200310);
 
         EXPECT_SUCCESS(s2n_connection_set_cipher_preferences(conn, "20190801"));
@@ -777,8 +767,8 @@ int main(int argc, char **argv)
         EXPECT_EQUAL(security_policy->signature_preferences, &s2n_signature_preferences_20140601);
         EXPECT_EQUAL(security_policy->ecc_preferences, &s2n_ecc_preferences_20140601);
 
-        EXPECT_FAILURE_WITH_ERRNO(
-            s2n_connection_set_cipher_preferences(conn, "notathing"), S2N_ERR_INVALID_SECURITY_POLICY);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_connection_set_cipher_preferences(conn, "notathing"),
+                S2N_ERR_INVALID_SECURITY_POLICY);
 
         s2n_config_free(config);
         s2n_connection_free(conn);
@@ -792,8 +782,7 @@ int main(int argc, char **argv)
             EXPECT_NOT_NULL(security_policy->signature_preferences);
 
             for (int j = 0; j < security_policy->signature_preferences->count; j++) {
-                const struct s2n_signature_scheme *scheme =
-                    security_policy->signature_preferences->signature_schemes[j];
+                const struct s2n_signature_scheme *scheme = security_policy->signature_preferences->signature_schemes[j];
 
                 EXPECT_NOT_NULL(scheme);
 
@@ -823,7 +812,10 @@ int main(int argc, char **argv)
     /* Failure case when s2n_ecc_preference lists contains a curve not present in s2n_all_supported_curves_list */
     {
         const struct s2n_ecc_named_curve test_curve = {
-            .iana_id = 12345, .libcrypto_nid = 0, .name = "test_curve", .share_size = 0
+            .iana_id = 12345, 
+            .libcrypto_nid = 0, 
+            .name = "test_curve", 
+            .share_size = 0
         };
 
         const struct s2n_ecc_named_curve *const s2n_ecc_pref_list_test[] = {
@@ -841,11 +833,12 @@ int main(int argc, char **argv)
     /* Positive and negative cases for s2n_validate_kem_preferences() */
     {
         EXPECT_FAILURE_WITH_ERRNO(s2n_validate_kem_preferences(NULL, 0), S2N_ERR_NULL);
-        EXPECT_FAILURE_WITH_ERRNO(
-            s2n_validate_kem_preferences(&kem_preferences_null, 1), S2N_ERR_INVALID_SECURITY_POLICY);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_validate_kem_preferences(&kem_preferences_null, 1), S2N_ERR_INVALID_SECURITY_POLICY);
         EXPECT_SUCCESS(s2n_validate_kem_preferences(&kem_preferences_null, 0));
 
-        const struct s2n_kem_group *test_kem_group_list[] = { &s2n_secp256r1_kyber_512_r3 };
+        const struct s2n_kem_group *test_kem_group_list[] = {
+                &s2n_secp256r1_kyber_512_r3
+        };
 
         const struct s2n_kem_preferences invalid_kem_prefs[] = {
             {
@@ -875,12 +868,10 @@ int main(int argc, char **argv)
         };
 
         for (size_t i = 0; i < s2n_array_len(invalid_kem_prefs); i++) {
-            EXPECT_FAILURE_WITH_ERRNO(
-                s2n_validate_kem_preferences(&invalid_kem_prefs[i], 1), S2N_ERR_INVALID_SECURITY_POLICY);
+            EXPECT_FAILURE_WITH_ERRNO(s2n_validate_kem_preferences(&invalid_kem_prefs[i], 1), S2N_ERR_INVALID_SECURITY_POLICY);
         }
 
-        EXPECT_FAILURE_WITH_ERRNO(
-            s2n_validate_kem_preferences(&kem_preferences_pq_tls_1_0_2021_05, 0), S2N_ERR_INVALID_SECURITY_POLICY);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_validate_kem_preferences(&kem_preferences_pq_tls_1_0_2021_05, 0), S2N_ERR_INVALID_SECURITY_POLICY);
         EXPECT_SUCCESS(s2n_validate_kem_preferences(&kem_preferences_pq_tls_1_0_2021_05, 1));
     }
 
@@ -894,9 +885,8 @@ int main(int argc, char **argv)
             if (security_policy->certificate_signature_preferences != NULL) {
                 size_t num_rsa_pss = 0;
                 for (size_t j = 0; j < security_policy->certificate_signature_preferences->count; j++) {
-                    if (security_policy->certificate_signature_preferences->signature_schemes[j]->libcrypto_nid
-                        == NID_rsassaPss) {
-                        num_rsa_pss += 1;
+                    if (security_policy->certificate_signature_preferences->signature_schemes[j]->libcrypto_nid == NID_rsassaPss) {
+                        num_rsa_pss +=1;
                     }
                 }
                 EXPECT_TRUE(num_rsa_pss <= NUM_RSA_PSS_SCHEMES);
@@ -906,7 +896,7 @@ int main(int argc, char **argv)
 
     /* s2n_validate_certificate_signature_preferences will succeed if there are no rsa_pss schemes in the preference list */
     {
-        const struct s2n_signature_scheme *const test_sig_scheme_pref_list[] = {
+        const struct s2n_signature_scheme* const test_sig_scheme_pref_list[] = {
             &s2n_rsa_pkcs1_sha256,
         };
 
@@ -920,7 +910,7 @@ int main(int argc, char **argv)
 
     /* s2n_validate_certificate_signature_preferences will succeed if all rsa_pss schemes are included in the preference list */
     {
-        const struct s2n_signature_scheme *const test_sig_scheme_pref_list[] = {
+        const struct s2n_signature_scheme* const test_sig_scheme_pref_list[] = {
             &s2n_rsa_pss_pss_sha256,
             &s2n_rsa_pss_pss_sha384,
             &s2n_rsa_pss_pss_sha512,
@@ -939,7 +929,7 @@ int main(int argc, char **argv)
 
     /* s2n_validate_certificate_signature_preferences will fail if not all rsa_pss schemes are included in the preference list */
     {
-        const struct s2n_signature_scheme *const test_sig_scheme_pref_list[] = {
+        const struct s2n_signature_scheme* const test_sig_scheme_pref_list[] = {
             &s2n_rsa_pss_pss_sha256,
             &s2n_rsa_pss_pss_sha384,
         };
@@ -949,8 +939,7 @@ int main(int argc, char **argv)
             .signature_schemes = test_sig_scheme_pref_list,
         };
 
-        EXPECT_ERROR_WITH_ERRNO(s2n_validate_certificate_signature_preferences(&test_certificate_signature_preferences),
-            S2N_ERR_INVALID_SECURITY_POLICY);
+        EXPECT_ERROR_WITH_ERRNO(s2n_validate_certificate_signature_preferences(&test_certificate_signature_preferences), S2N_ERR_INVALID_SECURITY_POLICY);
     }
 
     END_TEST();

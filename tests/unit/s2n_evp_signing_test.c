@@ -13,14 +13,15 @@
  * permissions and limitations under the License.
  */
 
+#include "s2n_test.h"
+#include "testlib/s2n_testlib.h"
+
 #include "crypto/s2n_evp_signing.h"
 
 #include "crypto/s2n_ecdsa.h"
 #include "crypto/s2n_fips.h"
 #include "crypto/s2n_rsa_pss.h"
 #include "crypto/s2n_rsa_signing.h"
-#include "s2n_test.h"
-#include "testlib/s2n_testlib.h"
 
 /* The ecdsa sign/verify methods are static */
 #include "crypto/s2n_ecdsa.c"
@@ -29,7 +30,7 @@
 #define INPUT_DATA_SIZE 100
 #define OUTPUT_DATA_SIZE 1000
 
-#define EXPECT_PKEY_USES_EVP_SIGNING(pkey)   \
+#define EXPECT_PKEY_USES_EVP_SIGNING(pkey) \
     EXPECT_EQUAL(pkey->sign, &s2n_evp_sign); \
     EXPECT_EQUAL(pkey->verify, &s2n_evp_verify)
 
@@ -37,8 +38,9 @@ const uint8_t input_data[INPUT_DATA_SIZE] = "hello hash";
 
 static bool s2n_hash_alg_is_supported(s2n_signature_algorithm sig_alg, s2n_hash_algorithm hash_alg)
 {
-    return (hash_alg != S2N_HASH_NONE) && (hash_alg != S2N_HASH_MD5)
-        && (hash_alg != S2N_HASH_MD5_SHA1 || sig_alg == S2N_SIGNATURE_RSA);
+    return (hash_alg != S2N_HASH_NONE) &&
+           (hash_alg != S2N_HASH_MD5) &&
+           (hash_alg != S2N_HASH_MD5_SHA1 || sig_alg == S2N_SIGNATURE_RSA);
 }
 
 static S2N_RESULT s2n_test_hash_init(struct s2n_hash_state *hash_state, s2n_hash_algorithm hash_alg)
@@ -52,13 +54,14 @@ static S2N_RESULT s2n_test_hash_init(struct s2n_hash_state *hash_state, s2n_hash
 static S2N_RESULT s2n_setup_public_key(struct s2n_pkey *public_key, struct s2n_cert_chain_and_key *chain)
 {
     s2n_pkey_type pkey_type = S2N_PKEY_TYPE_UNKNOWN;
-    EXPECT_SUCCESS(s2n_asn1der_to_public_key_and_type(public_key, &pkey_type, &chain->cert_chain->head->raw));
+    EXPECT_SUCCESS(s2n_asn1der_to_public_key_and_type(public_key, &pkey_type,
+            &chain->cert_chain->head->raw));
     EXPECT_EQUAL(pkey_type, chain->cert_chain->head->pkey_type);
     return S2N_RESULT_OK;
 }
 
 static S2N_RESULT s2n_test_evp_sign(s2n_signature_algorithm sig_alg, s2n_hash_algorithm hash_alg,
-    struct s2n_pkey *private_key, struct s2n_blob *evp_signature_out)
+        struct s2n_pkey *private_key, struct s2n_blob *evp_signature_out)
 {
     DEFER_CLEANUP(struct s2n_hash_state hash_state = { 0 }, s2n_hash_free);
     RESULT_GUARD_POSIX(s2n_hash_new(&hash_state));
@@ -68,7 +71,8 @@ static S2N_RESULT s2n_test_evp_sign(s2n_signature_algorithm sig_alg, s2n_hash_al
 }
 
 static S2N_RESULT s2n_test_evp_verify(s2n_signature_algorithm sig_alg, s2n_hash_algorithm hash_alg,
-    struct s2n_pkey *public_key, struct s2n_blob *evp_signature, struct s2n_blob *expected_signature)
+        struct s2n_pkey *public_key,
+        struct s2n_blob *evp_signature, struct s2n_blob *expected_signature)
 {
     DEFER_CLEANUP(struct s2n_hash_state hash_state = { 0 }, s2n_hash_free);
     RESULT_GUARD_POSIX(s2n_hash_new(&hash_state));
@@ -107,8 +111,8 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_hash_new(&hash_state));
 
     struct s2n_cert_chain_and_key *rsa_cert_chain = NULL;
-    EXPECT_SUCCESS(
-        s2n_test_cert_chain_and_key_new(&rsa_cert_chain, S2N_RSA_2048_PKCS1_CERT_CHAIN, S2N_RSA_2048_PKCS1_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&rsa_cert_chain,
+            S2N_RSA_2048_PKCS1_CERT_CHAIN, S2N_RSA_2048_PKCS1_KEY));
 
     /* Test that unsupported hash algs are treated as invalid.
      * Later tests will ignore unsupported algs, so ensure they are actually invalid. */
@@ -123,10 +127,10 @@ int main(int argc, char **argv)
                 }
 
                 s2n_stack_blob(evp_signature, OUTPUT_DATA_SIZE, OUTPUT_DATA_SIZE);
-                EXPECT_ERROR_WITH_ERRNO(
-                    s2n_test_evp_sign(sig_alg, hash_alg, pkey, &evp_signature), S2N_ERR_HASH_INVALID_ALGORITHM);
+                EXPECT_ERROR_WITH_ERRNO(s2n_test_evp_sign(sig_alg, hash_alg, pkey, &evp_signature),
+                        S2N_ERR_HASH_INVALID_ALGORITHM);
                 EXPECT_ERROR_WITH_ERRNO(s2n_test_evp_verify(sig_alg, hash_alg, pkey, &evp_signature, &evp_signature),
-                    S2N_ERR_HASH_INVALID_ALGORITHM);
+                        S2N_ERR_HASH_INVALID_ALGORITHM);
             }
         }
     }
@@ -135,7 +139,7 @@ int main(int argc, char **argv)
     {
         s2n_signature_algorithm sig_alg = S2N_SIGNATURE_RSA;
 
-        DEFER_CLEANUP(struct s2n_pkey public_key_parsed = { 0 }, s2n_pkey_free);
+        DEFER_CLEANUP(struct s2n_pkey public_key_parsed = {0}, s2n_pkey_free);
         EXPECT_OK(s2n_setup_public_key(&public_key_parsed, rsa_cert_chain));
 
         struct s2n_pkey *private_key = rsa_cert_chain->private_key;
@@ -171,9 +175,9 @@ int main(int argc, char **argv)
         s2n_signature_algorithm sig_alg = S2N_SIGNATURE_ECDSA;
 
         struct s2n_cert_chain_and_key *ecdsa_cert_chain = NULL;
-        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-            &ecdsa_cert_chain, S2N_ECDSA_P384_PKCS1_CERT_CHAIN, S2N_ECDSA_P384_PKCS1_KEY));
-        DEFER_CLEANUP(struct s2n_pkey public_key_parsed = { 0 }, s2n_pkey_free);
+        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&ecdsa_cert_chain,
+                S2N_ECDSA_P384_PKCS1_CERT_CHAIN, S2N_ECDSA_P384_PKCS1_KEY));
+        DEFER_CLEANUP(struct s2n_pkey public_key_parsed = {0}, s2n_pkey_free);
         EXPECT_OK(s2n_setup_public_key(&public_key_parsed, ecdsa_cert_chain));
 
         struct s2n_pkey *private_key = ecdsa_cert_chain->private_key;
@@ -210,7 +214,7 @@ int main(int argc, char **argv)
     if (s2n_is_rsa_pss_signing_supported()) {
         s2n_signature_algorithm sig_alg = S2N_SIGNATURE_RSA_PSS_RSAE;
 
-        DEFER_CLEANUP(struct s2n_pkey public_key_parsed = { 0 }, s2n_pkey_free);
+        DEFER_CLEANUP(struct s2n_pkey public_key_parsed = {0}, s2n_pkey_free);
         EXPECT_OK(s2n_setup_public_key(&public_key_parsed, rsa_cert_chain));
 
         struct s2n_pkey *private_key = rsa_cert_chain->private_key;
@@ -246,9 +250,9 @@ int main(int argc, char **argv)
         s2n_signature_algorithm sig_alg = S2N_SIGNATURE_RSA_PSS_PSS;
 
         struct s2n_cert_chain_and_key *rsa_pss_cert_chain = NULL;
-        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-            &rsa_pss_cert_chain, S2N_RSA_PSS_2048_SHA256_LEAF_CERT, S2N_RSA_PSS_2048_SHA256_LEAF_KEY));
-        DEFER_CLEANUP(struct s2n_pkey public_key_parsed = { 0 }, s2n_pkey_free);
+        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&rsa_pss_cert_chain,
+                S2N_RSA_PSS_2048_SHA256_LEAF_CERT, S2N_RSA_PSS_2048_SHA256_LEAF_KEY));
+        DEFER_CLEANUP(struct s2n_pkey public_key_parsed = {0}, s2n_pkey_free);
         EXPECT_OK(s2n_setup_public_key(&public_key_parsed, rsa_pss_cert_chain));
 
         struct s2n_pkey *private_key = rsa_pss_cert_chain->private_key;

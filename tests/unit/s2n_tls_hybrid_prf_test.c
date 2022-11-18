@@ -13,16 +13,19 @@
  * permissions and limitations under the License.
  */
 
-#include <stdio.h>
+#include "s2n_test.h"
+
 #include <string.h>
+#include <stdio.h>
+
 
 #include "api/s2n.h"
-#include "s2n_test.h"
-#include "stuffer/s2n_stuffer.h"
-#include "tests/testlib/s2n_nist_kats.h"
 #include "tls/s2n_cipher_suites.h"
+
+#include "stuffer/s2n_stuffer.h"
 #include "tls/s2n_prf.h"
 #include "utils/s2n_safety.h"
+#include "tests/testlib/s2n_nist_kats.h"
 
 #define KAT_FILE_NAME "kats/hybrid_prf.kat"
 
@@ -65,8 +68,7 @@ int main(int argc, char **argv)
         uint32_t premaster_kem_secret_length = 0;
         uint32_t client_key_exchange_message_length = 0;
 
-        POSIX_GUARD(ReadHex(
-            kat_file, premaster_classic_secret, PREMASTER_CLASSIC_SECRET_LENGTH, "premaster_classic_secret = "));
+        POSIX_GUARD(ReadHex(kat_file, premaster_classic_secret, PREMASTER_CLASSIC_SECRET_LENGTH, "premaster_classic_secret = "));
 
         POSIX_GUARD(FindMarker(kat_file, "premaster_kem_secret_length = "));
         POSIX_ENSURE_GT(fscanf(kat_file, "%u", &premaster_kem_secret_length), 0);
@@ -83,18 +85,17 @@ int main(int argc, char **argv)
 
         uint8_t *client_key_exchange_message;
         POSIX_ENSURE_REF(client_key_exchange_message = malloc(client_key_exchange_message_length));
-        POSIX_GUARD(ReadHex(kat_file, client_key_exchange_message, client_key_exchange_message_length,
-            "client_key_exchange_message = "));
+        POSIX_GUARD(ReadHex(kat_file, client_key_exchange_message, client_key_exchange_message_length, "client_key_exchange_message = "));
 
         POSIX_GUARD(ReadHex(kat_file, expected_master_secret, MASTER_SECRET_LENGTH, "master_secret = "));
 
-        struct s2n_blob classic_pms = { .data = premaster_classic_secret, .size = PREMASTER_CLASSIC_SECRET_LENGTH };
-        struct s2n_blob kem_pms = { .data = premaster_kem_secret, .size = premaster_kem_secret_length };
+        struct s2n_blob classic_pms = {.data = premaster_classic_secret, .size = PREMASTER_CLASSIC_SECRET_LENGTH};
+        struct s2n_blob kem_pms = {.data = premaster_kem_secret, .size = premaster_kem_secret_length};
 
         /* In the future the hybrid_kex client_key_send (client side) and client_key_receive (server side) will concatenate the two parts */
-        DEFER_CLEANUP(struct s2n_blob combined_pms = { 0 }, s2n_free);
+        DEFER_CLEANUP(struct s2n_blob combined_pms = {0}, s2n_free);
         EXPECT_SUCCESS(s2n_alloc(&combined_pms, classic_pms.size + kem_pms.size));
-        struct s2n_stuffer combined_stuffer = { 0 };
+        struct s2n_stuffer combined_stuffer = {0};
         s2n_stuffer_init(&combined_stuffer, &combined_pms);
         s2n_stuffer_write(&combined_stuffer, &classic_pms);
         s2n_stuffer_write(&combined_stuffer, &kem_pms);
@@ -104,8 +105,7 @@ int main(int argc, char **argv)
 
         EXPECT_SUCCESS(s2n_alloc(&conn->kex_params.client_key_exchange_message, client_key_exchange_message_length));
 
-        EXPECT_MEMCPY_SUCCESS(conn->kex_params.client_key_exchange_message.data, client_key_exchange_message,
-            client_key_exchange_message_length);
+        EXPECT_MEMCPY_SUCCESS(conn->kex_params.client_key_exchange_message.data, client_key_exchange_message, client_key_exchange_message_length);
 
         EXPECT_SUCCESS(s2n_hybrid_prf_master_secret(conn, &combined_pms));
         EXPECT_BYTEARRAY_EQUAL(expected_master_secret, conn->secrets.tls12.master_secret, S2N_TLS_SECRET_LEN);
@@ -117,9 +117,7 @@ int main(int argc, char **argv)
     }
 
     if (FindMarker(kat_file, "count = ") == 0) {
-        FAIL_MSG(
-            "Found unexpected test vectors in the KAT file. Has the KAT file been changed? Did you update "
-            "NUM_TEST_VECTORS?");
+        FAIL_MSG("Found unexpected test vectors in the KAT file. Has the KAT file been changed? Did you update NUM_TEST_VECTORS?");
     }
 
     END_TEST();

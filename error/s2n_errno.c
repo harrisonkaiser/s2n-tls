@@ -13,20 +13,19 @@
  * permissions and limitations under the License.
  */
 
-#include "error/s2n_errno.h"
-
 #include <errno.h>
+#include <strings.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
+#include "error/s2n_errno.h"
 
 #include "api/s2n.h"
 #include "utils/s2n_map.h"
 #include "utils/s2n_safety.h"
 
 #ifdef S2N_STACKTRACE
-    #include <execinfo.h>
+#   include <execinfo.h>
 #endif
 
 __thread int s2n_errno;
@@ -288,14 +287,10 @@ static const char *no_such_error = "Internal s2n error";
     ERR_ENTRY(S2N_ERR_INTERNAL_LIBCRYPTO_ERROR, "An internal error has occurred in the libcrypto API") \
     ERR_ENTRY(S2N_ERR_NO_RENEGOTIATION, "Only secure, server-initiated renegotiation is supported") \
     ERR_ENTRY(S2N_ERR_APP_DATA_BLOCKED, "Blocked on application data during handshake") \
-    /* clang-format on */
+/* clang-format on */
 
-#define ERR_STR_CASE(ERR, str) \
-    case ERR:                  \
-        return str;
-#define ERR_NAME_CASE(ERR, str) \
-    case ERR:                   \
-        return #ERR;
+#define ERR_STR_CASE(ERR, str) case ERR: return str;
+#define ERR_NAME_CASE(ERR, str) case ERR: return #ERR;
 
 const char *s2n_strerror(int error, const char *lang)
 {
@@ -322,7 +317,7 @@ const char *s2n_strerror(int error, const char *lang)
         case S2N_ERR_T_USAGE_END:
             break;
 
-            /* No default to make compiler fail on missing values */
+        /* No default to make compiler fail on missing values */
     }
 
     return no_such_error;
@@ -345,7 +340,7 @@ const char *s2n_strerror_name(int error)
         case S2N_ERR_T_USAGE_END:
             break;
 
-            /* No default to make compiler fail on missing values */
+        /* No default to make compiler fail on missing values */
     }
 
     return no_such_error;
@@ -374,6 +369,7 @@ int s2n_error_get_type(int error)
     return (error >> S2N_ERR_NUM_VALUE_BITS);
 }
 
+
 /* https://www.gnu.org/software/libc/manual/html_node/Backtraces.html */
 static bool s_s2n_stack_traces_enabled = false;
 
@@ -390,15 +386,15 @@ int s2n_stack_traces_enabled_set(bool newval)
 
 #ifdef S2N_STACKTRACE
 
-    #define MAX_BACKTRACE_DEPTH 20
-__thread struct s2n_stacktrace tl_stacktrace = { 0 };
+#define MAX_BACKTRACE_DEPTH 20
+__thread struct s2n_stacktrace tl_stacktrace = {0};
 
 int s2n_free_stacktrace(void)
 {
     if (tl_stacktrace.trace != NULL) {
         free(tl_stacktrace.trace);
-        struct s2n_stacktrace zero_stacktrace = { 0 };
-        tl_stacktrace = zero_stacktrace;
+	struct s2n_stacktrace zero_stacktrace = {0};
+	tl_stacktrace = zero_stacktrace;
     }
     return S2N_SUCCESS;
 }
@@ -418,8 +414,7 @@ int s2n_calculate_stacktrace(void)
     return S2N_SUCCESS;
 }
 
-int s2n_get_stacktrace(struct s2n_stacktrace *trace)
-{
+int s2n_get_stacktrace(struct s2n_stacktrace *trace) {
     *trace = tl_stacktrace;
     return S2N_SUCCESS;
 }
@@ -427,15 +422,15 @@ int s2n_get_stacktrace(struct s2n_stacktrace *trace)
 int s2n_print_stacktrace(FILE *fptr)
 {
     if (!s_s2n_stack_traces_enabled) {
-        fprintf(fptr, "%s\n%s\n",
-            "NOTE: Some details are omitted, run with S2N_PRINT_STACKTRACE=1 for a verbose backtrace.",
-            "See https://github.com/aws/s2n-tls/blob/main/docs/USAGE-GUIDE.md");
+      fprintf(fptr, "%s\n%s\n",
+	      "NOTE: Some details are omitted, run with S2N_PRINT_STACKTRACE=1 for a verbose backtrace.",
+	      "See https://github.com/aws/s2n-tls/blob/main/docs/USAGE-GUIDE.md");
         return S2N_SUCCESS;
     }
 
     fprintf(fptr, "\nStacktrace is:\n");
-    for (int i = 0; i < tl_stacktrace.trace_size; ++i) {
-        fprintf(fptr, "%s\n", tl_stacktrace.trace[i]);
+    for (int i = 0; i < tl_stacktrace.trace_size; ++i){
+        fprintf(fptr, "%s\n",  tl_stacktrace.trace[i]);
     }
     return S2N_SUCCESS;
 }
@@ -448,7 +443,8 @@ int s2n_free_stacktrace(void)
 
 int s2n_calculate_stacktrace(void)
 {
-    if (!s_s2n_stack_traces_enabled) {
+    if (!s_s2n_stack_traces_enabled)
+    {
         return S2N_SUCCESS;
     }
 

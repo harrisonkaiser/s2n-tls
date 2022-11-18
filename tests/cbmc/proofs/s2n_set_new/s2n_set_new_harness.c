@@ -13,16 +13,17 @@
  * permissions and limitations under the License.
  */
 
-#include <assert.h>
+#include "utils/s2n_set.h"
+
 #include <cbmc_proof/make_common_datastructures.h>
 
-#include "utils/s2n_set.h"
+#include <assert.h>
 
 void s2n_set_new_harness()
 {
     /* Non-deterministic inputs. */
     uint32_t element_size;
-    int (*nondet_compare_ptr)(void *, void *) = nondet_bool() ? &nondet_compare : NULL;
+    int (*nondet_compare_ptr)(void*,void*) = nondet_bool() ? &nondet_compare : NULL;
 
     nondet_s2n_mem_init();
 

@@ -13,13 +13,14 @@
  * permissions and limitations under the License.
  */
 
-#include <stdio.h>
+#include "s2n_test.h"
+
 #include <string.h>
+#include <stdio.h>
 
 #include "crypto/s2n_fips.h"
-#include "s2n_test.h"
-#include "stuffer/s2n_stuffer.h"
 #include "testlib/s2n_testlib.h"
+#include "stuffer/s2n_stuffer.h"
 #include "tls/s2n_prf.h"
 
 /*
@@ -34,19 +35,17 @@
 int main(int argc, char **argv)
 {
     uint8_t master_secret_hex_pad[96];
-    char premaster_secret_hex_in[] =
-        "03009e8e006a7f1451d32164088a8cba5077d1b819160662a97e90a765cec244b5f8f98fd50cfe8e4fba97994a7a4843";
+    char premaster_secret_hex_in[] = "03009e8e006a7f1451d32164088a8cba5077d1b819160662a97e90a765cec244b5f8f98fd50cfe8e4fba97994a7a4843";
     char client_random_hex_in[] = "537fb7fdddc05090774e55f8ef8564c2b5b238819703409bfdabe14e4cf1897d";
     char server_random_hex_in[] = "537fb7fe649225c9f37904b24916452d51794b3b5735fc7e628b6090db52209f";
-    char master_secret_hex_in[] =
-        "02b811717e3aa29e6b0526d7e9ae2b74496d461564401f47498e9cdbdf54c8afa69c25a648b360de2004c74850e8f7db";
+    char master_secret_hex_in[] = "02b811717e3aa29e6b0526d7e9ae2b74496d461564401f47498e9cdbdf54c8afa69c25a648b360de2004c74850e8f7db";
 
-    struct s2n_stuffer client_random_in = { 0 };
-    struct s2n_stuffer server_random_in = { 0 };
-    struct s2n_stuffer premaster_secret_in = { 0 };
-    struct s2n_stuffer master_secret_hex_out = { 0 };
-    struct s2n_blob master_secret = { .data = master_secret_hex_pad, .size = sizeof(master_secret_hex_pad) };
-    struct s2n_blob pms = { 0 };
+    struct s2n_stuffer client_random_in = {0};
+    struct s2n_stuffer server_random_in = {0};
+    struct s2n_stuffer premaster_secret_in = {0};
+    struct s2n_stuffer master_secret_hex_out = {0};
+    struct s2n_blob master_secret = {.data = master_secret_hex_pad,.size = sizeof(master_secret_hex_pad) };
+    struct s2n_blob pms = {0};
 
     struct s2n_connection *conn = NULL;
 

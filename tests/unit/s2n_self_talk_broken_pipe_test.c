@@ -13,24 +13,25 @@
  * permissions and limitations under the License.
  */
 
-#include <stdint.h>
+#include "s2n_test.h"
+
+#include "testlib/s2n_testlib.h"
+
 #include <sys/socket.h>
 #include <sys/wait.h>
-#include <time.h>
 #include <unistd.h>
+#include <time.h>
+#include <stdint.h>
 
 #include "api/s2n.h"
-#include "s2n_test.h"
-#include "testlib/s2n_testlib.h"
+
 #include "tls/s2n_connection.h"
 #include "tls/s2n_handshake.h"
 
 #define SUPPORTED_CERTIFICATE_FORMATS (2)
 
-static const char *certificate_paths[SUPPORTED_CERTIFICATE_FORMATS] = { S2N_RSA_2048_PKCS1_CERT_CHAIN,
-    S2N_RSA_2048_PKCS8_CERT_CHAIN };
-static const char *private_key_paths[SUPPORTED_CERTIFICATE_FORMATS] = { S2N_RSA_2048_PKCS1_KEY,
-    S2N_RSA_2048_PKCS8_KEY };
+static const char *certificate_paths[SUPPORTED_CERTIFICATE_FORMATS] = { S2N_RSA_2048_PKCS1_CERT_CHAIN, S2N_RSA_2048_PKCS8_CERT_CHAIN };
+static const char *private_key_paths[SUPPORTED_CERTIFICATE_FORMATS] = { S2N_RSA_2048_PKCS1_KEY, S2N_RSA_2048_PKCS8_KEY };
 
 void mock_client(struct s2n_test_io_pair *io_pair)
 {

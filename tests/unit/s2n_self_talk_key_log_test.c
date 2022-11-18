@@ -13,14 +13,16 @@
  * permissions and limitations under the License.
  */
 
-#include "crypto/s2n_rsa_signing.h"
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
+
+#include "crypto/s2n_rsa_signing.h"
 #include "tls/s2n_key_log.h"
 
-static int s2n_test_key_log_cb(void *context, struct s2n_connection *conn, uint8_t *logline, size_t len)
+static int s2n_test_key_log_cb(void* context, struct s2n_connection *conn,
+                                   uint8_t *logline, size_t len)
 {
-    struct s2n_stuffer *stuffer = (struct s2n_stuffer *) context;
+    struct s2n_stuffer* stuffer = (struct s2n_stuffer*)context;
     POSIX_GUARD(s2n_stuffer_write_bytes(stuffer, logline, len));
     POSIX_GUARD(s2n_stuffer_write_uint8(stuffer, '\n'));
 
@@ -31,7 +33,7 @@ S2N_RESULT s2n_test_check_tls12(struct s2n_stuffer *stuffer)
 {
     size_t len = s2n_stuffer_data_available(stuffer);
     RESULT_ENSURE_GT(len, 0);
-    char *out = (char *) s2n_stuffer_raw_read(stuffer, len);
+    char *out = (char *)s2n_stuffer_raw_read(stuffer, len);
     RESULT_ENSURE_REF(out);
     /**
      * rather than writing a full parser, we'll just make sure it at least
@@ -45,7 +47,7 @@ S2N_RESULT s2n_test_check_tls13(struct s2n_stuffer *stuffer)
 {
     size_t len = s2n_stuffer_data_available(stuffer);
     RESULT_ENSURE_GT(len, 0);
-    char *out = (char *) s2n_stuffer_raw_read(stuffer, len);
+    char *out = (char *)s2n_stuffer_raw_read(stuffer, len);
     RESULT_ENSURE_REF(out);
     /**
      * rather than writing a full parser, we'll just make sure it at least
@@ -71,8 +73,8 @@ int main(int argc, char **argv)
 
         /* Setup config */
         struct s2n_cert_chain_and_key *chain_and_key;
-        EXPECT_SUCCESS(
-            s2n_test_cert_chain_and_key_new(&chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
+            S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
         struct s2n_config *client_config;
         EXPECT_NOT_NULL(client_config = s2n_config_new());
         EXPECT_SUCCESS(s2n_config_set_cipher_preferences(client_config, "default"));
@@ -122,8 +124,8 @@ int main(int argc, char **argv)
 
         /* Setup config */
         struct s2n_cert_chain_and_key *chain_and_key;
-        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-            &chain_and_key, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
+            S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
         struct s2n_config *client_config;
         EXPECT_NOT_NULL(client_config = s2n_config_new());
         EXPECT_SUCCESS(s2n_config_set_cipher_preferences(client_config, "default_tls13"));
@@ -169,7 +171,7 @@ int main(int argc, char **argv)
         uint8_t bytes[256] = { 0 };
 
         for (size_t idx = 0; idx < sizeof(bytes); idx++) {
-            bytes[idx] = (uint8_t) idx;
+            bytes[idx] = (uint8_t)idx;
         }
 
         DEFER_CLEANUP(struct s2n_stuffer encoded, s2n_stuffer_free);

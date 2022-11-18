@@ -14,8 +14,7 @@
  */
 
 #include <openssl/evp.h>
-int main()
-{
+int main() {
     EVP_md5_sha1();
     return 0;
 }

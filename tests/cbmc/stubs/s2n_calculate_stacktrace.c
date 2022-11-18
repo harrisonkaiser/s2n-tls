@@ -17,7 +17,4 @@
 
 #include "api/s2n.h"
 
-int s2n_calculate_stacktrace()
-{
-    return nondet_bool() ? S2N_SUCCESS : S2N_FAILURE;
-}
+int s2n_calculate_stacktrace() { return nondet_bool() ? S2N_SUCCESS : S2N_FAILURE; }

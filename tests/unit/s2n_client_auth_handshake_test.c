@@ -13,29 +13,33 @@
  * permissions and limitations under the License.
  */
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include "s2n_test.h"
+
+#include "testlib/s2n_testlib.h"
+#include "tls/s2n_tls13.h"
+
 #include <unistd.h>
+#include <stdint.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <stdlib.h>
 
 #include "api/s2n.h"
+
 #include "crypto/s2n_fips.h"
-#include "s2n_test.h"
-#include "testlib/s2n_testlib.h"
-#include "tls/s2n_cipher_preferences.h"
-#include "tls/s2n_cipher_suites.h"
+
 #include "tls/s2n_connection.h"
 #include "tls/s2n_handshake.h"
-#include "tls/s2n_tls13.h"
+#include "tls/s2n_cipher_preferences.h"
+#include "tls/s2n_cipher_suites.h"
 #include "utils/s2n_safety.h"
 
 /* To get access to the static functions / variables we need to test */
 #include "tls/s2n_handshake_io.c"
 #include "tls/s2n_tls13_handshake.c"
 
-int s2n_test_client_auth_negotiation(struct s2n_config *server_config, struct s2n_config *client_config,
-    struct s2n_cert_chain_and_key *ecdsa_cert, bool no_cert)
+
+int s2n_test_client_auth_negotiation(struct s2n_config *server_config, struct s2n_config *client_config, struct s2n_cert_chain_and_key *ecdsa_cert, bool no_cert)
 {
     /* Set up client and server connections */
     struct s2n_connection *client_conn;
@@ -244,11 +248,9 @@ int s2n_test_client_auth_message_by_message(bool no_cert)
     EXPECT_SUCCESS(s2n_handshake_write_io(client_conn));
 
     if (no_cert) {
-        EXPECT_EQUAL(client_conn->handshake.handshake_type,
-            NEGOTIATED | FULL_HANDSHAKE | CLIENT_AUTH | NO_CLIENT_CERT | MIDDLEBOX_COMPAT);
+        EXPECT_EQUAL(client_conn->handshake.handshake_type, NEGOTIATED | FULL_HANDSHAKE | CLIENT_AUTH | NO_CLIENT_CERT | MIDDLEBOX_COMPAT);
     } else {
-        EXPECT_EQUAL(
-            client_conn->handshake.handshake_type, NEGOTIATED | FULL_HANDSHAKE | CLIENT_AUTH | MIDDLEBOX_COMPAT);
+        EXPECT_EQUAL(client_conn->handshake.handshake_type, NEGOTIATED | FULL_HANDSHAKE | CLIENT_AUTH | MIDDLEBOX_COMPAT);
 
         /* Client sends CertVerify */
         EXPECT_EQUAL(s2n_conn_get_current_message_type(client_conn), CLIENT_CERT_VERIFY);
@@ -269,11 +271,9 @@ int s2n_test_client_auth_message_by_message(bool no_cert)
     EXPECT_SUCCESS(s2n_handshake_read_io(server_conn));
 
     if (no_cert) {
-        EXPECT_EQUAL(server_conn->handshake.handshake_type,
-            NEGOTIATED | FULL_HANDSHAKE | CLIENT_AUTH | NO_CLIENT_CERT | MIDDLEBOX_COMPAT);
+        EXPECT_EQUAL(server_conn->handshake.handshake_type, NEGOTIATED | FULL_HANDSHAKE | CLIENT_AUTH | NO_CLIENT_CERT | MIDDLEBOX_COMPAT);
     } else {
-        EXPECT_EQUAL(
-            server_conn->handshake.handshake_type, NEGOTIATED | FULL_HANDSHAKE | CLIENT_AUTH | MIDDLEBOX_COMPAT);
+        EXPECT_EQUAL(server_conn->handshake.handshake_type, NEGOTIATED | FULL_HANDSHAKE | CLIENT_AUTH | MIDDLEBOX_COMPAT);
 
         /* Server reads CertVerify */
         EXPECT_EQUAL(s2n_conn_get_current_message_type(server_conn), CLIENT_CERT_VERIFY);
@@ -332,20 +332,17 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_config_set_cipher_preferences(server_config, "20190801"));
         EXPECT_SUCCESS(s2n_config_set_cipher_preferences(client_config, "20190801"));
 
-        EXPECT_SUCCESS(s2n_read_test_pem_and_len(
-            S2N_ECDSA_P384_PKCS1_CERT_CHAIN, cert_chain_pem, &cert_chain_len, S2N_MAX_TEST_PEM_SIZE));
-        EXPECT_SUCCESS(s2n_read_test_pem_and_len(
-            S2N_ECDSA_P384_PKCS1_KEY, private_key_pem, &private_key_len, S2N_MAX_TEST_PEM_SIZE));
+        EXPECT_SUCCESS(s2n_read_test_pem_and_len(S2N_ECDSA_P384_PKCS1_CERT_CHAIN, cert_chain_pem, &cert_chain_len, S2N_MAX_TEST_PEM_SIZE));
+        EXPECT_SUCCESS(s2n_read_test_pem_and_len(S2N_ECDSA_P384_PKCS1_KEY, private_key_pem, &private_key_len, S2N_MAX_TEST_PEM_SIZE));
         EXPECT_NOT_NULL(ecdsa_cert = s2n_cert_chain_and_key_new());
-        EXPECT_SUCCESS(s2n_cert_chain_and_key_load_pem_bytes(
-            ecdsa_cert, cert_chain_pem, cert_chain_len, private_key_pem, private_key_len));
+        EXPECT_SUCCESS(s2n_cert_chain_and_key_load_pem_bytes(ecdsa_cert, cert_chain_pem, cert_chain_len, private_key_pem, private_key_len));
         EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(server_config, ecdsa_cert));
 
         EXPECT_SUCCESS(s2n_config_set_verification_ca_location(client_config, S2N_ECDSA_P384_PKCS1_CERT_CHAIN, NULL));
 
         /* client_auth with no cert */
         EXPECT_SUCCESS(s2n_test_client_auth_negotiation(server_config, client_config, ecdsa_cert, 1));
-
+        
         /* client_auth with cert */
         EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(client_config, ecdsa_cert));
         EXPECT_SUCCESS(s2n_test_client_auth_negotiation(server_config, client_config, ecdsa_cert, 0));

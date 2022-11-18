@@ -26,8 +26,7 @@ static int s2n_wipe_alpn_ext(struct s2n_connection *conn, void *ctx)
     struct s2n_client_hello *client_hello = s2n_connection_get_client_hello(conn);
     POSIX_ENSURE_REF(client_hello);
     s2n_parsed_extension *parsed_extension = NULL;
-    POSIX_GUARD(
-        s2n_client_hello_get_parsed_extension(S2N_EXTENSION_ALPN, &client_hello->extensions, &parsed_extension));
+    POSIX_GUARD(s2n_client_hello_get_parsed_extension(S2N_EXTENSION_ALPN, &client_hello->extensions, &parsed_extension));
     POSIX_ENSURE_REF(parsed_extension);
     POSIX_GUARD(s2n_blob_zero(&parsed_extension->extension));
 
@@ -53,8 +52,7 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_config_set_unsafe_for_testing(config));
     EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, "default"));
     struct s2n_cert_chain_and_key *chain_and_key = NULL;
-    EXPECT_SUCCESS(
-        s2n_test_cert_chain_and_key_new(&chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
     EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(config, chain_and_key));
     EXPECT_SUCCESS(s2n_config_set_protocol_preferences(config, protocols, protocols_count));
     config->npn_supported = true;

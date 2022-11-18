@@ -1,11 +1,9 @@
-#include "kyber512r3_poly.h"
-
 #include <stdint.h>
-
-#include "kyber512r3_cbd.h"
-#include "kyber512r3_ntt.h"
 #include "kyber512r3_params.h"
+#include "kyber512r3_poly.h"
+#include "kyber512r3_ntt.h"
 #include "kyber512r3_reduce.h"
+#include "kyber512r3_cbd.h"
 #include "kyber512r3_symmetric.h"
 
 S2N_ENSURE_PORTABLE_OPTIMIZATIONS
@@ -19,8 +17,7 @@ S2N_ENSURE_PORTABLE_OPTIMIZATIONS
 *                            (of length S2N_KYBER_512_R3_POLYCOMPRESSEDBYTES)
 *              - poly *a:    pointer to input polynomial
 **************************************************/
-void poly_compress(uint8_t r[S2N_KYBER_512_R3_POLYCOMPRESSEDBYTES], poly *a)
-{
+void poly_compress(uint8_t r[S2N_KYBER_512_R3_POLYCOMPRESSEDBYTES], poly *a) {
     unsigned int i, j;
     uint8_t t[8];
 
@@ -28,7 +25,7 @@ void poly_compress(uint8_t r[S2N_KYBER_512_R3_POLYCOMPRESSEDBYTES], poly *a)
 
     for (i = 0; i < S2N_KYBER_512_R3_N / 8; i++) {
         for (j = 0; j < 8; j++) {
-            t[j] = ((((uint16_t) a->coeffs[8 * i + j] << 4) + S2N_KYBER_512_R3_Q / 2) / S2N_KYBER_512_R3_Q) & 15;
+            t[j] = ((((uint16_t)a->coeffs[8 * i + j] << 4) + S2N_KYBER_512_R3_Q / 2) / S2N_KYBER_512_R3_Q) & 15;
         }
 
         r[0] = t[0] | (t[1] << 4);
@@ -49,13 +46,12 @@ void poly_compress(uint8_t r[S2N_KYBER_512_R3_POLYCOMPRESSEDBYTES], poly *a)
 *              - const uint8_t *a: pointer to input byte array
 *                                  (of length S2N_KYBER_512_R3_POLYCOMPRESSEDBYTES bytes)
 **************************************************/
-void poly_decompress(poly *r, const uint8_t a[S2N_KYBER_512_R3_POLYCOMPRESSEDBYTES])
-{
+void poly_decompress(poly *r, const uint8_t a[S2N_KYBER_512_R3_POLYCOMPRESSEDBYTES]) {
     unsigned int i;
 
     for (i = 0; i < S2N_KYBER_512_R3_N / 2; i++) {
-        r->coeffs[2 * i + 0] = (((uint16_t) (a[0] & 15) * S2N_KYBER_512_R3_Q) + 8) >> 4;
-        r->coeffs[2 * i + 1] = (((uint16_t) (a[0] >> 4) * S2N_KYBER_512_R3_Q) + 8) >> 4;
+        r->coeffs[2 * i + 0] = (((uint16_t)(a[0] & 15) * S2N_KYBER_512_R3_Q) + 8) >> 4;
+        r->coeffs[2 * i + 1] = (((uint16_t)(a[0] >> 4) * S2N_KYBER_512_R3_Q) + 8) >> 4;
         a += 1;
     }
 }
@@ -69,8 +65,7 @@ void poly_decompress(poly *r, const uint8_t a[S2N_KYBER_512_R3_POLYCOMPRESSEDBYT
 *                            (needs space for S2N_KYBER_512_R3_POLYBYTES bytes)
 *              - poly *a:    pointer to input polynomial
 **************************************************/
-void poly_tobytes(uint8_t r[S2N_KYBER_512_R3_POLYBYTES], poly *a)
-{
+void poly_tobytes(uint8_t r[S2N_KYBER_512_R3_POLYBYTES], poly *a) {
     unsigned int i;
 
     poly_csubq(a);
@@ -94,12 +89,11 @@ void poly_tobytes(uint8_t r[S2N_KYBER_512_R3_POLYBYTES], poly *a)
 *              - const uint8_t *a: pointer to input byte array
 *                                  (of S2N_KYBER_512_R3_POLYBYTES bytes)
 **************************************************/
-void poly_frombytes(poly *r, const uint8_t a[S2N_KYBER_512_R3_POLYBYTES])
-{
+void poly_frombytes(poly *r, const uint8_t a[S2N_KYBER_512_R3_POLYBYTES]) {
     unsigned int i;
     for (i = 0; i < S2N_KYBER_512_R3_N / 2; i++) {
-        r->coeffs[2 * i] = ((a[3 * i + 0] >> 0) | ((uint16_t) a[3 * i + 1] << 8)) & 0xFFF;
-        r->coeffs[2 * i + 1] = ((a[3 * i + 1] >> 4) | ((uint16_t) a[3 * i + 2] << 4)) & 0xFFF;
+        r->coeffs[2 * i]   = ((a[3 * i + 0] >> 0) | ((uint16_t)a[3 * i + 1] << 8)) & 0xFFF;
+        r->coeffs[2 * i + 1] = ((a[3 * i + 1] >> 4) | ((uint16_t)a[3 * i + 2] << 4)) & 0xFFF;
     }
 }
 
@@ -111,14 +105,13 @@ void poly_frombytes(poly *r, const uint8_t a[S2N_KYBER_512_R3_POLYBYTES])
 * Arguments:   - poly *r:            pointer to output polynomial
 *              - const uint8_t *msg: pointer to input message
 **************************************************/
-void poly_frommsg(poly *r, const uint8_t msg[S2N_KYBER_512_R3_INDCPA_MSGBYTES])
-{
+void poly_frommsg(poly *r, const uint8_t msg[S2N_KYBER_512_R3_INDCPA_MSGBYTES]) {
     unsigned int i, j;
     int16_t mask;
 
     for (i = 0; i < S2N_KYBER_512_R3_N / 8; i++) {
         for (j = 0; j < 8; j++) {
-            mask = -(int16_t) ((msg[i] >> j) & 1);
+            mask = -(int16_t)((msg[i] >> j) & 1);
             r->coeffs[8 * i + j] = mask & ((S2N_KYBER_512_R3_Q + 1) / 2);
         }
     }
@@ -132,8 +125,7 @@ void poly_frommsg(poly *r, const uint8_t msg[S2N_KYBER_512_R3_INDCPA_MSGBYTES])
 * Arguments:   - uint8_t *msg: pointer to output message
 *              - poly *a:      pointer to input polynomial
 **************************************************/
-void poly_tomsg(uint8_t msg[S2N_KYBER_512_R3_INDCPA_MSGBYTES], poly *a)
-{
+void poly_tomsg(uint8_t msg[S2N_KYBER_512_R3_INDCPA_MSGBYTES], poly *a) {
     unsigned int i, j;
     uint16_t t;
 
@@ -142,7 +134,7 @@ void poly_tomsg(uint8_t msg[S2N_KYBER_512_R3_INDCPA_MSGBYTES], poly *a)
     for (i = 0; i < S2N_KYBER_512_R3_N / 8; i++) {
         msg[i] = 0;
         for (j = 0; j < 8; j++) {
-            t = ((((uint16_t) a->coeffs[8 * i + j] << 1) + S2N_KYBER_512_R3_Q / 2) / S2N_KYBER_512_R3_Q) & 1;
+            t = ((((uint16_t)a->coeffs[8 * i + j] << 1) + S2N_KYBER_512_R3_Q / 2) / S2N_KYBER_512_R3_Q) & 1;
             msg[i] |= t << j;
         }
     }
@@ -160,8 +152,7 @@ void poly_tomsg(uint8_t msg[S2N_KYBER_512_R3_INDCPA_MSGBYTES], poly *a)
 *                                     (of length S2N_KYBER_512_R3_SYMBYTES bytes)
 *              - uint8_t nonce:       one-byte input nonce
 **************************************************/
-void poly_getnoise_eta1(poly *r, const uint8_t seed[S2N_KYBER_512_R3_SYMBYTES], uint8_t nonce)
-{
+void poly_getnoise_eta1(poly *r, const uint8_t seed[S2N_KYBER_512_R3_SYMBYTES], uint8_t nonce) {
     uint8_t buf[S2N_KYBER_512_R3_ETA1 * S2N_KYBER_512_R3_N / 4];
     shake256_prf(buf, sizeof(buf), seed, nonce);
     cbd_eta1(r, buf);
@@ -179,12 +170,12 @@ void poly_getnoise_eta1(poly *r, const uint8_t seed[S2N_KYBER_512_R3_SYMBYTES], 
 *                                     (of length S2N_KYBER_512_R3_SYMBYTES bytes)
 *              - uint8_t nonce:       one-byte input nonce
 **************************************************/
-void poly_getnoise_eta2(poly *r, const uint8_t seed[S2N_KYBER_512_R3_SYMBYTES], uint8_t nonce)
-{
+void poly_getnoise_eta2(poly *r, const uint8_t seed[S2N_KYBER_512_R3_SYMBYTES], uint8_t nonce) {
     uint8_t buf[S2N_KYBER_512_R3_ETA2 * S2N_KYBER_512_R3_N / 4];
     shake256_prf(buf, sizeof(buf), seed, nonce);
     cbd_eta2(r, buf);
 }
+
 
 /*************************************************
 * Name:        poly_ntt
@@ -195,8 +186,7 @@ void poly_getnoise_eta2(poly *r, const uint8_t seed[S2N_KYBER_512_R3_SYMBYTES], 
 *
 * Arguments:   - uint16_t *r: pointer to in/output polynomial
 **************************************************/
-void poly_ntt(poly *r)
-{
+void poly_ntt(poly *r) {
     ntt(r->coeffs);
     poly_reduce(r);
 }
@@ -210,8 +200,7 @@ void poly_ntt(poly *r)
 *
 * Arguments:   - uint16_t *a: pointer to in/output polynomial
 **************************************************/
-void poly_invntt_tomont(poly *r)
-{
+void poly_invntt_tomont(poly *r) {
     invntt(r->coeffs);
 }
 
@@ -224,12 +213,12 @@ void poly_invntt_tomont(poly *r)
 *              - const poly *a: pointer to first input polynomial
 *              - const poly *b: pointer to second input polynomial
 **************************************************/
-void poly_basemul_montgomery(poly *r, const poly *a, const poly *b)
-{
+void poly_basemul_montgomery(poly *r, const poly *a, const poly *b) {
     unsigned int i;
     for (i = 0; i < S2N_KYBER_512_R3_N / 4; i++) {
         basemul(&r->coeffs[4 * i], &a->coeffs[4 * i], &b->coeffs[4 * i], zetas[64 + i]);
-        basemul(&r->coeffs[4 * i + 2], &a->coeffs[4 * i + 2], &b->coeffs[4 * i + 2], -zetas[64 + i]);
+        basemul(&r->coeffs[4 * i + 2], &a->coeffs[4 * i + 2], &b->coeffs[4 * i + 2],
+                -zetas[64 + i]);
     }
 }
 
@@ -241,12 +230,11 @@ void poly_basemul_montgomery(poly *r, const poly *a, const poly *b)
 *
 * Arguments:   - poly *r: pointer to input/output polynomial
 **************************************************/
-void poly_tomont(poly *r)
-{
+void poly_tomont(poly *r) {
     unsigned int i;
     const int16_t f = (1ULL << 32) % S2N_KYBER_512_R3_Q;
     for (i = 0; i < S2N_KYBER_512_R3_N; i++) {
-        r->coeffs[i] = montgomery_reduce((int32_t) r->coeffs[i] * f);
+        r->coeffs[i] = montgomery_reduce((int32_t)r->coeffs[i] * f);
     }
 }
 
@@ -258,8 +246,7 @@ void poly_tomont(poly *r)
 *
 * Arguments:   - poly *r: pointer to input/output polynomial
 **************************************************/
-void poly_reduce(poly *r)
-{
+void poly_reduce(poly *r) {
     unsigned int i;
     for (i = 0; i < S2N_KYBER_512_R3_N; i++) {
         r->coeffs[i] = barrett_reduce(r->coeffs[i]);
@@ -275,8 +262,7 @@ void poly_reduce(poly *r)
 *
 * Arguments:   - poly *r: pointer to input/output polynomial
 **************************************************/
-void poly_csubq(poly *r)
-{
+void poly_csubq(poly *r) {
     unsigned int i;
     for (i = 0; i < S2N_KYBER_512_R3_N; i++) {
         r->coeffs[i] = csubq(r->coeffs[i]);
@@ -292,8 +278,7 @@ void poly_csubq(poly *r)
 *            - const poly *a: pointer to first input polynomial
 *            - const poly *b: pointer to second input polynomial
 **************************************************/
-void poly_add(poly *r, const poly *a, const poly *b)
-{
+void poly_add(poly *r, const poly *a, const poly *b) {
     unsigned int i;
     for (i = 0; i < S2N_KYBER_512_R3_N; i++) {
         r->coeffs[i] = a->coeffs[i] + b->coeffs[i];
@@ -309,8 +294,7 @@ void poly_add(poly *r, const poly *a, const poly *b)
 *            - const poly *a: pointer to first input polynomial
 *            - const poly *b: pointer to second input polynomial
 **************************************************/
-void poly_sub(poly *r, const poly *a, const poly *b)
-{
+void poly_sub(poly *r, const poly *a, const poly *b) {
     unsigned int i;
     for (i = 0; i < S2N_KYBER_512_R3_N; i++) {
         r->coeffs[i] = a->coeffs[i] - b->coeffs[i];

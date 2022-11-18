@@ -13,13 +13,15 @@
  * permissions and limitations under the License.
  */
 
-#include <stdio.h>
+#include "s2n_test.h"
+
 #include <string.h>
+#include <stdio.h>
 
 #include "api/s2n.h"
-#include "s2n_test.h"
-#include "stuffer/s2n_stuffer.h"
+
 #include "testlib/s2n_testlib.h"
+#include "stuffer/s2n_stuffer.h"
 /* To gain access to handshake_read and handshake_write */
 #include "tls/s2n_handshake_io.c"
 
@@ -37,11 +39,13 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_disable_tls13_in_test());
 
     S2N_BLOB_FROM_HEX(premaster_secret_in,
-        "0301bebf2a5707c7bda6bfe5a8971a351a9ebd019de412212da021fd802e03f49f231d4e959c7352679f892f9d7f9748");
-    S2N_BLOB_FROM_HEX(client_random_in, "537eefc1e720b311ff8483d057ae750a3667af9d5b496cc0d2edfb0dd309a286");
-    S2N_BLOB_FROM_HEX(server_random_in, "537eefc29f337c5eedacd00a1889b031261701872d666a74fa999dc13bcd8821");
+            "0301bebf2a5707c7bda6bfe5a8971a351a9ebd019de412212da021fd802e03f49f231d4e959c7352679f892f9d7f9748");
+    S2N_BLOB_FROM_HEX(client_random_in,
+            "537eefc1e720b311ff8483d057ae750a3667af9d5b496cc0d2edfb0dd309a286");
+    S2N_BLOB_FROM_HEX(server_random_in,
+            "537eefc29f337c5eedacd00a1889b031261701872d666a74fa999dc13bcd8821");
     S2N_BLOB_FROM_HEX(master_secret_in,
-        "c8c610686237cd024a2d8e0391f61a8a4464c2c9576ea2b5ccf3af68139ec07c6a1720097063de968f2341f77b837120");
+            "c8c610686237cd024a2d8e0391f61a8a4464c2c9576ea2b5ccf3af68139ec07c6a1720097063de968f2341f77b837120");
 
     struct s2n_connection *conn = NULL;
 
@@ -52,14 +56,12 @@ int main(int argc, char **argv)
         /* Check the most common PRF */
         conn->actual_protocol_version = S2N_TLS11;
 
-        EXPECT_MEMCPY_SUCCESS(
-            conn->secrets.tls12.rsa_premaster_secret, premaster_secret_in.data, premaster_secret_in.size);
+        EXPECT_MEMCPY_SUCCESS(conn->secrets.tls12.rsa_premaster_secret, premaster_secret_in.data, premaster_secret_in.size);
         EXPECT_MEMCPY_SUCCESS(conn->handshake_params.client_random, client_random_in.data, client_random_in.size);
         EXPECT_MEMCPY_SUCCESS(conn->handshake_params.server_random, server_random_in.data, server_random_in.size);
 
-        struct s2n_blob pms = { 0 };
-        EXPECT_SUCCESS(s2n_blob_init(
-            &pms, conn->secrets.tls12.rsa_premaster_secret, sizeof(conn->secrets.tls12.rsa_premaster_secret)));
+        struct s2n_blob pms = {0};
+        EXPECT_SUCCESS(s2n_blob_init(&pms, conn->secrets.tls12.rsa_premaster_secret, sizeof(conn->secrets.tls12.rsa_premaster_secret)));
         EXPECT_SUCCESS(s2n_tls_prf_master_secret(conn, &pms));
         EXPECT_EQUAL(memcmp(conn->secrets.tls12.master_secret, master_secret_in.data, master_secret_in.size), 0);
 
@@ -72,7 +74,8 @@ int main(int argc, char **argv)
          * extended master secret were pulled from an OpenSSL TLS1.2 EMS session
          * using the s2n_ecdhe_ecdsa_with_aes_256_gcm_sha384 ciphersuite.
          */
-        S2N_BLOB_FROM_HEX(premaster_secret, "05e12675c9264d82b53fa15d589c829af9be1ae3d881ab0b023b7b8cad8bc058");
+        S2N_BLOB_FROM_HEX(premaster_secret,
+            "05e12675c9264d82b53fa15d589c829af9be1ae3d881ab0b023b7b8cad8bc058");
 
         S2N_BLOB_FROM_HEX(hash_digest,
             "e6cbbaa03909ea387714fe70c07546086dedfcee086fd2985dfdd50924393619"
@@ -108,21 +111,19 @@ int main(int argc, char **argv)
 
         conn->secure->cipher_suite = &s2n_ecdhe_ecdsa_with_aes_256_gcm_sha384;
 
-        EXPECT_MEMCPY_SUCCESS(
-            conn->secrets.tls12.rsa_premaster_secret, premaster_secret_in.data, premaster_secret_in.size);
+        EXPECT_MEMCPY_SUCCESS(conn->secrets.tls12.rsa_premaster_secret, premaster_secret_in.data, premaster_secret_in.size);
         EXPECT_MEMCPY_SUCCESS(conn->handshake_params.client_random, client_random_in.data, client_random_in.size);
         EXPECT_MEMCPY_SUCCESS(conn->handshake_params.server_random, server_random_in.data, server_random_in.size);
 
-        struct s2n_blob pms = { 0 };
-        EXPECT_SUCCESS(s2n_blob_init(
-            &pms, conn->secrets.tls12.rsa_premaster_secret, sizeof(conn->secrets.tls12.rsa_premaster_secret)));
+        struct s2n_blob pms = {0};
+        EXPECT_SUCCESS(s2n_blob_init(&pms, conn->secrets.tls12.rsa_premaster_secret, sizeof(conn->secrets.tls12.rsa_premaster_secret)));
 
         /* Errors when handshake is not at the Client Key Exchange message */
         EXPECT_FAILURE_WITH_ERRNO(s2n_prf_calculate_master_secret(conn, &pms), S2N_ERR_SAFETY);
 
         /* Advance handshake to Client Key Exchange message */
         conn->handshake.handshake_type = NEGOTIATED | FULL_HANDSHAKE;
-        while (ACTIVE_MESSAGE(conn) != CLIENT_KEY) {
+        while(ACTIVE_MESSAGE(conn) != CLIENT_KEY) {
             conn->handshake.message_number++;
         }
 
@@ -160,8 +161,8 @@ int main(int argc, char **argv)
      */
     {
         struct s2n_cert_chain_and_key *tls12_chain_and_key = NULL;
-        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-            &tls12_chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+        EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&tls12_chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN,
+                S2N_DEFAULT_TEST_PRIVATE_KEY));
 
         struct s2n_config *config = s2n_config_new();
         EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(config, tls12_chain_and_key));
@@ -206,8 +207,7 @@ int main(int argc, char **argv)
         EXPECT_OK(s2n_prf_get_digest_for_ems(server_conn, &message, hash_alg, &digest_for_ems));
 
         /* Server reads Client Key Exchange message */
-        EXPECT_SUCCESS(
-            s2n_stuffer_rewind_read(&client_to_server, S2N_TLS_RECORD_HEADER_LENGTH + client_key_message_length));
+        EXPECT_SUCCESS(s2n_stuffer_rewind_read(&client_to_server, S2N_TLS_RECORD_HEADER_LENGTH + client_key_message_length));
         EXPECT_SUCCESS(s2n_handshake_read_io(server_conn));
 
         /* Calculate the digest message after the Server read the Client Key message */
@@ -285,27 +285,24 @@ int main(int argc, char **argv)
 
         /* PRF usable throughout connection lifecycle */
         {
-            struct s2n_blob pms = { 0 };
+            struct s2n_blob pms = {0};
             EXPECT_SUCCESS(s2n_blob_init(&pms, premaster_secret_in.data, premaster_secret_in.size));
 
             EXPECT_NOT_NULL(conn = s2n_connection_new(S2N_SERVER));
-            EXPECT_MEMCPY_SUCCESS(
-                conn->secrets.tls12.rsa_premaster_secret, premaster_secret_in.data, premaster_secret_in.size);
+            EXPECT_MEMCPY_SUCCESS(conn->secrets.tls12.rsa_premaster_secret, premaster_secret_in.data, premaster_secret_in.size);
             EXPECT_MEMCPY_SUCCESS(conn->handshake_params.client_random, client_random_in.data, client_random_in.size);
             EXPECT_MEMCPY_SUCCESS(conn->handshake_params.server_random, server_random_in.data, server_random_in.size);
             EXPECT_SUCCESS(s2n_tls_prf_master_secret(conn, &pms));
             EXPECT_EQUAL(memcmp(conn->secrets.tls12.master_secret, master_secret_in.data, master_secret_in.size), 0);
 
             EXPECT_SUCCESS(s2n_connection_free_handshake(conn));
-            EXPECT_MEMCPY_SUCCESS(
-                conn->secrets.tls12.rsa_premaster_secret, premaster_secret_in.data, premaster_secret_in.size);
+            EXPECT_MEMCPY_SUCCESS(conn->secrets.tls12.rsa_premaster_secret, premaster_secret_in.data, premaster_secret_in.size);
             EXPECT_MEMCPY_SUCCESS(conn->handshake_params.client_random, client_random_in.data, client_random_in.size);
             EXPECT_MEMCPY_SUCCESS(conn->handshake_params.server_random, server_random_in.data, server_random_in.size);
             EXPECT_FAILURE_WITH_ERRNO(s2n_tls_prf_master_secret(conn, &pms), S2N_ERR_NULL);
 
             EXPECT_SUCCESS(s2n_connection_wipe(conn));
-            EXPECT_MEMCPY_SUCCESS(
-                conn->secrets.tls12.rsa_premaster_secret, premaster_secret_in.data, premaster_secret_in.size);
+            EXPECT_MEMCPY_SUCCESS(conn->secrets.tls12.rsa_premaster_secret, premaster_secret_in.data, premaster_secret_in.size);
             EXPECT_MEMCPY_SUCCESS(conn->handshake_params.client_random, client_random_in.data, client_random_in.size);
             EXPECT_MEMCPY_SUCCESS(conn->handshake_params.server_random, server_random_in.data, server_random_in.size);
             EXPECT_SUCCESS(s2n_tls_prf_master_secret(conn, &pms));

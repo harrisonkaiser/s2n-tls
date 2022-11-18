@@ -13,24 +13,25 @@
  * permissions and limitations under the License.
  */
 
-#include <errno.h>
-#include <fcntl.h>
-#include <getopt.h>
-#include <netdb.h>
-#include <signal.h>
-#include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
+#include <netdb.h>
+#include <signal.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <getopt.h>
+#include <errno.h>
 
 #ifndef S2N_INTERN_LIBCRYPTO
-    #include <openssl/crypto.h>
-    #include <openssl/err.h>
+#include <openssl/crypto.h>
+#include <openssl/err.h>
 #endif
 
 #include "api/s2n.h"
 #include "api/unstable/npn.h"
 #include "common.h"
+
 #include "utils/s2n_safety.h"
 
 #define MAX_CERTIFICATES 50
@@ -123,6 +124,8 @@ static char default_private_key[] =
     "ggF9KQ0xWz7Km3GXv5+bwM5bcgt1A/s6sZCimXuj3Fle3RqOTF0="
     "-----END RSA PRIVATE KEY-----";
 
+
+
 void usage()
 {
     fprintf(stderr, "usage: s2nd [options] host port\n");
@@ -136,13 +139,11 @@ void usage()
     fprintf(stderr, "  --ciphers [version_string]\n");
     fprintf(stderr, "    Set the cipher preference version string. Defaults to \"default\". See USAGE-GUIDE.md\n");
     fprintf(stderr, "  --enter-fips-mode\n");
-    fprintf(
-        stderr, "    Enter libcrypto's FIPS mode. The linked version of OpenSSL must be built with the FIPS module.\n");
+    fprintf(stderr, "    Enter libcrypto's FIPS mode. The linked version of OpenSSL must be built with the FIPS module.\n");
     fprintf(stderr, "  --cert\n");
     fprintf(stderr, "    Path to a PEM encoded certificate [chain]. Option can be repeated to load multiple certs.\n");
     fprintf(stderr, "  --key\n");
-    fprintf(stderr,
-        "    Path to a PEM encoded private key that matches cert. Option can be repeated to load multiple certs.\n");
+    fprintf(stderr, "    Path to a PEM encoded private key that matches cert. Option can be repeated to load multiple certs.\n");
     fprintf(stderr, "  -m\n");
     fprintf(stderr, "  --mutualAuth\n");
     fprintf(stderr, "    Request a Client Certificate. Any RSA Certificate will be accepted.\n");
@@ -150,12 +151,8 @@ void usage()
     fprintf(stderr, "  --negotiate\n");
     fprintf(stderr, "    Only perform tls handshake and then shutdown the connection\n");
     fprintf(stderr, "  --parallelize\n");
-    fprintf(stderr,
-        "    Create a new Connection handler thread for each new connection. Useful for tests with lots of "
-        "connections.\n");
-    fprintf(stderr,
-        "    Warning: this option isn't compatible with TLS Resumption, since each thread gets its own Session "
-        "cache.\n");
+    fprintf(stderr, "    Create a new Connection handler thread for each new connection. Useful for tests with lots of connections.\n");
+    fprintf(stderr, "    Warning: this option isn't compatible with TLS Resumption, since each thread gets its own Session cache.\n");
     fprintf(stderr, "  --prefer-low-latency\n");
     fprintf(stderr, "    Prefer low latency by clamping maximum outgoing record size at 1500.\n");
     fprintf(stderr, "  --prefer-throughput\n");
@@ -167,17 +164,12 @@ void usage()
     fprintf(stderr, "  -s\n");
     fprintf(stderr, "  --self-service-blinding\n");
     fprintf(stderr, "    Don't introduce 10-30 second delays on TLS Handshake errors. \n");
-    fprintf(stderr,
-        "    Warning: this should only be used for testing since skipping blinding may allow timing side channels.\n");
+    fprintf(stderr, "    Warning: this should only be used for testing since skipping blinding may allow timing side channels.\n");
     fprintf(stderr, "  -t,--ca-file [file path]\n");
-    fprintf(stderr,
-        "    Location of trust store CA file (PEM format). If neither -t or -d are specified. System defaults will be "
-        "used.");
+    fprintf(stderr, "    Location of trust store CA file (PEM format). If neither -t or -d are specified. System defaults will be used.");
     fprintf(stderr, "    This option is only used if mutual auth is enabled.\n");
     fprintf(stderr, "  -d,--ca-dir [directory path]\n");
-    fprintf(stderr,
-        "    Directory containing hashed trusted certs. If neither -t or -d are specified. System defaults will be "
-        "used.");
+    fprintf(stderr, "    Directory containing hashed trusted certs. If neither -t or -d are specified. System defaults will be used.");
     fprintf(stderr, "    This option is only used if mutual auth is enabled.\n");
     fprintf(stderr, "  -i,--insecure\n");
     fprintf(stderr, "    Turns off certification validation altogether.\n");
@@ -195,18 +187,14 @@ void usage()
     fprintf(stderr, "    Send number of bytes in https server mode to test throughput.\n");
     fprintf(stderr, "  -L --key-log <path>\n");
     fprintf(stderr, "    Enable NSS key logging into the provided path\n");
-    fprintf(stderr,
-        "  -P --psk <psk-identity,psk-secret,psk-hmac-alg> \n"
-        "    A comma-separated list of psk parameters in this order: psk_identity, psk_secret and psk_hmac_alg.\n"
-        "    Note that the maximum number of permitted psks is 10, the psk-secret is hex-encoded, and whitespace is "
-        "not allowed before or after the commas.\n"
-        "    Ex: --psk psk_id,psk_secret,SHA256 --psk shared_id,shared_secret,SHA384.\n");
+    fprintf(stderr, "  -P --psk <psk-identity,psk-secret,psk-hmac-alg> \n"
+                    "    A comma-separated list of psk parameters in this order: psk_identity, psk_secret and psk_hmac_alg.\n"
+                    "    Note that the maximum number of permitted psks is 10, the psk-secret is hex-encoded, and whitespace is not allowed before or after the commas.\n"
+                    "    Ex: --psk psk_id,psk_secret,SHA256 --psk shared_id,shared_secret,SHA384.\n");
     fprintf(stderr, "  -E, --max-early-data \n");
     fprintf(stderr, "    Sets maximum early data allowed in session tickets. \n");
     fprintf(stderr, "  -N --npn \n");
-    fprintf(stderr,
-        "    Indicates support for the NPN extension. The '--alpn' option MUST be used with this option to signal the "
-        "protocols supported.");
+    fprintf(stderr, "    Indicates support for the NPN extension. The '--alpn' option MUST be used with this option to signal the protocols supported."); 
     fprintf(stderr, "  -h,--help\n");
     fprintf(stderr, "    Display this message and quit.\n");
 
@@ -294,35 +282,35 @@ int main(int argc, char *const *argv)
     bool npn = false;
 
     struct option long_options[] = {
-        { "ciphers", required_argument, NULL, 'c' },
-        { "enable-mfl", no_argument, NULL, 'e' },
-        { "enter-fips-mode", no_argument, NULL, 'f' },
-        { "help", no_argument, NULL, 'h' },
-        { "key", required_argument, NULL, 'k' },
-        { "prefer-low-latency", no_argument, NULL, 'l' },
-        { "mutualAuth", no_argument, NULL, 'm' },
-        { "negotiate", no_argument, NULL, 'n' },
-        { "ocsp", required_argument, NULL, 'o' },
-        { "parallelize", no_argument, &parallelize, 1 },
-        { "prefer-throughput", no_argument, NULL, 'p' },
-        { "cert", required_argument, NULL, 'r' },
-        { "self-service-blinding", no_argument, NULL, 's' },
-        { "ca-dir", required_argument, 0, 'd' },
-        { "ca-file", required_argument, 0, 't' },
-        { "insecure", no_argument, 0, 'i' },
-        { "stk-file", required_argument, 0, 'a' },
-        { "no-session-ticket", no_argument, 0, 'T' },
-        { "corked-io", no_argument, 0, 'C' },
-        { "max-conns", optional_argument, 0, 'X' },
-        { "tls13", no_argument, 0, '3' },
-        { "https-server", no_argument, 0, 'w' },
-        { "https-bench", required_argument, 0, 'b' },
-        { "alpn", required_argument, 0, 'A' },
-        { "npn", no_argument, 0, 'N' },
-        { "non-blocking", no_argument, 0, 'B' },
-        { "key-log", required_argument, 0, 'L' },
-        { "psk", required_argument, 0, 'P' },
-        { "max-early-data", required_argument, 0, 'E' },
+        {"ciphers", required_argument, NULL, 'c'},
+        {"enable-mfl", no_argument, NULL, 'e'},
+        {"enter-fips-mode", no_argument, NULL, 'f'},
+        {"help", no_argument, NULL, 'h'},
+        {"key", required_argument, NULL, 'k'},
+        {"prefer-low-latency", no_argument, NULL, 'l'},
+        {"mutualAuth", no_argument, NULL, 'm'},
+        {"negotiate", no_argument, NULL, 'n'},
+        {"ocsp", required_argument, NULL, 'o'},
+        {"parallelize", no_argument, &parallelize, 1},
+        {"prefer-throughput", no_argument, NULL, 'p'},
+        {"cert", required_argument, NULL, 'r'},
+        {"self-service-blinding", no_argument, NULL, 's'},
+        {"ca-dir", required_argument, 0, 'd'},
+        {"ca-file", required_argument, 0, 't'},
+        {"insecure", no_argument, 0, 'i'},
+        {"stk-file", required_argument, 0, 'a'},
+        {"no-session-ticket", no_argument, 0, 'T'},
+        {"corked-io", no_argument, 0, 'C'},
+        {"max-conns", optional_argument, 0, 'X'},
+        {"tls13", no_argument, 0, '3'},
+        {"https-server", no_argument, 0, 'w'},
+        {"https-bench", required_argument, 0, 'b'},
+        {"alpn", required_argument, 0, 'A'},
+        {"npn", no_argument, 0, 'N'},
+        {"non-blocking", no_argument, 0, 'B'},
+        {"key-log", required_argument, 0, 'L'},
+        {"psk", required_argument, 0, 'P'},
+        {"max-early-data", required_argument, 0, 'E'},
         /* Per getopt(3) the last element of the array has to be filled with all zeros */
         { 0 },
     };
@@ -334,119 +322,119 @@ int main(int argc, char *const *argv)
         }
 
         switch (c) {
-            case 0:
-                /* getopt_long() returns 0 if an option.flag is non-null (Eg "parallelize") */
-                break;
-            case 'C':
-                conn_settings.use_corked_io = 1;
-                break;
-            case 'c':
-                cipher_prefs = optarg;
-                break;
-            case 'e':
-                conn_settings.enable_mfl = 1;
-                break;
-            case 'f':
-                fips_mode = 1;
-                break;
-            case 'h':
-                usage();
-                break;
-            case 'k':
-                if (num_user_private_keys == MAX_CERTIFICATES) {
-                    fprintf(stderr, "Cannot support more than %d certificates!\n", MAX_CERTIFICATES);
-                    exit(1);
-                }
-                private_keys[num_user_private_keys] = load_file_to_cstring(optarg);
-                num_user_private_keys++;
-                break;
-            case 'l':
-                conn_settings.prefer_low_latency = 1;
-                break;
-            case 'm':
-                conn_settings.mutual_auth = 1;
-                break;
-            case 'n':
-                conn_settings.only_negotiate = 1;
-                break;
-            case 'o':
-                ocsp_response_file_path = optarg;
-                break;
-            case 'p':
-                conn_settings.prefer_throughput = 1;
-                break;
-            case 'r':
-                if (num_user_certificates == MAX_CERTIFICATES) {
-                    fprintf(stderr, "Cannot support more than %d certificates!\n", MAX_CERTIFICATES);
-                    exit(1);
-                }
-                certificates[num_user_certificates] = load_file_to_cstring(optarg);
-                num_user_certificates++;
-                break;
-            case 's':
-                conn_settings.self_service_blinding = 1;
-                break;
-            case 'd':
-                conn_settings.ca_dir = optarg;
-                break;
-            case 't':
-                conn_settings.ca_file = optarg;
-                break;
-            case 'i':
-                conn_settings.insecure = 1;
-                break;
-            case 'a':
-                session_ticket_key_file_path = optarg;
-                break;
-            case 'T':
-                conn_settings.session_ticket = 0;
-                break;
-            case '3':
-                /* Do nothing -- this argument is deprecated */
-                break;
-            case 'X':
-                if (optarg == NULL) {
-                    conn_settings.max_conns = 1;
-                } else {
-                    conn_settings.max_conns = atoi(optarg);
-                }
-                break;
-            case 'w':
-                fprintf(stdout, "Running s2nd in simple https server mode\n");
-                conn_settings.https_server = 1;
-                break;
-            case 'b':
-                bytes = strtoul(optarg, NULL, 10);
-                GUARD_EXIT(bytes, "https-bench bytes needs to be some positive long value.");
-                conn_settings.https_bench = bytes;
-                break;
-            case 'A':
-                alpn = optarg;
-                break;
-            case 'B':
-                non_blocking = 1;
-                break;
-            case 'L':
-                key_log_path = optarg;
-                break;
-            case 'P':
-                if (conn_settings.psk_list_len >= S2N_MAX_PSK_LIST_LENGTH) {
-                    fprintf(stderr, "Error setting psks, maximum number of psks permitted is 10.\n");
-                    exit(1);
-                }
-                conn_settings.psk_optarg_list[conn_settings.psk_list_len++] = optarg;
-                break;
-            case 'E':
-                max_early_data = atoi(optarg);
-                break;
-            case 'N':
-                npn = true;
-                break;
-            case '?':
-            default:
-                fprintf(stdout, "getopt_long returned: %d", c);
-                usage();
-                break;
+        case 0:
+            /* getopt_long() returns 0 if an option.flag is non-null (Eg "parallelize") */
+            break;
+        case 'C':
+            conn_settings.use_corked_io = 1;
+            break;
+        case 'c':
+            cipher_prefs = optarg;
+            break;
+        case 'e':
+            conn_settings.enable_mfl = 1;
+            break;
+        case 'f':
+            fips_mode = 1;
+            break;
+        case 'h':
+            usage();
+            break;
+        case 'k':
+            if (num_user_private_keys == MAX_CERTIFICATES) {
+                fprintf(stderr, "Cannot support more than %d certificates!\n", MAX_CERTIFICATES);
+                exit(1);
+            }
+            private_keys[num_user_private_keys] = load_file_to_cstring(optarg);
+            num_user_private_keys++;
+            break;
+        case 'l':
+            conn_settings.prefer_low_latency = 1;
+            break;
+        case 'm':
+            conn_settings.mutual_auth = 1;
+            break;
+        case 'n':
+            conn_settings.only_negotiate = 1;
+            break;
+        case 'o':
+            ocsp_response_file_path = optarg;
+            break;
+        case 'p':
+            conn_settings.prefer_throughput = 1;
+            break;
+        case 'r':
+            if (num_user_certificates == MAX_CERTIFICATES) {
+                fprintf(stderr, "Cannot support more than %d certificates!\n", MAX_CERTIFICATES);
+                exit(1);
+            }
+            certificates[num_user_certificates] = load_file_to_cstring(optarg);
+            num_user_certificates++;
+            break;
+        case 's':
+            conn_settings.self_service_blinding = 1;
+            break;
+        case 'd':
+            conn_settings.ca_dir = optarg;
+            break;
+        case 't':
+            conn_settings.ca_file = optarg;
+            break;
+        case 'i':
+            conn_settings.insecure = 1;
+            break;
+        case 'a':
+            session_ticket_key_file_path = optarg;
+            break;
+        case 'T':
+            conn_settings.session_ticket = 0;
+            break;
+        case '3':
+            /* Do nothing -- this argument is deprecated */
+            break;
+        case 'X':
+            if (optarg == NULL) {
+                conn_settings.max_conns = 1;
+            } else {
+                conn_settings.max_conns = atoi(optarg);
+            }
+            break;
+        case 'w':
+            fprintf(stdout, "Running s2nd in simple https server mode\n");
+            conn_settings.https_server = 1;
+            break;
+        case 'b':
+            bytes = strtoul(optarg, NULL, 10);
+            GUARD_EXIT(bytes, "https-bench bytes needs to be some positive long value.");
+            conn_settings.https_bench = bytes;
+            break;
+        case 'A':
+            alpn = optarg;
+            break;
+        case 'B':
+            non_blocking = 1;
+            break;
+        case 'L':
+            key_log_path = optarg;
+            break;
+        case 'P':
+            if (conn_settings.psk_list_len >= S2N_MAX_PSK_LIST_LENGTH) {
+                fprintf(stderr, "Error setting psks, maximum number of psks permitted is 10.\n");
+                exit(1);
+            }
+            conn_settings.psk_optarg_list[conn_settings.psk_list_len++] = optarg;
+            break;
+        case 'E':
+            max_early_data = atoi(optarg);
+            break;
+        case 'N':
+            npn = true;
+            break;
+        case '?':
+        default:
+            fprintf(stdout, "getopt_long returned: %d", c);
+            usage();
+            break;
         }
     }
 
@@ -516,19 +504,18 @@ int main(int argc, char *const *argv)
 
     if (fips_mode) {
 #ifndef S2N_INTERN_LIBCRYPTO
-    #if defined(OPENSSL_FIPS) || defined(OPENSSL_IS_AWSLC)
+#if defined(OPENSSL_FIPS) || defined(OPENSSL_IS_AWSLC)
         if (FIPS_mode_set(1) == 0) {
             unsigned long fips_rc = ERR_get_error();
             char ssl_error_buf[256]; /* Openssl claims you need no more than 120 bytes for error strings */
-            fprintf(stderr, "s2nd failed to enter FIPS mode with RC: %lu; String: %s\n", fips_rc,
-                ERR_error_string(fips_rc, ssl_error_buf));
+            fprintf(stderr, "s2nd failed to enter FIPS mode with RC: %lu; String: %s\n", fips_rc, ERR_error_string(fips_rc, ssl_error_buf));
             exit(1);
         }
         printf("s2nd entered FIPS mode\n");
-    #else
+#else
         fprintf(stderr, "Error entering FIPS mode. s2nd was not built against a FIPS-capable libcrypto.\n");
         exit(1);
-    #endif
+#endif
 #endif
     }
 
@@ -543,8 +530,7 @@ int main(int argc, char *const *argv)
     }
 
     if (num_user_certificates != num_user_private_keys) {
-        fprintf(stderr, "Mismatched certificate(%d) and private key(%d) count!\n", num_user_certificates,
-            num_user_private_keys);
+        fprintf(stderr, "Mismatched certificate(%d) and private key(%d) count!\n", num_user_certificates, num_user_private_keys);
         exit(1);
     }
 
@@ -559,8 +545,7 @@ int main(int argc, char *const *argv)
 
     for (int i = 0; i < num_certificates; i++) {
         struct s2n_cert_chain_and_key *chain_and_key = s2n_cert_chain_and_key_new();
-        GUARD_EXIT(s2n_cert_chain_and_key_load_pem(chain_and_key, certificates[i], private_keys[i]),
-            "Error getting certificate/key");
+        GUARD_EXIT(s2n_cert_chain_and_key_load_pem(chain_and_key, certificates[i], private_keys[i]), "Error getting certificate/key");
 
         if (ocsp_response_file_path) {
             int fd = open(ocsp_response_file_path, O_RDONLY);
@@ -569,7 +554,7 @@ int main(int argc, char *const *argv)
                 exit(1);
             }
 
-            struct stat st = { 0 };
+            struct stat st = {0};
             if (fstat(fd, &st) < 0) {
                 fprintf(stderr, "Error fstat-ing OCSP response file: '%s'\n", strerror(errno));
                 exit(1);
@@ -602,8 +587,7 @@ int main(int argc, char *const *argv)
 
     if (alpn) {
         const char *protocols[] = { alpn };
-        GUARD_EXIT(
-            s2n_config_set_protocol_preferences(config, protocols, s2n_array_len(protocols)), "Failed to set alpn");
+        GUARD_EXIT(s2n_config_set_protocol_preferences(config, protocols, s2n_array_len(protocols)), "Failed to set alpn");
     }
 
     if (npn) {
@@ -615,12 +599,19 @@ int main(int argc, char *const *argv)
     if (key_log_path) {
         key_log_file = fopen(key_log_path, "a");
         GUARD_EXIT(key_log_file == NULL ? S2N_FAILURE : S2N_SUCCESS, "Failed to open key log file");
-        GUARD_EXIT(s2n_config_set_key_log_cb(config, key_log_callback, (void *) key_log_file),
-            "Failed to set key log callback");
+        GUARD_EXIT(
+            s2n_config_set_key_log_cb(
+                config,
+                key_log_callback,
+                (void *)key_log_file
+            ),
+            "Failed to set key log callback"
+        );
     }
 
     int fd;
     while ((fd = accept(sockfd, ai->ai_addr, &ai->ai_addrlen)) > 0) {
+
         if (non_blocking) {
             int flags = fcntl(sockfd, F_GETFL, 0);
             if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
@@ -640,7 +631,7 @@ int main(int argc, char *const *argv)
              * unlimited connections are allow, so ignore the variable. */
             if (conn_settings.max_conns > 0) {
                 if (conn_settings.max_conns-- == 1) {
-                    GUARD_EXIT(s2n_cleanup(), "Error running s2n_cleanup()");
+                    GUARD_EXIT(s2n_cleanup(),  "Error running s2n_cleanup()");
                     exit(0);
                 }
             }
@@ -669,7 +660,7 @@ int main(int argc, char *const *argv)
         fclose(key_log_file);
     }
 
-    GUARD_EXIT(s2n_cleanup(), "Error running s2n_cleanup()");
+    GUARD_EXIT(s2n_cleanup(),  "Error running s2n_cleanup()");
 
     return 0;
 }

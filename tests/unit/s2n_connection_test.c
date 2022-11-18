@@ -13,15 +13,17 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/s2n_connection.h"
-
-#include "crypto/s2n_hash.h"
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
-#include "tls/extensions/s2n_client_server_name.h"
+
 #include "tls/extensions/s2n_extension_list.h"
+#include "tls/extensions/s2n_client_server_name.h"
+#include "tls/s2n_connection.h"
 #include "tls/s2n_internal.h"
 #include "tls/s2n_tls.h"
+
+#include "crypto/s2n_hash.h"
+
 #include "utils/s2n_socket.h"
 
 const uint8_t actual_version = 1, client_version = 2, server_version = 3;
@@ -36,9 +38,9 @@ static int s2n_set_test_protocol_versions(struct s2n_connection *conn)
 bool s2n_server_name_test_callback_flag = false;
 static int s2n_server_name_test_callback(struct s2n_connection *conn, void *ctx)
 {
-    const char *expected_server_name = *(const char **) ctx;
+    const char* expected_server_name = *(const char**) ctx;
 
-    const char *actual_server_name = NULL;
+    const char* actual_server_name = NULL;
     EXPECT_NOT_NULL(actual_server_name = s2n_get_server_name(conn));
     EXPECT_STRING_EQUAL(actual_server_name, expected_server_name);
 
@@ -47,8 +49,8 @@ static int s2n_server_name_test_callback(struct s2n_connection *conn, void *ctx)
 }
 
 S2N_RESULT s2n_test_signature_scheme_valid(s2n_tls_signature_algorithm expected_sig_alg,
-    s2n_tls_signature_algorithm server_sig_alg, s2n_tls_signature_algorithm client_sig_alg,
-    s2n_tls_hash_algorithm server_hash_alg, s2n_tls_hash_algorithm client_hash_alg)
+        s2n_tls_signature_algorithm server_sig_alg, s2n_tls_signature_algorithm client_sig_alg,
+        s2n_tls_hash_algorithm server_hash_alg, s2n_tls_hash_algorithm client_hash_alg)
 {
     /* The server and client should agree */
     RESULT_ENSURE_EQ(server_sig_alg, client_sig_alg);
@@ -69,7 +71,7 @@ S2N_RESULT s2n_test_signature_scheme_valid(s2n_tls_signature_algorithm expected_
 }
 
 S2N_RESULT s2n_test_all_signature_schemes_valid(s2n_tls_signature_algorithm expected_sig_alg,
-    struct s2n_connection *server_conn, struct s2n_connection *client_conn)
+        struct s2n_connection *server_conn, struct s2n_connection *client_conn)
 {
     s2n_tls_signature_algorithm server_sig_alg = 0, client_sig_alg = 0;
     s2n_tls_hash_algorithm server_hash_alg = 0, client_hash_alg = 0;
@@ -78,15 +80,15 @@ S2N_RESULT s2n_test_all_signature_schemes_valid(s2n_tls_signature_algorithm expe
     RESULT_GUARD_POSIX(s2n_connection_get_selected_signature_algorithm(server_conn, &server_sig_alg));
     RESULT_GUARD_POSIX(s2n_connection_get_selected_digest_algorithm(client_conn, &client_hash_alg));
     RESULT_GUARD_POSIX(s2n_connection_get_selected_digest_algorithm(server_conn, &server_hash_alg));
-    RESULT_GUARD(s2n_test_signature_scheme_valid(
-        expected_sig_alg, server_sig_alg, client_sig_alg, server_hash_alg, client_hash_alg));
+    RESULT_GUARD(s2n_test_signature_scheme_valid(expected_sig_alg,
+            server_sig_alg, client_sig_alg, server_hash_alg, client_hash_alg));
 
     RESULT_GUARD_POSIX(s2n_connection_get_selected_client_cert_signature_algorithm(client_conn, &client_sig_alg));
     RESULT_GUARD_POSIX(s2n_connection_get_selected_client_cert_signature_algorithm(server_conn, &server_sig_alg));
     RESULT_GUARD_POSIX(s2n_connection_get_selected_client_cert_digest_algorithm(client_conn, &client_hash_alg));
     RESULT_GUARD_POSIX(s2n_connection_get_selected_client_cert_digest_algorithm(server_conn, &server_hash_alg));
-    RESULT_GUARD(s2n_test_signature_scheme_valid(
-        expected_sig_alg, server_sig_alg, client_sig_alg, server_hash_alg, client_hash_alg));
+    RESULT_GUARD(s2n_test_signature_scheme_valid(expected_sig_alg,
+            server_sig_alg, client_sig_alg, server_hash_alg, client_hash_alg));
 
     return S2N_RESULT_OK;
 }
@@ -106,12 +108,12 @@ int main(int argc, char **argv)
     BEGIN_TEST();
 
     struct s2n_cert_chain_and_key *ecdsa_chain_and_key = NULL;
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
-        &ecdsa_chain_and_key, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&ecdsa_chain_and_key,
+            S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
 
     struct s2n_cert_chain_and_key *rsa_chain_and_key = NULL;
-    EXPECT_SUCCESS(
-        s2n_test_cert_chain_and_key_new(&rsa_chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&rsa_chain_and_key,
+            S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
 
     /* Test s2n_connection does not grow too much.
      * s2n_connection is a very large structure. We should be working to reduce its
@@ -130,12 +132,11 @@ int main(int argc, char **argv)
         size_t connection_size = sizeof(struct s2n_connection);
 
         if (connection_size > max_connection_size || connection_size < min_connection_size) {
-            const char message[] =
-                "s2n_connection size (%zu) no longer in (%i, %i). "
-                "Please verify that this change was intentional and then update this test.";
+            const char message[] = "s2n_connection size (%zu) no longer in (%i, %i). "
+                    "Please verify that this change was intentional and then update this test.";
             char message_buffer[sizeof(message) + 100] = { 0 };
-            int r = snprintf(message_buffer, sizeof(message_buffer), message, connection_size, min_connection_size,
-                max_connection_size);
+            int r = snprintf(message_buffer, sizeof(message_buffer), message,
+                    connection_size, min_connection_size, max_connection_size);
             EXPECT_TRUE(r < sizeof(message_buffer));
             FAIL_MSG(message_buffer);
         }
@@ -143,7 +144,7 @@ int main(int argc, char **argv)
 
     /* s2n_get_server_name */
     {
-        const char *test_server_name = "A server name";
+        const char* test_server_name = "A server name";
 
         /* Safety check */
         EXPECT_NULL(s2n_get_server_name(NULL));
@@ -164,7 +165,7 @@ int main(int argc, char **argv)
             EXPECT_NOT_NULL(conn = s2n_connection_new(S2N_CLIENT));
             EXPECT_SUCCESS(s2n_set_server_name(conn, test_server_name));
 
-            const char *actual_server_name = NULL;
+            const char* actual_server_name = NULL;
             EXPECT_NOT_NULL(actual_server_name = s2n_get_server_name(conn));
             EXPECT_STRING_EQUAL(actual_server_name, test_server_name);
 
@@ -184,11 +185,10 @@ int main(int argc, char **argv)
 
             s2n_extension_type_id extension_id;
             EXPECT_SUCCESS(s2n_extension_supported_iana_value_to_id(TLS_EXTENSION_SERVER_NAME, &extension_id));
-            server_conn->client_hello.extensions.parsed_extensions[extension_id].extension_type =
-                TLS_EXTENSION_SERVER_NAME;
+            server_conn->client_hello.extensions.parsed_extensions[extension_id].extension_type = TLS_EXTENSION_SERVER_NAME;
             server_conn->client_hello.extensions.parsed_extensions[extension_id].extension = stuffer.blob;
 
-            const char *actual_server_name = NULL;
+            const char* actual_server_name = NULL;
             EXPECT_NOT_NULL(actual_server_name = s2n_get_server_name(server_conn));
             EXPECT_STRING_EQUAL(actual_server_name, test_server_name);
 
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
 
             EXPECT_SUCCESS(s2n_client_hello_send(client_conn));
             EXPECT_SUCCESS(s2n_stuffer_copy(&client_conn->handshake.io, &server_conn->handshake.io,
-                s2n_stuffer_data_available(&client_conn->handshake.io)));
+                    s2n_stuffer_data_available(&client_conn->handshake.io)));
 
             /* This function can succeed or fail -- it doesn't affect the test. */
             s2n_client_hello_recv(server_conn);
@@ -273,9 +273,11 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_connection_get_selected_digest_algorithm(conn, &output));
         EXPECT_EQUAL(S2N_TLS_HASH_NONE, output);
 
-        s2n_tls_hash_algorithm expected_output[] = { S2N_TLS_HASH_NONE, S2N_TLS_HASH_MD5, S2N_TLS_HASH_SHA1,
-            S2N_TLS_HASH_SHA224, S2N_TLS_HASH_SHA256, S2N_TLS_HASH_SHA384, S2N_TLS_HASH_SHA512, S2N_TLS_HASH_MD5_SHA1,
-            S2N_TLS_HASH_NONE };
+        s2n_tls_hash_algorithm expected_output[] = { S2N_TLS_HASH_NONE, S2N_TLS_HASH_MD5,
+                                                     S2N_TLS_HASH_SHA1, S2N_TLS_HASH_SHA224,
+                                                     S2N_TLS_HASH_SHA256, S2N_TLS_HASH_SHA384,
+                                                     S2N_TLS_HASH_SHA512, S2N_TLS_HASH_MD5_SHA1,
+                                                     S2N_TLS_HASH_NONE };
 
         for (size_t i = S2N_TLS_HASH_NONE; i <= UINT16_MAX; i++) {
             conn->handshake_params.client_cert_sig_scheme.hash_alg = i;
@@ -317,11 +319,11 @@ int main(int argc, char **argv)
         EXPECT_EQUAL(S2N_TLS_SIGNATURE_ANONYMOUS, output);
 
         s2n_tls_signature_algorithm expected_output[] = {
-            [S2N_SIGNATURE_ANONYMOUS] = S2N_TLS_SIGNATURE_ANONYMOUS,
-            [S2N_SIGNATURE_RSA] = S2N_TLS_SIGNATURE_RSA,
-            [S2N_SIGNATURE_ECDSA] = S2N_TLS_SIGNATURE_ECDSA,
-            [S2N_SIGNATURE_RSA_PSS_RSAE] = S2N_TLS_SIGNATURE_RSA_PSS_RSAE,
-            [S2N_SIGNATURE_RSA_PSS_PSS] = S2N_TLS_SIGNATURE_RSA_PSS_PSS,
+            [ S2N_SIGNATURE_ANONYMOUS ] = S2N_TLS_SIGNATURE_ANONYMOUS,
+            [ S2N_SIGNATURE_RSA ] = S2N_TLS_SIGNATURE_RSA,
+            [ S2N_SIGNATURE_ECDSA ] = S2N_TLS_SIGNATURE_ECDSA,
+            [ S2N_SIGNATURE_RSA_PSS_RSAE ] = S2N_TLS_SIGNATURE_RSA_PSS_RSAE,
+            [ S2N_SIGNATURE_RSA_PSS_PSS ] = S2N_TLS_SIGNATURE_RSA_PSS_PSS,
         };
 
         for (size_t i = 0; i <= UINT16_MAX; i++) {
@@ -649,7 +651,8 @@ int main(int argc, char **argv)
 
     /* Test s2n_connection_get_wire_bytes_out */
     {
-        DEFER_CLEANUP(struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(conn);
         EXPECT_EQUAL(0, s2n_connection_get_wire_bytes_out(conn));
 
@@ -666,18 +669,20 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_config_set_unsafe_for_testing(config));
         EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(config, ecdsa_chain_and_key));
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
+                s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
         uint8_t app_data[100] = "hello world";
         s2n_blocked_status blocked = S2N_NOT_BLOCKED;
 
-        for (size_t i = 0; i < 10; i++) {
+        for (size_t i = 0; i < 10; i ++) {
             DEFER_CLEANUP(struct s2n_test_io_pair io_pair = { 0 }, s2n_io_pair_close);
             EXPECT_SUCCESS(s2n_io_pair_init_non_blocking(&io_pair));
             EXPECT_SUCCESS(s2n_connections_set_io_pair(client_conn, server_conn, &io_pair));
