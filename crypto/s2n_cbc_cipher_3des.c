@@ -15,20 +15,19 @@
 
 #include <openssl/evp.h>
 
-#include "error/s2n_errno.h"
-
 #include "crypto/s2n_cipher.h"
 #include "crypto/s2n_openssl.h"
-
-#include "utils/s2n_safety.h"
+#include "error/s2n_errno.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_safety.h"
 
 static uint8_t s2n_cbc_cipher_3des_available()
 {
     return (EVP_des_ede3_cbc() ? 1 : 0);
 }
 
-static int s2n_cbc_cipher_3des_encrypt(struct s2n_session_key *key, struct s2n_blob *iv, struct s2n_blob *in, struct s2n_blob *out)
+static int s2n_cbc_cipher_3des_encrypt(
+    struct s2n_session_key *key, struct s2n_blob *iv, struct s2n_blob *in, struct s2n_blob *out)
 {
     POSIX_ENSURE_GTE(out->size, in->size);
 
@@ -42,7 +41,8 @@ static int s2n_cbc_cipher_3des_encrypt(struct s2n_session_key *key, struct s2n_b
     return 0;
 }
 
-static int s2n_cbc_cipher_3des_decrypt(struct s2n_session_key *key, struct s2n_blob *iv, struct s2n_blob *in, struct s2n_blob *out)
+static int s2n_cbc_cipher_3des_decrypt(
+    struct s2n_session_key *key, struct s2n_blob *iv, struct s2n_blob *in, struct s2n_blob *out)
 {
     POSIX_ENSURE_GTE(out->size, in->size);
 
@@ -61,7 +61,8 @@ static int s2n_cbc_cipher_3des_set_decryption_key(struct s2n_session_key *key, s
     POSIX_ENSURE_EQ(in->size, 192 / 8);
 
     EVP_CIPHER_CTX_set_padding(key->evp_cipher_ctx, 0);
-    POSIX_GUARD_OSSL(EVP_DecryptInit_ex(key->evp_cipher_ctx, EVP_des_ede3_cbc(), NULL, in->data, NULL), S2N_ERR_KEY_INIT);
+    POSIX_GUARD_OSSL(
+        EVP_DecryptInit_ex(key->evp_cipher_ctx, EVP_des_ede3_cbc(), NULL, in->data, NULL), S2N_ERR_KEY_INIT);
 
     return 0;
 }
@@ -71,7 +72,8 @@ static int s2n_cbc_cipher_3des_set_encryption_key(struct s2n_session_key *key, s
     POSIX_ENSURE_EQ(in->size, 192 / 8);
 
     EVP_CIPHER_CTX_set_padding(key->evp_cipher_ctx, 0);
-    POSIX_GUARD_OSSL(EVP_EncryptInit_ex(key->evp_cipher_ctx, EVP_des_ede3_cbc(), NULL, in->data, NULL), S2N_ERR_KEY_INIT);
+    POSIX_GUARD_OSSL(
+        EVP_EncryptInit_ex(key->evp_cipher_ctx, EVP_des_ede3_cbc(), NULL, in->data, NULL), S2N_ERR_KEY_INIT);
 
     return 0;
 }
@@ -93,11 +95,10 @@ static int s2n_cbc_cipher_3des_destroy_key(struct s2n_session_key *key)
 const struct s2n_cipher s2n_3des = {
     .key_material_size = 24,
     .type = S2N_CBC,
-    .io.cbc = {
-               .block_size = 8,
-               .record_iv_size = 8,
-               .decrypt = s2n_cbc_cipher_3des_decrypt,
-               .encrypt = s2n_cbc_cipher_3des_encrypt},
+    .io.cbc = { .block_size = 8,
+        .record_iv_size = 8,
+        .decrypt = s2n_cbc_cipher_3des_decrypt,
+        .encrypt = s2n_cbc_cipher_3des_encrypt },
     .is_available = s2n_cbc_cipher_3des_available,
     .init = s2n_cbc_cipher_3des_init,
     .set_decryption_key = s2n_cbc_cipher_3des_set_decryption_key,

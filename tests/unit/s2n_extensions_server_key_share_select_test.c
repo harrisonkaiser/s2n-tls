@@ -15,13 +15,14 @@
 
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
-#include "tls/s2n_tls.h"
-#include "tls/s2n_tls13.h"
 #include "tls/extensions/s2n_server_key_share.h"
 #include "tls/s2n_security_policies.h"
+#include "tls/s2n_tls.h"
+#include "tls/s2n_tls13.h"
 
 /* These tests check the server's logic when selecting a keyshare and supporting group. */
-int main() {
+int main()
+{
     BEGIN_TEST();
 
 /* Need at least two KEM's to test fallback */
@@ -38,8 +39,7 @@ int main() {
         EXPECT_NULL(server_conn->kex_params.server_ecc_evp_params.negotiated_curve);
         EXPECT_NULL(server_conn->kex_params.server_kem_group_params.kem_group);
 
-        EXPECT_FAILURE_WITH_ERRNO(s2n_extensions_server_key_share_select(server_conn),
-                S2N_ERR_ECDHE_UNSUPPORTED_CURVE);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_extensions_server_key_share_select(server_conn), S2N_ERR_ECDHE_UNSUPPORTED_CURVE);
 
         EXPECT_NULL(server_conn->kex_params.server_ecc_evp_params.negotiated_curve);
         EXPECT_NULL(server_conn->kex_params.server_kem_group_params.kem_group);
@@ -104,30 +104,30 @@ int main() {
         EXPECT_NULL(server_conn->kex_params.server_kem_group_params.kem_group);
         EXPECT_FALSE(s2n_is_hello_retry_handshake(server_conn));
 
-        EXPECT_SUCCESS(s2n_connection_free(server_conn)); 
+        EXPECT_SUCCESS(s2n_connection_free(server_conn));
     }
 
     {
         const struct s2n_kem_group *test_kem_groups[] = {
-                &s2n_secp256r1_kyber_512_r3,
-#if EVP_APIS_SUPPORTED
-                &s2n_x25519_kyber_512_r3,
-#endif
+            &s2n_secp256r1_kyber_512_r3,
+    #if EVP_APIS_SUPPORTED
+            &s2n_x25519_kyber_512_r3,
+    #endif
         };
 
         const struct s2n_kem_preferences test_kem_pref = {
-                .kem_count = 0,
-                .kems = NULL,
-                .tls13_kem_group_count = s2n_array_len(test_kem_groups),
-                .tls13_kem_groups = test_kem_groups,
+            .kem_count = 0,
+            .kems = NULL,
+            .tls13_kem_group_count = s2n_array_len(test_kem_groups),
+            .tls13_kem_groups = test_kem_groups,
         };
 
         const struct s2n_security_policy test_security_policy = {
-                .minimum_protocol_version = S2N_SSLv3,
-                .cipher_preferences = &cipher_preferences_test_all_tls13,
-                .kem_preferences = &test_kem_pref,
-                .signature_preferences = &s2n_signature_preferences_20200207,
-                .ecc_preferences = &s2n_ecc_preferences_20200310,
+            .minimum_protocol_version = S2N_SSLv3,
+            .cipher_preferences = &cipher_preferences_test_all_tls13,
+            .kem_preferences = &test_kem_pref,
+            .signature_preferences = &s2n_signature_preferences_20200207,
+            .ecc_preferences = &s2n_ecc_preferences_20200310,
         };
 
         /* If both server_curve and server_kem_group are set (erroneous behavior), we should
@@ -149,8 +149,8 @@ int main() {
             server_conn->kex_params.server_ecc_evp_params.negotiated_curve = ecc_pref->ecc_curves[0];
             server_conn->kex_params.server_kem_group_params.kem_group = kem_pref->tls13_kem_groups[0];
 
-            EXPECT_FAILURE_WITH_ERRNO(s2n_extensions_server_key_share_select(server_conn),
-                    S2N_ERR_ECDHE_UNSUPPORTED_CURVE);
+            EXPECT_FAILURE_WITH_ERRNO(
+                s2n_extensions_server_key_share_select(server_conn), S2N_ERR_ECDHE_UNSUPPORTED_CURVE);
 
             EXPECT_FALSE(s2n_is_hello_retry_handshake(server_conn));
 
@@ -357,7 +357,8 @@ int main() {
             /* Server would have initially chosen kem_group[0] when processing the supported_groups extension */
             EXPECT_NULL(server_conn->kex_params.server_ecc_evp_params.negotiated_curve);
             struct s2n_kem_group_params *server_params = &server_conn->kex_params.server_kem_group_params;
-            const struct s2n_kem_group *kem_group0 = kem_pref->tls13_kem_groups[0];;
+            const struct s2n_kem_group *kem_group0 = kem_pref->tls13_kem_groups[0];
+            ;
             server_params->kem_group = kem_group0;
             server_params->kem_params.kem = kem_group0->kem;
             server_params->ecc_params.negotiated_curve = kem_group0->curve;
@@ -411,7 +412,8 @@ int main() {
             /* Server would have initially chosen kem_group[0] when processing the supported_groups extension */
             EXPECT_NULL(server_conn->kex_params.server_ecc_evp_params.negotiated_curve);
             struct s2n_kem_group_params *server_params = &server_conn->kex_params.server_kem_group_params;
-            const struct s2n_kem_group *kem_group0 = kem_pref->tls13_kem_groups[0];;
+            const struct s2n_kem_group *kem_group0 = kem_pref->tls13_kem_groups[0];
+            ;
             server_params->kem_group = kem_group0;
             server_params->kem_params.kem = kem_group0->kem;
             server_params->ecc_params.negotiated_curve = kem_group0->curve;

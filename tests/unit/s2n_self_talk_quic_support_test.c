@@ -15,7 +15,6 @@
 
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
-
 #include "tls/s2n_quic_support.h"
 
 #define S2N_MODE_COUNT 2
@@ -24,12 +23,11 @@
 static const uint8_t CLIENT_TRANSPORT_PARAMS[] = "client transport params";
 static const uint8_t SERVER_TRANSPORT_PARAMS[] = "server transport params";
 
-static int s2n_test_secret_handler(void* context, struct s2n_connection *conn,
-                                   s2n_secret_type_t secret_type,
-                                   uint8_t *secret, uint8_t secret_size)
+static int s2n_test_secret_handler(
+    void *context, struct s2n_connection *conn, s2n_secret_type_t secret_type, uint8_t *secret, uint8_t secret_size)
 {
     /* Verify context passed through correctly */
-    struct s2n_blob (*secrets)[S2N_SECRET_TYPE_COUNT] = context;
+    struct s2n_blob(*secrets)[S2N_SECRET_TYPE_COUNT] = context;
     EXPECT_NOT_NULL(secrets);
 
     /* Save secret for later */
@@ -57,8 +55,8 @@ int main(int argc, char **argv)
 
     /* Setup config */
     struct s2n_cert_chain_and_key *chain_and_key;
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
-            S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
+        &chain_and_key, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
     struct s2n_config *config;
     EXPECT_NOT_NULL(config = s2n_config_new());
     EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, "default_tls13"));
@@ -75,10 +73,10 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_connection_set_io_pair(server_conn, &io_pair));
 
     /* Setup quic transport parameters */
-    EXPECT_SUCCESS(s2n_connection_set_quic_transport_parameters(client_conn,
-            CLIENT_TRANSPORT_PARAMS, sizeof(CLIENT_TRANSPORT_PARAMS)));
-    EXPECT_SUCCESS(s2n_connection_set_quic_transport_parameters(server_conn,
-            SERVER_TRANSPORT_PARAMS, sizeof(SERVER_TRANSPORT_PARAMS)));
+    EXPECT_SUCCESS(s2n_connection_set_quic_transport_parameters(
+        client_conn, CLIENT_TRANSPORT_PARAMS, sizeof(CLIENT_TRANSPORT_PARAMS)));
+    EXPECT_SUCCESS(s2n_connection_set_quic_transport_parameters(
+        server_conn, SERVER_TRANSPORT_PARAMS, sizeof(SERVER_TRANSPORT_PARAMS)));
 
     /* Set secret handler */
     struct s2n_blob secrets[S2N_MODE_COUNT][S2N_SECRET_TYPE_COUNT] = { 0 };
@@ -93,14 +91,12 @@ int main(int argc, char **argv)
     EXPECT_EQUAL(server_conn->actual_protocol_version, S2N_TLS13);
 
     /* Verify server quic_transport_parameters on client */
-    EXPECT_SUCCESS(s2n_connection_get_quic_transport_parameters(client_conn,
-            &transport_params, &transport_params_len));
+    EXPECT_SUCCESS(s2n_connection_get_quic_transport_parameters(client_conn, &transport_params, &transport_params_len));
     EXPECT_EQUAL(transport_params_len, sizeof(SERVER_TRANSPORT_PARAMS));
     EXPECT_BYTEARRAY_EQUAL(transport_params, SERVER_TRANSPORT_PARAMS, transport_params_len);
 
     /* Verify client quic_transport_parameters on server */
-    EXPECT_SUCCESS(s2n_connection_get_quic_transport_parameters(server_conn,
-            &transport_params, &transport_params_len));
+    EXPECT_SUCCESS(s2n_connection_get_quic_transport_parameters(server_conn, &transport_params, &transport_params_len));
     EXPECT_EQUAL(transport_params_len, sizeof(CLIENT_TRANSPORT_PARAMS));
     EXPECT_BYTEARRAY_EQUAL(transport_params, CLIENT_TRANSPORT_PARAMS, transport_params_len);
 

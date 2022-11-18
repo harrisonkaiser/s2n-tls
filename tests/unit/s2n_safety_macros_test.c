@@ -15,7 +15,6 @@
  */
 
 #include "s2n_test.h"
-
 #include "utils/s2n_safety.h"
 
 /**
@@ -167,13 +166,13 @@ static s2n_result RESULT_ENSURE_EXCLUSIVE_RANGE_harness_int32(int32_t a, int32_t
     return S2N_RESULT_OK;
 }
 
-static s2n_result RESULT_ENSURE_REF_harness(const char* str)
+static s2n_result RESULT_ENSURE_REF_harness(const char *str)
 {
     RESULT_ENSURE_REF(str);
     return S2N_RESULT_OK;
 }
 
-static s2n_result RESULT_ENSURE_MUT_harness(uint32_t* v)
+static s2n_result RESULT_ENSURE_MUT_harness(uint32_t *v)
 {
     RESULT_ENSURE_MUT(v);
     return S2N_RESULT_OK;
@@ -203,13 +202,13 @@ static s2n_result RESULT_POSTCONDITION_harness(s2n_result result)
     return S2N_RESULT_OK;
 }
 
-static s2n_result RESULT_CHECKED_MEMCPY_harness(uint32_t* dest, uint32_t* source, size_t len)
+static s2n_result RESULT_CHECKED_MEMCPY_harness(uint32_t *dest, uint32_t *source, size_t len)
 {
     RESULT_CHECKED_MEMCPY(dest, source, len);
     return S2N_RESULT_OK;
 }
 
-static s2n_result RESULT_CHECKED_MEMSET_harness(uint32_t* dest, uint8_t value, size_t len)
+static s2n_result RESULT_CHECKED_MEMSET_harness(uint32_t *dest, uint8_t value, size_t len)
 {
     RESULT_CHECKED_MEMSET(dest, value, len);
     return S2N_RESULT_OK;
@@ -367,13 +366,13 @@ static int POSIX_ENSURE_EXCLUSIVE_RANGE_harness_int32(int32_t a, int32_t b, int3
     return S2N_SUCCESS;
 }
 
-static int POSIX_ENSURE_REF_harness(const char* str)
+static int POSIX_ENSURE_REF_harness(const char *str)
 {
     POSIX_ENSURE_REF(str);
     return S2N_SUCCESS;
 }
 
-static int POSIX_ENSURE_MUT_harness(uint32_t* v)
+static int POSIX_ENSURE_MUT_harness(uint32_t *v)
 {
     POSIX_ENSURE_MUT(v);
     return S2N_SUCCESS;
@@ -403,13 +402,13 @@ static int POSIX_POSTCONDITION_harness(s2n_result result)
     return S2N_SUCCESS;
 }
 
-static int POSIX_CHECKED_MEMCPY_harness(uint32_t* dest, uint32_t* source, size_t len)
+static int POSIX_CHECKED_MEMCPY_harness(uint32_t *dest, uint32_t *source, size_t len)
 {
     POSIX_CHECKED_MEMCPY(dest, source, len);
     return S2N_SUCCESS;
 }
 
-static int POSIX_CHECKED_MEMSET_harness(uint32_t* dest, uint8_t value, size_t len)
+static int POSIX_CHECKED_MEMSET_harness(uint32_t *dest, uint8_t value, size_t len)
 {
     POSIX_CHECKED_MEMSET(dest, value, len);
     return S2N_SUCCESS;
@@ -427,31 +426,31 @@ static int POSIX_GUARD_OSSL_harness(int result, int error)
     return S2N_SUCCESS;
 }
 
-static const char* PTR_BAIL_harness()
+static const char *PTR_BAIL_harness()
 {
     PTR_BAIL(S2N_ERR_SAFETY);
     return "ok";
 }
 
-static const char* PTR_ENSURE_harness(bool is_ok)
+static const char *PTR_ENSURE_harness(bool is_ok)
 {
     PTR_ENSURE(is_ok, S2N_ERR_SAFETY);
     return "ok";
 }
 
-static const char* PTR_DEBUG_ENSURE_harness(bool is_ok)
+static const char *PTR_DEBUG_ENSURE_harness(bool is_ok)
 {
     PTR_DEBUG_ENSURE(is_ok, S2N_ERR_SAFETY);
     return "ok";
 }
 
-static const char* PTR_ENSURE_OK_harness(bool is_ok)
+static const char *PTR_ENSURE_OK_harness(bool is_ok)
 {
     PTR_ENSURE_OK(PTR_ENSURE_harness(is_ok), S2N_ERR_IO);
     return "ok";
 }
 
-static const char* PTR_ENSURE_GTE_harness_uint32(uint32_t a, uint32_t b)
+static const char *PTR_ENSURE_GTE_harness_uint32(uint32_t a, uint32_t b)
 {
     PTR_ENSURE_GTE(a, b);
     /* test the inverse */
@@ -459,7 +458,7 @@ static const char* PTR_ENSURE_GTE_harness_uint32(uint32_t a, uint32_t b)
     return "ok";
 }
 
-static const char* PTR_ENSURE_GTE_harness_int32(int32_t a, int32_t b)
+static const char *PTR_ENSURE_GTE_harness_int32(int32_t a, int32_t b)
 {
     PTR_ENSURE_GTE(a, b);
     /* test the inverse */
@@ -467,7 +466,7 @@ static const char* PTR_ENSURE_GTE_harness_int32(int32_t a, int32_t b)
     return "ok";
 }
 
-static const char* PTR_ENSURE_LTE_harness_uint32(uint32_t a, uint32_t b)
+static const char *PTR_ENSURE_LTE_harness_uint32(uint32_t a, uint32_t b)
 {
     PTR_ENSURE_LTE(a, b);
     /* test the inverse */
@@ -475,7 +474,7 @@ static const char* PTR_ENSURE_LTE_harness_uint32(uint32_t a, uint32_t b)
     return "ok";
 }
 
-static const char* PTR_ENSURE_LTE_harness_int32(int32_t a, int32_t b)
+static const char *PTR_ENSURE_LTE_harness_int32(int32_t a, int32_t b)
 {
     PTR_ENSURE_LTE(a, b);
     /* test the inverse */
@@ -483,7 +482,7 @@ static const char* PTR_ENSURE_LTE_harness_int32(int32_t a, int32_t b)
     return "ok";
 }
 
-static const char* PTR_ENSURE_GT_harness_uint32(uint32_t a, uint32_t b)
+static const char *PTR_ENSURE_GT_harness_uint32(uint32_t a, uint32_t b)
 {
     PTR_ENSURE_GT(a, b);
     /* test the inverse */
@@ -491,7 +490,7 @@ static const char* PTR_ENSURE_GT_harness_uint32(uint32_t a, uint32_t b)
     return "ok";
 }
 
-static const char* PTR_ENSURE_GT_harness_int32(int32_t a, int32_t b)
+static const char *PTR_ENSURE_GT_harness_int32(int32_t a, int32_t b)
 {
     PTR_ENSURE_GT(a, b);
     /* test the inverse */
@@ -499,7 +498,7 @@ static const char* PTR_ENSURE_GT_harness_int32(int32_t a, int32_t b)
     return "ok";
 }
 
-static const char* PTR_ENSURE_LT_harness_uint32(uint32_t a, uint32_t b)
+static const char *PTR_ENSURE_LT_harness_uint32(uint32_t a, uint32_t b)
 {
     PTR_ENSURE_LT(a, b);
     /* test the inverse */
@@ -507,7 +506,7 @@ static const char* PTR_ENSURE_LT_harness_uint32(uint32_t a, uint32_t b)
     return "ok";
 }
 
-static const char* PTR_ENSURE_LT_harness_int32(int32_t a, int32_t b)
+static const char *PTR_ENSURE_LT_harness_int32(int32_t a, int32_t b)
 {
     PTR_ENSURE_LT(a, b);
     /* test the inverse */
@@ -515,65 +514,65 @@ static const char* PTR_ENSURE_LT_harness_int32(int32_t a, int32_t b)
     return "ok";
 }
 
-static const char* PTR_ENSURE_EQ_harness_uint32(uint32_t a, uint32_t b)
+static const char *PTR_ENSURE_EQ_harness_uint32(uint32_t a, uint32_t b)
 {
     PTR_ENSURE_EQ(a, b);
     PTR_ENSURE_EQ(b, a);
     return "ok";
 }
 
-static const char* PTR_ENSURE_EQ_harness_int32(int32_t a, int32_t b)
+static const char *PTR_ENSURE_EQ_harness_int32(int32_t a, int32_t b)
 {
     PTR_ENSURE_EQ(a, b);
     PTR_ENSURE_EQ(b, a);
     return "ok";
 }
 
-static const char* PTR_ENSURE_NE_harness_uint32(uint32_t a, uint32_t b)
+static const char *PTR_ENSURE_NE_harness_uint32(uint32_t a, uint32_t b)
 {
     PTR_ENSURE_NE(a, b);
     PTR_ENSURE_NE(b, a);
     return "ok";
 }
 
-static const char* PTR_ENSURE_NE_harness_int32(int32_t a, int32_t b)
+static const char *PTR_ENSURE_NE_harness_int32(int32_t a, int32_t b)
 {
     PTR_ENSURE_NE(a, b);
     PTR_ENSURE_NE(b, a);
     return "ok";
 }
 
-static const char* PTR_ENSURE_INCLUSIVE_RANGE_harness_uint32(uint32_t a, uint32_t b, uint32_t c)
+static const char *PTR_ENSURE_INCLUSIVE_RANGE_harness_uint32(uint32_t a, uint32_t b, uint32_t c)
 {
     PTR_ENSURE_INCLUSIVE_RANGE(a, b, c);
     return "ok";
 }
 
-static const char* PTR_ENSURE_INCLUSIVE_RANGE_harness_int32(int32_t a, int32_t b, int32_t c)
+static const char *PTR_ENSURE_INCLUSIVE_RANGE_harness_int32(int32_t a, int32_t b, int32_t c)
 {
     PTR_ENSURE_INCLUSIVE_RANGE(a, b, c);
     return "ok";
 }
 
-static const char* PTR_ENSURE_EXCLUSIVE_RANGE_harness_uint32(uint32_t a, uint32_t b, uint32_t c)
+static const char *PTR_ENSURE_EXCLUSIVE_RANGE_harness_uint32(uint32_t a, uint32_t b, uint32_t c)
 {
     PTR_ENSURE_EXCLUSIVE_RANGE(a, b, c);
     return "ok";
 }
 
-static const char* PTR_ENSURE_EXCLUSIVE_RANGE_harness_int32(int32_t a, int32_t b, int32_t c)
+static const char *PTR_ENSURE_EXCLUSIVE_RANGE_harness_int32(int32_t a, int32_t b, int32_t c)
 {
     PTR_ENSURE_EXCLUSIVE_RANGE(a, b, c);
     return "ok";
 }
 
-static const char* PTR_ENSURE_REF_harness(const char* str)
+static const char *PTR_ENSURE_REF_harness(const char *str)
 {
     PTR_ENSURE_REF(str);
     return "ok";
 }
 
-static const char* PTR_ENSURE_MUT_harness(uint32_t* v)
+static const char *PTR_ENSURE_MUT_harness(uint32_t *v)
 {
     PTR_ENSURE_MUT(v);
     return "ok";
@@ -585,7 +584,7 @@ static S2N_RESULT PTR_PRECONDITION_harness_check(bool is_ok)
     return S2N_RESULT_OK;
 }
 
-static const char* PTR_PRECONDITION_harness(s2n_result result)
+static const char *PTR_PRECONDITION_harness(s2n_result result)
 {
     PTR_PRECONDITION(result);
     return "ok";
@@ -597,31 +596,31 @@ static S2N_RESULT PTR_POSTCONDITION_harness_check(bool is_ok)
     return S2N_RESULT_OK;
 }
 
-static const char* PTR_POSTCONDITION_harness(s2n_result result)
+static const char *PTR_POSTCONDITION_harness(s2n_result result)
 {
     PTR_POSTCONDITION(result);
     return "ok";
 }
 
-static const char* PTR_CHECKED_MEMCPY_harness(uint32_t* dest, uint32_t* source, size_t len)
+static const char *PTR_CHECKED_MEMCPY_harness(uint32_t *dest, uint32_t *source, size_t len)
 {
     PTR_CHECKED_MEMCPY(dest, source, len);
     return "ok";
 }
 
-static const char* PTR_CHECKED_MEMSET_harness(uint32_t* dest, uint8_t value, size_t len)
+static const char *PTR_CHECKED_MEMSET_harness(uint32_t *dest, uint8_t value, size_t len)
 {
     PTR_CHECKED_MEMSET(dest, value, len);
     return "ok";
 }
 
-static const char* PTR_GUARD_harness(const char* result)
+static const char *PTR_GUARD_harness(const char *result)
 {
     PTR_GUARD(result);
     return "ok";
 }
 
-static const char* PTR_GUARD_OSSL_harness(int result, int error)
+static const char *PTR_GUARD_OSSL_harness(int result, int error)
 {
     PTR_GUARD_OSSL(result, error);
     return "ok";
@@ -640,11 +639,11 @@ int main(int argc, char **argv)
 
     /* RESULT_DEBUG_ENSURE(condition, error) */
     EXPECT_OK(RESULT_DEBUG_ENSURE_harness(true));
-    #ifdef NDEBUG
+#ifdef NDEBUG
     EXPECT_OK(RESULT_DEBUG_ENSURE_harness(false));
-    #else
+#else
     EXPECT_ERROR_WITH_ERRNO(RESULT_DEBUG_ENSURE_harness(false), S2N_ERR_SAFETY);
-    #endif
+#endif
 
     /* RESULT_ENSURE_OK(result, error) */
     EXPECT_OK(RESULT_ENSURE_OK_harness(true));
@@ -734,11 +733,11 @@ int main(int argc, char **argv)
 
     /* RESULT_POSTCONDITION(result) */
     EXPECT_OK(RESULT_POSTCONDITION_harness(RESULT_POSTCONDITION_harness_check(true)));
-    #ifdef NDEBUG
+#ifdef NDEBUG
     EXPECT_OK(RESULT_POSTCONDITION_harness(RESULT_POSTCONDITION_harness_check(false)));
-    #else
+#else
     EXPECT_ERROR_WITH_ERRNO(RESULT_POSTCONDITION_harness(RESULT_POSTCONDITION_harness_check(false)), S2N_ERR_SAFETY);
-    #endif
+#endif
 
     /* RESULT_CHECKED_MEMCPY(destination, source, len) */
     uint32_t RESULT__checked_memcpy_dest = 1;
@@ -775,11 +774,11 @@ int main(int argc, char **argv)
 
     /* POSIX_DEBUG_ENSURE(condition, error) */
     EXPECT_SUCCESS(POSIX_DEBUG_ENSURE_harness(true));
-    #ifdef NDEBUG
+#ifdef NDEBUG
     EXPECT_SUCCESS(POSIX_DEBUG_ENSURE_harness(false));
-    #else
+#else
     EXPECT_FAILURE_WITH_ERRNO(POSIX_DEBUG_ENSURE_harness(false), S2N_ERR_SAFETY);
-    #endif
+#endif
 
     /* POSIX_ENSURE_OK(result, error) */
     EXPECT_SUCCESS(POSIX_ENSURE_OK_harness(true));
@@ -869,11 +868,11 @@ int main(int argc, char **argv)
 
     /* POSIX_POSTCONDITION(result) */
     EXPECT_SUCCESS(POSIX_POSTCONDITION_harness(POSIX_POSTCONDITION_harness_check(true)));
-    #ifdef NDEBUG
+#ifdef NDEBUG
     EXPECT_SUCCESS(POSIX_POSTCONDITION_harness(POSIX_POSTCONDITION_harness_check(false)));
-    #else
+#else
     EXPECT_FAILURE_WITH_ERRNO(POSIX_POSTCONDITION_harness(POSIX_POSTCONDITION_harness_check(false)), S2N_ERR_SAFETY);
-    #endif
+#endif
 
     /* POSIX_CHECKED_MEMCPY(destination, source, len) */
     uint32_t POSIX__checked_memcpy_dest = 1;
@@ -910,11 +909,11 @@ int main(int argc, char **argv)
 
     /* PTR_DEBUG_ENSURE(condition, error) */
     EXPECT_NOT_NULL(PTR_DEBUG_ENSURE_harness(true));
-    #ifdef NDEBUG
+#ifdef NDEBUG
     EXPECT_NOT_NULL(PTR_DEBUG_ENSURE_harness(false));
-    #else
+#else
     EXPECT_NULL_WITH_ERRNO(PTR_DEBUG_ENSURE_harness(false), S2N_ERR_SAFETY);
-    #endif
+#endif
 
     /* PTR_ENSURE_OK(result, error) */
     EXPECT_NOT_NULL(PTR_ENSURE_OK_harness(true));
@@ -1004,11 +1003,11 @@ int main(int argc, char **argv)
 
     /* PTR_POSTCONDITION(result) */
     EXPECT_NOT_NULL(PTR_POSTCONDITION_harness(PTR_POSTCONDITION_harness_check(true)));
-    #ifdef NDEBUG
+#ifdef NDEBUG
     EXPECT_NOT_NULL(PTR_POSTCONDITION_harness(PTR_POSTCONDITION_harness_check(false)));
-    #else
+#else
     EXPECT_NULL_WITH_ERRNO(PTR_POSTCONDITION_harness(PTR_POSTCONDITION_harness_check(false)), S2N_ERR_SAFETY);
-    #endif
+#endif
 
     /* PTR_CHECKED_MEMCPY(destination, source, len) */
     uint32_t PTR__checked_memcpy_dest = 1;
@@ -1035,7 +1034,6 @@ int main(int argc, char **argv)
     /* PTR_GUARD_OSSL(result, error) */
     EXPECT_NOT_NULL(PTR_GUARD_OSSL_harness(1, S2N_ERR_SAFETY));
     EXPECT_NULL_WITH_ERRNO(PTR_GUARD_OSSL_harness(0, S2N_ERR_SAFETY), S2N_ERR_SAFETY);
-
 
     END_TEST();
     return S2N_SUCCESS;

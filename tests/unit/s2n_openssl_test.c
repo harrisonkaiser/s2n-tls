@@ -13,14 +13,15 @@
  * permissions and limitations under the License.
  */
 
-#include "s2n_test.h"
 #include "crypto/s2n_openssl.h"
+
+#include "s2n_test.h"
 
 int main(int argc, char **argv)
 {
     BEGIN_TEST();
 
-    const char* env_libcrypto = getenv("S2N_LIBCRYPTO");
+    const char *env_libcrypto = getenv("S2N_LIBCRYPTO");
     if (env_libcrypto == NULL) {
         END_TEST();
     }

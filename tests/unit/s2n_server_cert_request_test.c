@@ -14,11 +14,10 @@
  */
 
 #include "api/s2n.h"
-
+#include "s2n_test.h"
+#include "stuffer/s2n_stuffer.h"
 #include "tls/s2n_config.h"
 #include "tls/s2n_tls.h"
-#include "stuffer/s2n_stuffer.h"
-#include "s2n_test.h"
 
 /*
  * Definitions in s2n_server_cert_request.c
@@ -36,16 +35,10 @@ typedef enum {
     S2N_CERT_TYPE_ECDSA_FIXED_ECDH = 66,
 } s2n_cert_type;
 
-static uint8_t s2n_cert_type_preference_list[] = {
-    S2N_CERT_TYPE_RSA_SIGN,
-    S2N_CERT_TYPE_ECDSA_SIGN
-};
+static uint8_t s2n_cert_type_preference_list[] = { S2N_CERT_TYPE_RSA_SIGN, S2N_CERT_TYPE_ECDSA_SIGN };
 
-static uint8_t s2n_cert_type_preference_list_legacy_dss[] = {
-    S2N_CERT_TYPE_RSA_SIGN,
-    S2N_CERT_TYPE_DSS_SIGN,
-    S2N_CERT_TYPE_ECDSA_SIGN
-};
+static uint8_t s2n_cert_type_preference_list_legacy_dss[] = { S2N_CERT_TYPE_RSA_SIGN, S2N_CERT_TYPE_DSS_SIGN,
+    S2N_CERT_TYPE_ECDSA_SIGN };
 
 int main(int argc, char **argv)
 {

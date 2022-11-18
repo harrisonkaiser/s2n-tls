@@ -13,10 +13,9 @@
  * permissions and limitations under the License.
  */
 
-#include "s2n_test.h"
-
 #include <sys/param.h>
 
+#include "s2n_test.h"
 #include "tls/s2n_connection.h"
 
 #define S2N_FIRST_COMMON_HANDSHAKE_FLAG NEGOTIATED
@@ -69,7 +68,8 @@ int main(int argc, char **argv)
         EXPECT_ERROR_WITH_ERRNO(s2n_handshake_type_set_flag(NULL, 0), S2N_ERR_NULL);
 
         /* Sets all common flags */
-        for (s2n_handshake_type_flag flag = S2N_FIRST_COMMON_HANDSHAKE_FLAG; flag <= S2N_LAST_COMMON_HANDSHAKE_FLAG; flag++) {
+        for (s2n_handshake_type_flag flag = S2N_FIRST_COMMON_HANDSHAKE_FLAG; flag <= S2N_LAST_COMMON_HANDSHAKE_FLAG;
+             flag++) {
             struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT);
             EXPECT_NOT_NULL(conn);
 
@@ -93,7 +93,8 @@ int main(int argc, char **argv)
         EXPECT_FALSE(s2n_handshake_type_check_flag(NULL, 0));
 
         /* Check when common flags set */
-        for (s2n_handshake_type_flag flag = S2N_FIRST_COMMON_HANDSHAKE_FLAG; flag <= S2N_LAST_COMMON_HANDSHAKE_FLAG; flag++) {
+        for (s2n_handshake_type_flag flag = S2N_FIRST_COMMON_HANDSHAKE_FLAG; flag <= S2N_LAST_COMMON_HANDSHAKE_FLAG;
+             flag++) {
             struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT);
             EXPECT_NOT_NULL(conn);
 
@@ -140,7 +141,8 @@ int main(int argc, char **argv)
         EXPECT_ERROR_WITH_ERRNO(s2n_handshake_type_set_tls12_flag(NULL, 0), S2N_ERR_NULL);
 
         /* Sets all TLS1.2 flags */
-        for (s2n_tls12_handshake_type_flag flag = S2N_FIRST_TLS12_HANDSHAKE_FLAG; flag <= S2N_LAST_TLS12_HANDSHAKE_FLAG; flag++) {
+        for (s2n_tls12_handshake_type_flag flag = S2N_FIRST_TLS12_HANDSHAKE_FLAG; flag <= S2N_LAST_TLS12_HANDSHAKE_FLAG;
+             flag++) {
             struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT);
             EXPECT_NOT_NULL(conn);
 
@@ -163,7 +165,8 @@ int main(int argc, char **argv)
         EXPECT_FALSE(s2n_handshake_type_check_tls12_flag(NULL, 0));
 
         /* Check when common flags set */
-        for (s2n_tls12_handshake_type_flag flag = S2N_FIRST_TLS12_HANDSHAKE_FLAG; flag <= S2N_LAST_TLS12_HANDSHAKE_FLAG; flag++) {
+        for (s2n_tls12_handshake_type_flag flag = S2N_FIRST_TLS12_HANDSHAKE_FLAG; flag <= S2N_LAST_TLS12_HANDSHAKE_FLAG;
+             flag++) {
             struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT);
             EXPECT_NOT_NULL(conn);
 
@@ -210,7 +213,8 @@ int main(int argc, char **argv)
         EXPECT_ERROR_WITH_ERRNO(s2n_handshake_type_set_tls13_flag(NULL, 0), S2N_ERR_NULL);
 
         /* Sets all TLS1.3 flags */
-        for (s2n_tls13_handshake_type_flag flag = S2N_FIRST_TLS13_HANDSHAKE_FLAG; flag <= S2N_LAST_TLS13_HANDSHAKE_FLAG; flag++) {
+        for (s2n_tls13_handshake_type_flag flag = S2N_FIRST_TLS13_HANDSHAKE_FLAG; flag <= S2N_LAST_TLS13_HANDSHAKE_FLAG;
+             flag++) {
             struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT);
             EXPECT_NOT_NULL(conn);
 
@@ -231,7 +235,8 @@ int main(int argc, char **argv)
         EXPECT_FALSE(s2n_handshake_type_check_tls13_flag(NULL, 0));
 
         /* Check when common flags set */
-        for (s2n_tls13_handshake_type_flag flag = S2N_FIRST_TLS13_HANDSHAKE_FLAG; flag <= S2N_LAST_TLS13_HANDSHAKE_FLAG; flag++) {
+        for (s2n_tls13_handshake_type_flag flag = S2N_FIRST_TLS13_HANDSHAKE_FLAG; flag <= S2N_LAST_TLS13_HANDSHAKE_FLAG;
+             flag++) {
             struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT);
             EXPECT_NOT_NULL(conn);
 

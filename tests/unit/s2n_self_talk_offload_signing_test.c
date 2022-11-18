@@ -13,17 +13,17 @@
  * permissions and limitations under the License.
  */
 
+#include "crypto/s2n_rsa_signing.h"
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
-#include "crypto/s2n_rsa_signing.h"
 
 #define S2N_TEST_CERT_MEM 5000
 
 int s2n_ecdsa_sign_digest(const struct s2n_pkey *priv, struct s2n_blob *digest, struct s2n_blob *signature);
-int s2n_rsa_pkcs1v15_sign_digest(const struct s2n_pkey *priv, s2n_hash_algorithm hash_alg,
-        struct s2n_blob *digest, struct s2n_blob *signature);
-int s2n_rsa_pss_sign_digest(const struct s2n_pkey *priv, s2n_hash_algorithm hash_alg,
-        struct s2n_blob *digest_in, struct s2n_blob *signature_out);
+int s2n_rsa_pkcs1v15_sign_digest(
+    const struct s2n_pkey *priv, s2n_hash_algorithm hash_alg, struct s2n_blob *digest, struct s2n_blob *signature);
+int s2n_rsa_pss_sign_digest(const struct s2n_pkey *priv, s2n_hash_algorithm hash_alg, struct s2n_blob *digest_in,
+    struct s2n_blob *signature_out);
 
 struct s2n_async_pkey_op *pkey_op = NULL;
 struct s2n_connection *pkey_op_conn = NULL;
@@ -76,11 +76,10 @@ static S2N_RESULT s2n_async_pkey_sign(struct s2n_cert_chain_and_key *complete_ch
     } else if (sig_alg == S2N_TLS_SIGNATURE_ECDSA) {
         RESULT_GUARD_POSIX(s2n_ecdsa_sign_digest(complete_chain->private_key, &input, &output));
     } else if (sig_alg == S2N_TLS_SIGNATURE_RSA) {
-        RESULT_GUARD_POSIX(s2n_rsa_pkcs1v15_sign_digest(
-                complete_chain->private_key, sig_scheme->hash_alg, &input, &output));
+        RESULT_GUARD_POSIX(
+            s2n_rsa_pkcs1v15_sign_digest(complete_chain->private_key, sig_scheme->hash_alg, &input, &output));
     } else if (sig_alg == S2N_TLS_SIGNATURE_RSA_PSS_RSAE) {
-        RESULT_GUARD_POSIX(s2n_rsa_pss_sign_digest(
-                complete_chain->private_key, sig_scheme->hash_alg, &input, &output));
+        RESULT_GUARD_POSIX(s2n_rsa_pss_sign_digest(complete_chain->private_key, sig_scheme->hash_alg, &input, &output));
     } else {
         RESULT_BAIL(S2N_ERR_UNIMPLEMENTED);
     }
@@ -96,7 +95,7 @@ static S2N_RESULT s2n_async_pkey_sign(struct s2n_cert_chain_and_key *complete_ch
 }
 
 static S2N_RESULT s2n_do_test_handshake(struct s2n_config *config, struct s2n_cert_chain_and_key *complete_chain,
-        uint8_t expected_protocol_version, uint32_t expected_handshake_type)
+    uint8_t expected_protocol_version, uint32_t expected_handshake_type)
 {
     struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT);
     RESULT_ENSURE_REF(client_conn);
@@ -135,19 +134,20 @@ int main(int argc, char **argv)
     uint32_t pem_len = 0;
     uint8_t pem[S2N_TEST_CERT_MEM] = { 0 };
 
-    const char* tls12_policy = "ELBSecurityPolicy-2016-08";
-    const char* tls13_policy = "default_tls13";
+    const char *tls12_policy = "ELBSecurityPolicy-2016-08";
+    const char *tls13_policy = "default_tls13";
 
     /* Some TLS1.2 cipher suites use RSA for key exchange.
      * Doing so requires generating a random key and encrypting it with RSA,
      * which uses the private RSA key for a S2N_ASYNC_DECRYPT operation.
      */
-    const char* tls12_rsa_kex_policy = "test_all_rsa_kex";
+    const char *tls12_rsa_kex_policy = "test_all_rsa_kex";
 
     uint32_t basic_handshake = NEGOTIATED | FULL_HANDSHAKE;
     uint32_t tls_13_handshake = (basic_handshake | MIDDLEBOX_COMPAT);
     uint32_t tls_12_handshake = (basic_handshake | TLS12_PERFECT_FORWARD_SECRECY);
-    uint32_t expected_handshake_with_tls13_policy = s2n_is_tls13_fully_supported() ? tls_13_handshake : tls_12_handshake;
+    uint32_t expected_handshake_with_tls13_policy =
+        s2n_is_tls13_fully_supported() ? tls_13_handshake : tls_12_handshake;
 
     /* Create cert chains with both a public and private key.
      * We need these to do the actual signing / decrypting once our callback triggers,
@@ -155,12 +155,12 @@ int main(int argc, char **argv)
      */
 
     struct s2n_cert_chain_and_key *ecdsa_complete_chain = NULL;
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&ecdsa_complete_chain,
-            S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
+        &ecdsa_complete_chain, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
 
     struct s2n_cert_chain_and_key *rsa_complete_chain = NULL;
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&rsa_complete_chain,
-            S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
+        &rsa_complete_chain, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
 
     /* Create cert chains with only public certificates.
      * These are passed to the connections for use in the handshake.
@@ -188,13 +188,13 @@ int main(int argc, char **argv)
         {
             /* Test: TLS1.2 + ECDSA */
             EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, tls12_policy));
-            EXPECT_OK(s2n_do_test_handshake(config, ecdsa_complete_chain,
-                    S2N_TLS12, basic_handshake | TLS12_PERFECT_FORWARD_SECRECY));
+            EXPECT_OK(s2n_do_test_handshake(
+                config, ecdsa_complete_chain, S2N_TLS12, basic_handshake | TLS12_PERFECT_FORWARD_SECRECY));
 
             /* Test: TLS1.3 + ECDSA */
             EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, tls13_policy));
-            EXPECT_OK(s2n_do_test_handshake(config, ecdsa_complete_chain,
-                    s2n_get_highest_fully_supported_tls_version(), expected_handshake_with_tls13_policy));
+            EXPECT_OK(s2n_do_test_handshake(config, ecdsa_complete_chain, s2n_get_highest_fully_supported_tls_version(),
+                expected_handshake_with_tls13_policy));
         }
 
         /* Handshake with mutual auth. Both the client and server sign. */
@@ -203,13 +203,13 @@ int main(int argc, char **argv)
 
             /* Test: TLS1.2 + ECDSA + client auth */
             EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, tls12_policy));
-            EXPECT_OK(s2n_do_test_handshake(config, ecdsa_complete_chain,
-                    S2N_TLS12, basic_handshake | CLIENT_AUTH | TLS12_PERFECT_FORWARD_SECRECY));
+            EXPECT_OK(s2n_do_test_handshake(config, ecdsa_complete_chain, S2N_TLS12,
+                basic_handshake | CLIENT_AUTH | TLS12_PERFECT_FORWARD_SECRECY));
 
             /* Test: TLS1.3 + ECDSA + client auth */
             EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, tls13_policy));
-            EXPECT_OK(s2n_do_test_handshake(config, ecdsa_complete_chain,
-                    s2n_get_highest_fully_supported_tls_version(), expected_handshake_with_tls13_policy | CLIENT_AUTH));
+            EXPECT_OK(s2n_do_test_handshake(config, ecdsa_complete_chain, s2n_get_highest_fully_supported_tls_version(),
+                expected_handshake_with_tls13_policy | CLIENT_AUTH));
         }
 
         EXPECT_SUCCESS(s2n_config_free(config));
@@ -227,18 +227,17 @@ int main(int argc, char **argv)
         {
             /* Test: TLS1.2 + RSA kex */
             EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, tls12_rsa_kex_policy));
-            EXPECT_OK(s2n_do_test_handshake(config, rsa_complete_chain,
-                    S2N_TLS12, basic_handshake));
+            EXPECT_OK(s2n_do_test_handshake(config, rsa_complete_chain, S2N_TLS12, basic_handshake));
 
             /* Test: TLS1.2 + RSA */
             EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, tls12_policy));
-            EXPECT_OK(s2n_do_test_handshake(config, rsa_complete_chain,
-                    S2N_TLS12, basic_handshake | TLS12_PERFECT_FORWARD_SECRECY));
+            EXPECT_OK(s2n_do_test_handshake(
+                config, rsa_complete_chain, S2N_TLS12, basic_handshake | TLS12_PERFECT_FORWARD_SECRECY));
 
             /* Test: TLS1.3 + RSA */
             EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, tls13_policy));
-            EXPECT_OK(s2n_do_test_handshake(config, rsa_complete_chain,
-                    s2n_get_highest_fully_supported_tls_version(), expected_handshake_with_tls13_policy));
+            EXPECT_OK(s2n_do_test_handshake(config, rsa_complete_chain, s2n_get_highest_fully_supported_tls_version(),
+                expected_handshake_with_tls13_policy));
         }
 
         /* Handshake with mutual auth. Both the client and server sign. */
@@ -247,18 +246,17 @@ int main(int argc, char **argv)
 
             /* Test: TLS1.2 + RSA kex + client auth */
             EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, tls12_rsa_kex_policy));
-            EXPECT_OK(s2n_do_test_handshake(config, rsa_complete_chain,
-                    S2N_TLS12, basic_handshake | CLIENT_AUTH));
+            EXPECT_OK(s2n_do_test_handshake(config, rsa_complete_chain, S2N_TLS12, basic_handshake | CLIENT_AUTH));
 
             /* Test: TLS1.2 + RSA + client auth */
             EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, tls12_policy));
-            EXPECT_OK(s2n_do_test_handshake(config, rsa_complete_chain,
-                    S2N_TLS12, basic_handshake | CLIENT_AUTH | TLS12_PERFECT_FORWARD_SECRECY));
+            EXPECT_OK(s2n_do_test_handshake(
+                config, rsa_complete_chain, S2N_TLS12, basic_handshake | CLIENT_AUTH | TLS12_PERFECT_FORWARD_SECRECY));
 
             /* Test: TLS1.3 + RSA + client auth */
             EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, tls13_policy));
-            EXPECT_OK(s2n_do_test_handshake(config, rsa_complete_chain,
-                    s2n_get_highest_fully_supported_tls_version(), expected_handshake_with_tls13_policy | CLIENT_AUTH));
+            EXPECT_OK(s2n_do_test_handshake(config, rsa_complete_chain, s2n_get_highest_fully_supported_tls_version(),
+                expected_handshake_with_tls13_policy | CLIENT_AUTH));
         }
 
         EXPECT_SUCCESS(s2n_config_free(config));

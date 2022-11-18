@@ -13,15 +13,14 @@
  * permissions and limitations under the License.
  */
 
-#include "s2n_test.h"
-
-#include <string.h>
 #include <stdio.h>
-#include "api/s2n.h"
+#include <string.h>
 
-#include "tls/extensions/s2n_server_signature_algorithms.h"
+#include "api/s2n.h"
+#include "s2n_test.h"
 #include "stuffer/s2n_stuffer.h"
 #include "testlib/s2n_testlib.h"
+#include "tls/extensions/s2n_server_signature_algorithms.h"
 #include "tls/s2n_tls.h"
 #include "tls/s2n_tls13.h"
 #include "utils/s2n_safety.h"
@@ -66,11 +65,13 @@ int main(int argc, char **argv)
 
         EXPECT_SUCCESS(s2n_tls13_cert_req_send(server_conn));
         EXPECT_TRUE(s2n_stuffer_data_available(&server_conn->handshake.io) > 0);
-        EXPECT_SUCCESS(s2n_stuffer_copy(&server_conn->handshake.io, &client_conn->handshake.io, s2n_stuffer_data_available(&server_conn->handshake.io)));
+        EXPECT_SUCCESS(s2n_stuffer_copy(&server_conn->handshake.io, &client_conn->handshake.io,
+            s2n_stuffer_data_available(&server_conn->handshake.io)));
         EXPECT_TRUE(s2n_stuffer_data_available(&client_conn->handshake.io) > 0);
         EXPECT_SUCCESS(s2n_tls13_cert_req_recv(client_conn));
 
-        EXPECT_EQUAL(client_conn->handshake_params.server_sig_hash_algs.len, s2n_supported_sig_schemes_count(server_conn));
+        EXPECT_EQUAL(
+            client_conn->handshake_params.server_sig_hash_algs.len, s2n_supported_sig_schemes_count(server_conn));
 
         EXPECT_SUCCESS(s2n_connection_free(client_conn));
         EXPECT_SUCCESS(s2n_connection_free(server_conn));
