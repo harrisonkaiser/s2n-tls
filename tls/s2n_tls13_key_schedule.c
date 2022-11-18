@@ -37,11 +37,11 @@ static S2N_RESULT s2n_zero_sequence_number(struct s2n_connection *conn, s2n_mode
     RESULT_ENSURE_REF(conn->secure);
     struct s2n_blob sequence_number;
     if (mode == S2N_CLIENT) {
-        RESULT_GUARD_POSIX(s2n_blob_init(
-            &sequence_number, conn->secure->client_sequence_number, sizeof(conn->secure->client_sequence_number)));
+        RESULT_GUARD_POSIX(s2n_blob_init(&sequence_number,
+                conn->secure->client_sequence_number, sizeof(conn->secure->client_sequence_number)));
     } else {
-        RESULT_GUARD_POSIX(s2n_blob_init(
-            &sequence_number, conn->secure->server_sequence_number, sizeof(conn->secure->server_sequence_number)));
+        RESULT_GUARD_POSIX(s2n_blob_init(&sequence_number,
+                conn->secure->server_sequence_number, sizeof(conn->secure->server_sequence_number)));
     }
     RESULT_GUARD_POSIX(s2n_blob_zero(&sequence_number));
     return S2N_RESULT_OK;
@@ -117,14 +117,16 @@ static S2N_RESULT s2n_set_key(struct s2n_connection *conn, s2n_extract_secret_ty
     struct s2n_blob key = { 0 };
     uint8_t key_bytes[S2N_TLS13_SECRET_MAX_LEN] = { 0 };
     RESULT_GUARD_POSIX(s2n_blob_init(&key, key_bytes, key_size));
-    RESULT_GUARD_POSIX(s2n_hkdf_expand_label(&hmac, hmac_alg, &secret, key_purpose, &s2n_zero_length_context, &key));
+    RESULT_GUARD_POSIX(s2n_hkdf_expand_label(&hmac, hmac_alg,
+            &secret, key_purpose, &s2n_zero_length_context, &key));
     /**
      *= https://tools.ietf.org/rfc/rfc8446#section-7.3
      *# [sender]_write_iv  = HKDF-Expand-Label(Secret, "iv", "", iv_length)
      **/
     struct s2n_blob iv = { 0 };
     RESULT_GUARD_POSIX(s2n_blob_init(&iv, implicit_iv_data, iv_size));
-    RESULT_GUARD_POSIX(s2n_hkdf_expand_label(&hmac, hmac_alg, &secret, iv_purpose, &s2n_zero_length_context, &iv));
+    RESULT_GUARD_POSIX(s2n_hkdf_expand_label(&hmac, hmac_alg,
+            &secret, iv_purpose, &s2n_zero_length_context, &iv));
 
     bool is_sending_secret = (mode == conn->mode);
     if (is_sending_secret) {
@@ -165,7 +167,8 @@ static S2N_RESULT s2n_client_key_schedule(struct s2n_connection *conn)
      *#               Send ClientHello |        | Recv HelloRetryRequest
      *#          [K_send = early data] |        |
      */
-    if (message_type == CLIENT_HELLO && conn->early_data_state == S2N_EARLY_DATA_REQUESTED) {
+    if (message_type == CLIENT_HELLO
+            && conn->early_data_state == S2N_EARLY_DATA_REQUESTED) {
         K_send(conn, S2N_EARLY_SECRET);
     }
     /**
@@ -199,7 +202,8 @@ static S2N_RESULT s2n_client_key_schedule(struct s2n_connection *conn)
      *#           \                  | [Send EndOfEarlyData]
      *#                              | K_send = handshake
      */
-    if ((message_type == SERVER_FINISHED && !WITH_EARLY_DATA(conn)) || (message_type == END_OF_EARLY_DATA)) {
+    if ((message_type == SERVER_FINISHED && !WITH_EARLY_DATA(conn))
+            || (message_type == END_OF_EARLY_DATA)) {
         K_send(conn, S2N_HANDSHAKE_SECRET);
     }
     /**
@@ -251,7 +255,7 @@ static S2N_RESULT s2n_server_key_schedule(struct s2n_connection *conn)
      */
     if (message_type == SERVER_FINISHED) {
         K_send(conn, S2N_APPLICATION_SECRET);
-        /**
+    /**
      *= https://tools.ietf.org/rfc/rfc8446#appendix-A.2
      *# here                  +--------+--------+
      *#              No 0-RTT |                 | 0-RTT
@@ -304,7 +308,7 @@ static S2N_RESULT s2n_server_key_schedule(struct s2n_connection *conn)
     return S2N_RESULT_OK;
 }
 
-s2n_result (*key_schedules[])(struct s2n_connection *) = {
+s2n_result (*key_schedules[])(struct s2n_connection*) = {
     [S2N_CLIENT] = &s2n_client_key_schedule,
     [S2N_SERVER] = &s2n_server_key_schedule,
 };

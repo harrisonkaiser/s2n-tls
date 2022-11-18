@@ -16,8 +16,9 @@
 #include "tls/s2n_quic_support.h"
 
 #include "tls/s2n_connection.h"
-#include "tls/s2n_tls.h"
 #include "tls/s2n_tls13.h"
+#include "tls/s2n_tls.h"
+
 #include "utils/s2n_mem.h"
 #include "utils/s2n_safety.h"
 
@@ -51,11 +52,12 @@ int s2n_connection_enable_quic(struct s2n_connection *conn)
 
 bool s2n_connection_is_quic_enabled(struct s2n_connection *conn)
 {
-    return (conn && conn->quic_enabled) || (conn && conn->config && conn->config->quic_enabled);
+    return (conn && conn->quic_enabled) ||
+           (conn && conn->config && conn->config->quic_enabled);
 }
 
-int s2n_connection_set_quic_transport_parameters(
-    struct s2n_connection *conn, const uint8_t *data_buffer, uint16_t data_len)
+int s2n_connection_set_quic_transport_parameters(struct s2n_connection *conn,
+        const uint8_t *data_buffer, uint16_t data_len)
 {
     POSIX_ENSURE_REF(conn);
 
@@ -66,8 +68,8 @@ int s2n_connection_set_quic_transport_parameters(
     return S2N_SUCCESS;
 }
 
-int s2n_connection_get_quic_transport_parameters(
-    struct s2n_connection *conn, const uint8_t **data_buffer, uint16_t *data_len)
+int s2n_connection_get_quic_transport_parameters(struct s2n_connection *conn,
+        const uint8_t **data_buffer, uint16_t *data_len)
 {
     POSIX_ENSURE_REF(conn);
     POSIX_ENSURE_REF(data_buffer);

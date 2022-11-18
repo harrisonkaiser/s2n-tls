@@ -13,35 +13,38 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/s2n_client_hello.h"
-
-#include <stdint.h>
-#include <stdlib.h>
 #include <sys/param.h>
 #include <time.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #include "crypto/s2n_fips.h"
+
+#include "error/s2n_errno.h"
 #include "crypto/s2n_hash.h"
 #include "crypto/s2n_rsa_signing.h"
-#include "error/s2n_errno.h"
-#include "stuffer/s2n_stuffer.h"
+
 #include "tls/extensions/s2n_extension_list.h"
 #include "tls/extensions/s2n_server_key_share.h"
-#include "tls/s2n_alerts.h"
 #include "tls/s2n_auth_selection.h"
 #include "tls/s2n_cipher_preferences.h"
+#include "tls/s2n_security_policies.h"
 #include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_connection.h"
+#include "tls/s2n_client_hello.h"
+#include "tls/s2n_alerts.h"
 #include "tls/s2n_handshake_type.h"
-#include "tls/s2n_security_policies.h"
 #include "tls/s2n_signature_algorithms.h"
 #include "tls/s2n_tls.h"
+#include "tls/s2n_security_policies.h"
+
+#include "stuffer/s2n_stuffer.h"
+
 #include "utils/s2n_bitmap.h"
 #include "utils/s2n_random.h"
 #include "utils/s2n_safety.h"
 
-struct s2n_client_hello *s2n_connection_get_client_hello(struct s2n_connection *conn)
-{
+struct s2n_client_hello *s2n_connection_get_client_hello(struct s2n_connection *conn) {
     if (conn->client_hello.callback_invoked != 1) {
         return NULL;
     }
@@ -49,8 +52,7 @@ struct s2n_client_hello *s2n_connection_get_client_hello(struct s2n_connection *
     return &conn->client_hello;
 }
 
-static uint32_t min_size(struct s2n_blob *blob, uint32_t max_length)
-{
+static uint32_t min_size(struct s2n_blob *blob, uint32_t max_length) {
     return blob->size < max_length ? blob->size : max_length;
 }
 
@@ -74,7 +76,7 @@ static S2N_RESULT s2n_generate_client_session_id(struct s2n_connection *conn)
         return S2N_RESULT_OK;
     }
 
-    struct s2n_blob session_id = { 0 };
+    struct s2n_blob session_id = {0};
     RESULT_GUARD_POSIX(s2n_blob_init(&session_id, conn->session_id, S2N_TLS_SESSION_ID_MAX_LEN));
     RESULT_GUARD(s2n_get_public_random_data(&session_id));
     conn->session_id_len = S2N_TLS_SESSION_ID_MAX_LEN;
@@ -82,8 +84,7 @@ static S2N_RESULT s2n_generate_client_session_id(struct s2n_connection *conn)
     return S2N_RESULT_OK;
 }
 
-ssize_t s2n_client_hello_get_raw_message_length(struct s2n_client_hello *ch)
-{
+ssize_t s2n_client_hello_get_raw_message_length(struct s2n_client_hello *ch) {
     POSIX_ENSURE_REF(ch);
 
     return ch->raw_message.size;
@@ -99,8 +100,7 @@ ssize_t s2n_client_hello_get_raw_message(struct s2n_client_hello *ch, uint8_t *o
     return len;
 }
 
-ssize_t s2n_client_hello_get_cipher_suites_length(struct s2n_client_hello *ch)
-{
+ssize_t s2n_client_hello_get_cipher_suites_length(struct s2n_client_hello *ch) {
     POSIX_ENSURE_REF(ch);
 
     return ch->cipher_suites.size;
@@ -110,7 +110,8 @@ int s2n_client_hello_cb_done(struct s2n_connection *conn)
 {
     POSIX_ENSURE_REF(conn);
     POSIX_ENSURE_REF(conn->config);
-    POSIX_ENSURE(conn->config->client_hello_cb_mode == S2N_CLIENT_HELLO_CB_NONBLOCKING, S2N_ERR_INVALID_STATE);
+    POSIX_ENSURE(conn->config->client_hello_cb_mode ==
+        S2N_CLIENT_HELLO_CB_NONBLOCKING, S2N_ERR_INVALID_STATE);
     POSIX_ENSURE(conn->client_hello.callback_invoked == 1, S2N_ERR_ASYNC_NOT_PERFORMED);
     POSIX_ENSURE(conn->client_hello.parsed == 1, S2N_ERR_INVALID_STATE);
 
@@ -133,8 +134,7 @@ ssize_t s2n_client_hello_get_cipher_suites(struct s2n_client_hello *ch, uint8_t 
     return len;
 }
 
-ssize_t s2n_client_hello_get_extensions_length(struct s2n_client_hello *ch)
-{
+ssize_t s2n_client_hello_get_extensions_length(struct s2n_client_hello *ch) {
     POSIX_ENSURE_REF(ch);
 
     return ch->extensions.raw.size;
@@ -183,8 +183,10 @@ int s2n_collect_client_hello(struct s2n_connection *conn, struct s2n_stuffer *so
     return 0;
 }
 
-static S2N_RESULT s2n_client_hello_verify_for_retry(struct s2n_connection *conn, struct s2n_client_hello *old_ch,
-    struct s2n_client_hello *new_ch, uint8_t *previous_client_random)
+
+static S2N_RESULT s2n_client_hello_verify_for_retry(struct s2n_connection *conn,
+        struct s2n_client_hello *old_ch, struct s2n_client_hello *new_ch,
+        uint8_t *previous_client_random)
 {
     RESULT_ENSURE_REF(conn);
     RESULT_ENSURE_REF(old_ch);
@@ -211,17 +213,22 @@ static S2N_RESULT s2n_client_hello_verify_for_retry(struct s2n_connection *conn,
     RESULT_ENSURE_GT(old_msg_len, old_extensions_len);
     size_t verify_len = old_msg_len - old_extensions_len;
     RESULT_ENSURE_LTE(verify_len, new_ch->raw_message.size);
-    RESULT_ENSURE(
-        s2n_constant_time_equals(old_ch->raw_message.data, new_ch->raw_message.data, verify_len), S2N_ERR_BAD_MESSAGE);
+    RESULT_ENSURE(s2n_constant_time_equals(
+        old_ch->raw_message.data,
+        new_ch->raw_message.data,
+        verify_len
+    ), S2N_ERR_BAD_MESSAGE);
 
     /*
      * We need to verify the client random separately
      * because we erase it from the client hello during parsing.
      * Compare the old value to the current value.
      */
-    RESULT_ENSURE(
-        s2n_constant_time_equals(previous_client_random, conn->handshake_params.client_random, S2N_TLS_RANDOM_DATA_LEN),
-        S2N_ERR_BAD_MESSAGE);
+    RESULT_ENSURE(s2n_constant_time_equals(
+        previous_client_random,
+        conn->handshake_params.client_random,
+        S2N_TLS_RANDOM_DATA_LEN
+    ), S2N_ERR_BAD_MESSAGE);
 
     /*
      * Now enforce that the extensions also exactly match,
@@ -245,7 +252,7 @@ static S2N_RESULT s2n_client_hello_verify_for_retry(struct s2n_connection *conn,
             continue;
         }
 
-        switch (extension_type) {
+        switch(extension_type) {
             /*
              *= https://tools.ietf.org/rfc/rfc8446#section-4.1.2
              *#    -  If a "key_share" extension was supplied in the HelloRetryRequest,
@@ -287,9 +294,11 @@ static S2N_RESULT s2n_client_hello_verify_for_retry(struct s2n_connection *conn,
              */
             default:
                 RESULT_ENSURE(old_size == new_size, S2N_ERR_BAD_MESSAGE);
-                RESULT_ENSURE(
-                    s2n_constant_time_equals(new_extension->extension.data, old_extension->extension.data, old_size),
-                    S2N_ERR_BAD_MESSAGE);
+                RESULT_ENSURE(s2n_constant_time_equals(
+                    new_extension->extension.data,
+                    old_extension->extension.data,
+                    old_size
+                ), S2N_ERR_BAD_MESSAGE);
         }
     }
 
@@ -303,7 +312,8 @@ int s2n_parse_client_hello(struct s2n_connection *conn)
     /* If a retry, move the old version of the client hello
      * somewhere safe so we can compare it to the new client hello later.
      */
-    DEFER_CLEANUP(struct s2n_client_hello previous_hello_retry = conn->client_hello, s2n_client_hello_free);
+    DEFER_CLEANUP(struct s2n_client_hello previous_hello_retry = conn->client_hello,
+            s2n_client_hello_free);
     if (s2n_is_hello_retry_handshake(conn)) {
         POSIX_CHECKED_MEMSET(&conn->client_hello, 0, sizeof(struct s2n_client_hello));
     }
@@ -343,11 +353,8 @@ int s2n_parse_client_hello(struct s2n_connection *conn)
     conn->client_hello_version = conn->client_protocol_version;
 
     POSIX_GUARD(s2n_stuffer_read_uint8(in, &conn->session_id_len));
-    S2N_ERROR_IF(
-        conn->session_id_len > S2N_TLS_SESSION_ID_MAX_LEN || conn->session_id_len > s2n_stuffer_data_available(in),
-        S2N_ERR_BAD_MESSAGE);
-    POSIX_GUARD(
-        s2n_blob_init(&client_hello->session_id, s2n_stuffer_raw_read(in, conn->session_id_len), conn->session_id_len));
+    S2N_ERROR_IF(conn->session_id_len > S2N_TLS_SESSION_ID_MAX_LEN || conn->session_id_len > s2n_stuffer_data_available(in), S2N_ERR_BAD_MESSAGE);
+    POSIX_GUARD(s2n_blob_init(&client_hello->session_id, s2n_stuffer_raw_read(in, conn->session_id_len), conn->session_id_len));
     POSIX_CHECKED_MEMCPY(conn->session_id, client_hello->session_id.data, conn->session_id_len);
 
     uint16_t cipher_suites_length = 0;
@@ -382,8 +389,8 @@ int s2n_parse_client_hello(struct s2n_connection *conn)
 
     POSIX_GUARD(s2n_extension_list_parse(in, &conn->client_hello.extensions));
 
-    POSIX_GUARD_RESULT(
-        s2n_client_hello_verify_for_retry(conn, &previous_hello_retry, client_hello, previous_client_random));
+    POSIX_GUARD_RESULT(s2n_client_hello_verify_for_retry(conn,
+            &previous_hello_retry, client_hello, previous_client_random));
     return S2N_SUCCESS;
 }
 
@@ -434,11 +441,12 @@ int s2n_process_client_hello(struct s2n_connection *conn)
     POSIX_CHECKED_MEMCPY(previous_cipher_suite_iana, conn->secure->cipher_suite->iana_value, S2N_TLS_CIPHER_SUITE_LEN);
 
     /* Now choose the ciphers we have certs for. */
-    POSIX_GUARD(
-        s2n_set_cipher_as_tls_server(conn, client_hello->cipher_suites.data, client_hello->cipher_suites.size / 2));
+    POSIX_GUARD(s2n_set_cipher_as_tls_server(conn, client_hello->cipher_suites.data, client_hello->cipher_suites.size / 2));
 
     /* Check if this is the second client hello in a hello retry handshake */
-    if (s2n_is_hello_retry_handshake(conn) && conn->handshake.message_number > 0) {
+    if (s2n_is_hello_retry_handshake(conn) &&
+        conn->handshake.message_number > 0) {
+
         /**
          *= https://tools.ietf.org/rfc/rfc8446#4.1.4
          *# Servers MUST ensure that they negotiate the
@@ -446,9 +454,8 @@ int s2n_process_client_hello(struct s2n_connection *conn)
          *# the server selects the cipher suite as the first step in the
          *# negotiation, then this will happen automatically).
          **/
-        POSIX_ENSURE(s2n_constant_time_equals(
-                         previous_cipher_suite_iana, conn->secure->cipher_suite->iana_value, S2N_TLS_CIPHER_SUITE_LEN),
-            S2N_ERR_BAD_MESSAGE);
+        POSIX_ENSURE(s2n_constant_time_equals(previous_cipher_suite_iana, conn->secure->cipher_suite->iana_value,
+                S2N_TLS_CIPHER_SUITE_LEN),S2N_ERR_BAD_MESSAGE);
     }
 
     /* If we're using a PSK, we don't need to choose a signature algorithm or certificate,
@@ -458,8 +465,9 @@ int s2n_process_client_hello(struct s2n_connection *conn)
     }
 
     /* And set the signature and hash algorithm used for key exchange signatures */
-    POSIX_GUARD(s2n_choose_sig_scheme_from_peer_preference_list(
-        conn, &conn->handshake_params.client_sig_hash_algs, &conn->handshake_params.conn_sig_scheme));
+    POSIX_GUARD(s2n_choose_sig_scheme_from_peer_preference_list(conn,
+        &conn->handshake_params.client_sig_hash_algs,
+        &conn->handshake_params.conn_sig_scheme));
 
     /* And finally, set the certs specified by the final auth + sig_alg combo. */
     POSIX_GUARD(s2n_select_certs_for_server_auth(conn, &conn->handshake_params.our_chain_and_key));
@@ -472,14 +480,14 @@ static S2N_RESULT s2n_client_hello_process_cb_response(struct s2n_connection *co
     if (rc < 0) {
         goto fail;
     }
-    switch (conn->config->client_hello_cb_mode) {
-        case S2N_CLIENT_HELLO_CB_BLOCKING: {
-            if (rc) {
+    switch(conn->config->client_hello_cb_mode) {
+        case S2N_CLIENT_HELLO_CB_BLOCKING : {
+            if(rc) {
                 conn->server_name_used = 1;
             }
             return S2N_RESULT_OK;
         }
-        case S2N_CLIENT_HELLO_CB_NONBLOCKING: {
+        case S2N_CLIENT_HELLO_CB_NONBLOCKING : {
             if (conn->client_hello.callback_async_done) {
                 return S2N_RESULT_OK;
             }
@@ -493,8 +501,7 @@ fail:
     RESULT_BAIL(S2N_ERR_CANCELLED);
 }
 
-bool s2n_client_hello_invoke_callback(struct s2n_connection *conn)
-{
+bool s2n_client_hello_invoke_callback(struct s2n_connection *conn) {
     /* Invoke only if the callback has not been called or if polling mode is enabled */
     bool invoke = !conn->client_hello.callback_invoked || conn->config->client_hello_cb_enable_poll;
     /*
@@ -561,7 +568,7 @@ int s2n_client_hello_send(struct s2n_connection *conn)
     }
 
     struct s2n_stuffer *out = &conn->handshake.io;
-    uint8_t client_protocol_version[S2N_TLS_PROTOCOL_VERSION_LEN] = { 0 };
+    uint8_t client_protocol_version[S2N_TLS_PROTOCOL_VERSION_LEN] = {0};
 
     uint8_t reported_protocol_version = MIN(conn->client_protocol_version, S2N_TLS12);
     client_protocol_version[0] = reported_protocol_version / 10;
@@ -685,20 +692,18 @@ int s2n_sslv2_client_hello_recv(struct s2n_connection *conn)
     /* Find potential certificate matches before we choose the cipher. */
     POSIX_GUARD(s2n_conn_find_name_matching_certs(conn));
 
-    POSIX_GUARD(s2n_set_cipher_as_sslv2_server(
-        conn, client_hello->cipher_suites.data, client_hello->cipher_suites.size / S2N_SSLv2_CIPHER_SUITE_LEN));
+    POSIX_GUARD(s2n_set_cipher_as_sslv2_server(conn, client_hello->cipher_suites.data, client_hello->cipher_suites.size / S2N_SSLv2_CIPHER_SUITE_LEN));
     POSIX_GUARD(s2n_choose_default_sig_scheme(conn, &conn->handshake_params.conn_sig_scheme, S2N_SERVER));
     POSIX_GUARD(s2n_select_certs_for_server_auth(conn, &conn->handshake_params.our_chain_and_key));
 
     S2N_ERROR_IF(session_id_length > s2n_stuffer_data_available(in), S2N_ERR_BAD_MESSAGE);
-    POSIX_GUARD(
-        s2n_blob_init(&client_hello->session_id, s2n_stuffer_raw_read(in, session_id_length), session_id_length));
+    POSIX_GUARD(s2n_blob_init(&client_hello->session_id, s2n_stuffer_raw_read(in, session_id_length), session_id_length));
     if (session_id_length > 0 && session_id_length <= S2N_TLS_SESSION_ID_MAX_LEN) {
         POSIX_CHECKED_MEMCPY(conn->session_id, client_hello->session_id.data, session_id_length);
         conn->session_id_len = (uint8_t) session_id_length;
     }
 
-    struct s2n_blob b = { 0 };
+    struct s2n_blob b = {0};
     POSIX_GUARD(s2n_blob_init(&b, conn->handshake_params.client_random, S2N_TLS_RANDOM_DATA_LEN));
 
     b.data += S2N_TLS_RANDOM_DATA_LEN - challenge_length;
@@ -710,7 +715,7 @@ int s2n_sslv2_client_hello_recv(struct s2n_connection *conn)
 }
 
 static int s2n_client_hello_get_parsed_extension(s2n_tls_extension_type extension_type,
-    s2n_parsed_extensions_list *parsed_extension_list, s2n_parsed_extension **parsed_extension)
+        s2n_parsed_extensions_list *parsed_extension_list, s2n_parsed_extension **parsed_extension)
 {
     POSIX_ENSURE_REF(parsed_extension_list);
     POSIX_ENSURE_REF(parsed_extension);
@@ -738,8 +743,7 @@ ssize_t s2n_client_hello_get_extension_length(struct s2n_client_hello *ch, s2n_t
     return parsed_extension->extension.size;
 }
 
-ssize_t s2n_client_hello_get_extension_by_id(
-    struct s2n_client_hello *ch, s2n_tls_extension_type extension_type, uint8_t *out, uint32_t max_length)
+ssize_t s2n_client_hello_get_extension_by_id(struct s2n_client_hello *ch, s2n_tls_extension_type extension_type, uint8_t *out, uint32_t max_length)
 {
     POSIX_ENSURE_REF(ch);
     POSIX_ENSURE_REF(out);
@@ -762,8 +766,7 @@ int s2n_client_hello_get_session_id_length(struct s2n_client_hello *ch, uint32_t
     return S2N_SUCCESS;
 }
 
-int s2n_client_hello_get_session_id(
-    struct s2n_client_hello *ch, uint8_t *out, uint32_t *out_length, uint32_t max_length)
+int s2n_client_hello_get_session_id(struct s2n_client_hello *ch, uint8_t *out, uint32_t *out_length, uint32_t max_length)
 {
     POSIX_ENSURE_REF(ch);
     POSIX_ENSURE_REF(out);
@@ -776,13 +779,13 @@ int s2n_client_hello_get_session_id(
     return S2N_SUCCESS;
 }
 
-static S2N_RESULT s2n_client_hello_get_raw_extension(
-    uint16_t extension_iana, struct s2n_blob *raw_extensions, struct s2n_blob *extension)
+static S2N_RESULT s2n_client_hello_get_raw_extension(uint16_t extension_iana,
+        struct s2n_blob *raw_extensions, struct s2n_blob *extension)
 {
     RESULT_ENSURE_REF(raw_extensions);
     RESULT_ENSURE_REF(extension);
 
-    *extension = (struct s2n_blob){ 0 };
+    *extension = (struct s2n_blob) { 0 };
 
     struct s2n_stuffer raw_extensions_stuffer = { 0 };
     RESULT_GUARD_POSIX(s2n_stuffer_init(&raw_extensions_stuffer, raw_extensions));

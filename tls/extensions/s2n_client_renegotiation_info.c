@@ -13,12 +13,12 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/extensions/s2n_client_renegotiation_info.h"
-
-#include <stdint.h>
 #include <sys/param.h>
+#include <stdint.h>
 
+#include "tls/extensions/s2n_client_renegotiation_info.h"
 #include "tls/s2n_tls.h"
+
 #include "utils/s2n_safety.h"
 
 static int s2n_client_renegotiation_send(struct s2n_connection *conn, struct s2n_stuffer *out);
@@ -136,7 +136,7 @@ static int s2n_client_renegotiation_recv_renegotiation(struct s2n_connection *co
     uint8_t *renegotiated_connection = s2n_stuffer_raw_read(extension, verify_data_len);
     POSIX_ENSURE_REF(renegotiated_connection);
     POSIX_ENSURE(s2n_constant_time_equals(renegotiated_connection, conn->handshake.client_finished, verify_data_len),
-        S2N_ERR_BAD_MESSAGE);
+            S2N_ERR_BAD_MESSAGE);
 
     return S2N_SUCCESS;
 }

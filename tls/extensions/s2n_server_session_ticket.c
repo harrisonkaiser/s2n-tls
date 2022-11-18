@@ -13,12 +13,12 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/extensions/s2n_server_session_ticket.h"
-
 #include "stuffer/s2n_stuffer.h"
+
+#include "tls/s2n_tls_parameters.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_tls.h"
-#include "tls/s2n_tls_parameters.h"
+#include "tls/extensions/s2n_server_session_ticket.h"
 
 static bool s2n_session_ticket_should_send(struct s2n_connection *conn);
 static int s2n_session_ticket_recv(struct s2n_connection *conn, struct s2n_stuffer *extension);

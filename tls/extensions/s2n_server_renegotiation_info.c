@@ -13,14 +13,16 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/extensions/s2n_server_renegotiation_info.h"
-
 #include "error/s2n_errno.h"
+
 #include "stuffer/s2n_stuffer.h"
+
+#include "utils/s2n_safety.h"
+
+#include "tls/s2n_tls_parameters.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_tls.h"
-#include "tls/s2n_tls_parameters.h"
-#include "utils/s2n_safety.h"
+#include "tls/extensions/s2n_server_renegotiation_info.h"
 
 /**
  * s2n-tls servers do NOT support renegotiation.
@@ -181,13 +183,13 @@ static int s2n_renegotiation_info_recv_renegotiation(struct s2n_connection *conn
 
     uint8_t *first_half = s2n_stuffer_raw_read(extension, verify_data_len);
     POSIX_ENSURE_REF(first_half);
-    POSIX_ENSURE(
-        s2n_constant_time_equals(first_half, conn->handshake.client_finished, verify_data_len), S2N_ERR_BAD_MESSAGE);
+    POSIX_ENSURE(s2n_constant_time_equals(first_half, conn->handshake.client_finished, verify_data_len),
+            S2N_ERR_BAD_MESSAGE);
 
     uint8_t *second_half = s2n_stuffer_raw_read(extension, verify_data_len);
     POSIX_ENSURE_REF(second_half);
-    POSIX_ENSURE(
-        s2n_constant_time_equals(second_half, conn->handshake.server_finished, verify_data_len), S2N_ERR_BAD_MESSAGE);
+    POSIX_ENSURE(s2n_constant_time_equals(second_half, conn->handshake.server_finished, verify_data_len),
+            S2N_ERR_BAD_MESSAGE);
 
     return S2N_SUCCESS;
 }

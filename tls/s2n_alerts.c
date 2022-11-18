@@ -13,36 +13,37 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/s2n_alerts.h"
-
 #include <stdint.h>
 #include <sys/param.h>
 
 #include "error/s2n_errno.h"
+
+#include "tls/s2n_tls_parameters.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_record.h"
 #include "tls/s2n_resume.h"
-#include "tls/s2n_tls_parameters.h"
-#include "utils/s2n_blob.h"
-#include "utils/s2n_safety.h"
+#include "tls/s2n_alerts.h"
 
-#define S2N_TLS_ALERT_LEVEL_WARNING 1
-#define S2N_TLS_ALERT_LEVEL_FATAL 2
+#include "utils/s2n_safety.h"
+#include "utils/s2n_blob.h"
+
+#define S2N_TLS_ALERT_LEVEL_WARNING         1
+#define S2N_TLS_ALERT_LEVEL_FATAL           2
 
 #define S2N_ALERT_CASE(error, alert_code) \
-    case (error):                         \
-        *alert = (alert_code);            \
+    case (error): \
+        *alert = (alert_code); \
         return S2N_RESULT_OK
 
 #define S2N_NO_ALERT(error) \
-    case (error):           \
+    case (error): \
         RESULT_BAIL(S2N_ERR_NO_ALERT)
 
 static S2N_RESULT s2n_translate_protocol_error_to_alert(int error_code, uint8_t *alert)
 {
     RESULT_ENSURE_REF(alert);
 
-    switch (error_code) {
+    switch(error_code) {
         S2N_ALERT_CASE(S2N_ERR_MISSING_EXTENSION, S2N_TLS_ALERT_MISSING_EXTENSION);
 
         /* TODO: The ERR_BAD_MESSAGE -> ALERT_UNEXPECTED_MESSAGE mapping
@@ -148,7 +149,8 @@ static bool s2n_process_as_warning(struct s2n_connection *conn, uint8_t level, u
     /* Only TLS1.2 considers the alert level. The alert level field is
      * considered deprecated in TLS1.3. */
     if (s2n_connection_get_protocol_version(conn) < S2N_TLS13) {
-        return level == S2N_TLS_ALERT_LEVEL_WARNING && conn->config->alert_behavior == S2N_ALERT_IGNORE_WARNINGS;
+        return level == S2N_TLS_ALERT_LEVEL_WARNING
+                && conn->config->alert_behavior == S2N_ALERT_IGNORE_WARNINGS;
     }
 
     /* user_canceled is the only alert currently treated as a warning in TLS1.3.
@@ -177,7 +179,7 @@ int s2n_error_get_alert(int error, uint8_t *alert)
 
     POSIX_ENSURE_REF(alert);
 
-    switch (error_type) {
+    switch(error_type) {
         case S2N_ERR_T_OK:
         case S2N_ERR_T_CLOSED:
         case S2N_ERR_T_BLOCKED:
@@ -217,6 +219,7 @@ int s2n_process_alert_fragment(struct s2n_connection *conn)
         POSIX_GUARD(s2n_stuffer_copy(&conn->in, &conn->alert_in, bytes_to_read));
 
         if (s2n_stuffer_data_available(&conn->alert_in) == 2) {
+
             /* Close notifications are handled as shutdowns */
             if (conn->alert_in_data[1] == S2N_TLS_ALERT_CLOSE_NOTIFY) {
                 conn->closed = 1;
@@ -232,8 +235,7 @@ int s2n_process_alert_fragment(struct s2n_connection *conn)
 
             /* RFC 5077 5.1 - Expire any cached session on an error alert */
             if (s2n_allowed_to_cache_connection(conn) && conn->session_id_len) {
-                conn->config->cache_delete(
-                    conn, conn->config->cache_delete_data, conn->session_id, conn->session_id_len);
+                conn->config->cache_delete(conn, conn->config->cache_delete_data, conn->session_id, conn->session_id_len);
             }
 
             /* All other alerts are treated as fatal errors */
@@ -253,7 +255,7 @@ int s2n_queue_writer_close_alert_warning(struct s2n_connection *conn)
     alert[0] = S2N_TLS_ALERT_LEVEL_WARNING;
     alert[1] = S2N_TLS_ALERT_CLOSE_NOTIFY;
 
-    struct s2n_blob out = { .data = alert, .size = sizeof(alert) };
+    struct s2n_blob out = {.data = alert,.size = sizeof(alert) };
 
     /* If there is an alert pending or we've already sent a close_notify, do nothing */
     if (s2n_stuffer_data_available(&conn->writer_alert_out) || conn->close_notify_queued) {
@@ -278,7 +280,7 @@ static int s2n_queue_reader_alert(struct s2n_connection *conn, uint8_t level, ui
     alert[0] = level;
     alert[1] = error_code;
 
-    struct s2n_blob out = { .data = alert, .size = sizeof(alert) };
+    struct s2n_blob out = {.data = alert,.size = sizeof(alert) };
 
     /* If there is an alert pending, do nothing */
     if (s2n_stuffer_data_available(&conn->reader_alert_out)) {

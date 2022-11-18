@@ -13,18 +13,19 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/extensions/s2n_client_supported_groups.h"
-
-#include <stdint.h>
 #include <sys/param.h>
+#include <stdint.h>
 
-#include "pq-crypto/s2n_pq.h"
+#include "tls/extensions/s2n_client_supported_groups.h"
 #include "tls/extensions/s2n_ec_point_format.h"
-#include "tls/s2n_security_policies.h"
+
 #include "tls/s2n_tls.h"
-#include "tls/s2n_tls13.h"
 #include "tls/s2n_tls_parameters.h"
+#include "tls/s2n_security_policies.h"
+
 #include "utils/s2n_safety.h"
+#include "pq-crypto/s2n_pq.h"
+#include "tls/s2n_tls13.h"
 
 static int s2n_client_supported_groups_send(struct s2n_connection *conn, struct s2n_stuffer *out);
 static int s2n_client_supported_groups_recv(struct s2n_connection *conn, struct s2n_stuffer *extension);
@@ -42,7 +43,7 @@ bool s2n_extension_should_send_if_ecc_enabled(struct s2n_connection *conn)
 {
     const struct s2n_security_policy *security_policy;
     return s2n_connection_get_security_policy(conn, &security_policy) == S2N_SUCCESS
-        && s2n_ecc_is_extension_required(security_policy);
+            && s2n_ecc_is_extension_required(security_policy);
 }
 
 static int s2n_client_supported_groups_send(struct s2n_connection *conn, struct s2n_stuffer *out)
@@ -81,8 +82,7 @@ static int s2n_client_supported_groups_send(struct s2n_connection *conn, struct 
 /* Populates the appropriate index of either the mutually_supported_curves or
  * mutually_supported_kem_groups array based on the received IANA ID. Will
  * ignore unrecognized IANA IDs (and return success). */
-static int s2n_client_supported_groups_recv_iana_id(struct s2n_connection *conn, uint16_t iana_id)
-{
+static int s2n_client_supported_groups_recv_iana_id(struct s2n_connection *conn, uint16_t iana_id) {
     POSIX_ENSURE_REF(conn);
 
     const struct s2n_ecc_preferences *ecc_pref = NULL;
@@ -117,8 +117,7 @@ static int s2n_client_supported_groups_recv_iana_id(struct s2n_connection *conn,
     return S2N_SUCCESS;
 }
 
-static int s2n_choose_supported_group(struct s2n_connection *conn)
-{
+static int s2n_choose_supported_group(struct s2n_connection *conn) {
     POSIX_ENSURE_REF(conn);
 
     const struct s2n_ecc_preferences *ecc_pref = NULL;
@@ -160,8 +159,7 @@ static int s2n_choose_supported_group(struct s2n_connection *conn)
     return S2N_SUCCESS;
 }
 
-static int s2n_client_supported_groups_recv(struct s2n_connection *conn, struct s2n_stuffer *extension)
-{
+static int s2n_client_supported_groups_recv(struct s2n_connection *conn, struct s2n_stuffer *extension) {
     POSIX_ENSURE_REF(conn);
     POSIX_ENSURE_REF(extension);
 

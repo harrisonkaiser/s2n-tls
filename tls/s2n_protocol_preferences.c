@@ -13,8 +13,8 @@
  * permissions and limitations under the License.
  */
 
-#include "error/s2n_errno.h"
 #include "tls/s2n_connection.h"
+#include "error/s2n_errno.h"
 #include "utils/s2n_safety.h"
 
 S2N_RESULT s2n_protocol_preferences_read(struct s2n_stuffer *protocol_preferences, struct s2n_blob *protocol)
@@ -33,8 +33,7 @@ S2N_RESULT s2n_protocol_preferences_read(struct s2n_stuffer *protocol_preference
     return S2N_RESULT_OK;
 }
 
-S2N_RESULT s2n_protocol_preferences_contain(
-    struct s2n_blob *protocol_preferences, struct s2n_blob *protocol, bool *contains)
+S2N_RESULT s2n_protocol_preferences_contain(struct s2n_blob *protocol_preferences, struct s2n_blob *protocol, bool *contains)
 {
     RESULT_ENSURE_REF(contains);
     *contains = false;
@@ -57,8 +56,7 @@ S2N_RESULT s2n_protocol_preferences_contain(
     return S2N_RESULT_OK;
 }
 
-S2N_RESULT s2n_protocol_preferences_append(
-    struct s2n_blob *application_protocols, const uint8_t *protocol, uint8_t protocol_len)
+S2N_RESULT s2n_protocol_preferences_append(struct s2n_blob *application_protocols, const uint8_t *protocol, uint8_t protocol_len)
 {
     RESULT_ENSURE_MUT(application_protocols);
     RESULT_ENSURE_REF(protocol);
@@ -85,8 +83,7 @@ S2N_RESULT s2n_protocol_preferences_append(
     return S2N_RESULT_OK;
 }
 
-S2N_RESULT s2n_protocol_preferences_set(
-    struct s2n_blob *application_protocols, const char *const *protocols, int protocol_count)
+S2N_RESULT s2n_protocol_preferences_set(struct s2n_blob *application_protocols, const char *const *protocols, int protocol_count)
 {
     RESULT_ENSURE_MUT(application_protocols);
 
@@ -112,7 +109,7 @@ S2N_RESULT s2n_protocol_preferences_set(
     RESULT_GUARD_POSIX(s2n_realloc(&new_protocols, 0));
 
     for (size_t i = 0; i < protocol_count; i++) {
-        const uint8_t *protocol = (const uint8_t *) protocols[i];
+        const uint8_t * protocol = (const uint8_t *)protocols[i];
         size_t length = strlen(protocols[i]);
 
         /**
@@ -122,7 +119,7 @@ S2N_RESULT s2n_protocol_preferences_set(
          */
         RESULT_ENSURE(length < 256, S2N_ERR_INVALID_APPLICATION_PROTOCOL);
 
-        RESULT_GUARD(s2n_protocol_preferences_append(&new_protocols, protocol, (uint8_t) length));
+        RESULT_GUARD(s2n_protocol_preferences_append(&new_protocols, protocol, (uint8_t)length));
     }
 
     /* now we can free the previous list since we've validated all new input */
@@ -140,29 +137,29 @@ S2N_RESULT s2n_protocol_preferences_set(
     return S2N_RESULT_OK;
 }
 
-S2N_RESULT s2n_select_server_preference_protocol(
-    struct s2n_connection *conn, struct s2n_stuffer *server_list, struct s2n_blob *client_list)
+S2N_RESULT s2n_select_server_preference_protocol(struct s2n_connection *conn, struct s2n_stuffer *server_list,
+    struct s2n_blob *client_list)
 {
     RESULT_ENSURE_REF(conn);
     RESULT_ENSURE_REF(server_list);
     RESULT_ENSURE_REF(client_list);
 
-    while (s2n_stuffer_data_available(server_list) > 0) {
+    while(s2n_stuffer_data_available(server_list) > 0) {
         struct s2n_blob protocol = { 0 };
         RESULT_ENSURE_OK(s2n_protocol_preferences_read(server_list, &protocol), S2N_ERR_BAD_MESSAGE);
-
+        
         bool match_found = false;
         RESULT_ENSURE_OK(s2n_protocol_preferences_contain(client_list, &protocol, &match_found), S2N_ERR_BAD_MESSAGE);
-
+        
         if (match_found) {
             RESULT_ENSURE_LT(protocol.size, sizeof(conn->application_protocol));
             RESULT_CHECKED_MEMCPY(conn->application_protocol, protocol.data, protocol.size);
             conn->application_protocol[protocol.size] = '\0';
             return S2N_RESULT_OK;
-        }
+        }    
     }
 
-    return S2N_RESULT_OK;
+    return S2N_RESULT_OK;   
 }
 
 int s2n_config_set_protocol_preferences(struct s2n_config *config, const char *const *protocols, int protocol_count)
@@ -177,18 +174,14 @@ int s2n_config_append_protocol_preference(struct s2n_config *config, const uint8
     return S2N_SUCCESS;
 }
 
-int s2n_connection_set_protocol_preferences(
-    struct s2n_connection *conn, const char *const *protocols, int protocol_count)
+int s2n_connection_set_protocol_preferences(struct s2n_connection *conn, const char * const *protocols, int protocol_count)
 {
-    POSIX_GUARD_RESULT(
-        s2n_protocol_preferences_set(&conn->application_protocols_overridden, protocols, protocol_count));
+    POSIX_GUARD_RESULT(s2n_protocol_preferences_set(&conn->application_protocols_overridden, protocols, protocol_count));
     return S2N_SUCCESS;
 }
 
-int s2n_connection_append_protocol_preference(
-    struct s2n_connection *conn, const uint8_t *protocol, uint8_t protocol_len)
+int s2n_connection_append_protocol_preference(struct s2n_connection *conn, const uint8_t *protocol, uint8_t protocol_len)
 {
-    POSIX_GUARD_RESULT(
-        s2n_protocol_preferences_append(&conn->application_protocols_overridden, protocol, protocol_len));
+    POSIX_GUARD_RESULT(s2n_protocol_preferences_append(&conn->application_protocols_overridden, protocol, protocol_len));
     return S2N_SUCCESS;
 }

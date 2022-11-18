@@ -15,17 +15,18 @@
 
 #pragma once
 
-#include <openssl/x509v3.h>
-
 #include "api/s2n.h"
+
 #include "tls/s2n_signature_scheme.h"
+
+#include <openssl/x509v3.h>
 
 /* one day, BoringSSL may add ocsp stapling support. Let's future proof this a bit by grabbing a definition
  * that would have to be there when they add support */
 #if defined(OPENSSL_IS_BORINGSSL) && !defined(OCSP_RESPONSE_STATUS_SUCCESSFUL)
-    #define S2N_OCSP_STAPLING_SUPPORTED 0
+#define S2N_OCSP_STAPLING_SUPPORTED 0
 #else
-    #define S2N_OCSP_STAPLING_SUPPORTED 1
+#define S2N_OCSP_STAPLING_SUPPORTED 1
 #endif /* defined(OPENSSL_IS_BORINGSSL) && !defined(OCSP_RESPONSE_STATUS_SUCCESSFUL) */
 
 typedef enum {
@@ -38,7 +39,7 @@ typedef enum {
 } validator_state;
 
 /** Return TRUE for trusted, FALSE for untrusted **/
-typedef uint8_t (*verify_host)(const char *host_name, size_t host_name_len, void *data);
+typedef uint8_t (*verify_host) (const char *host_name, size_t host_name_len, void *data);
 struct s2n_connection;
 
 /**
@@ -58,7 +59,7 @@ struct s2n_x509_validator {
     uint8_t skip_cert_validation;
     uint8_t check_stapled_ocsp;
     uint16_t max_chain_depth;
-    STACK_OF(X509) * cert_chain_from_wire;
+    STACK_OF(X509) *cert_chain_from_wire;
     int state;
     struct s2n_array *crl_lookup_list;
 };
@@ -80,8 +81,7 @@ int s2n_x509_trust_store_add_pem(struct s2n_x509_trust_store *store, const char 
 
 /** Initialize trust store from a CA file. This will allocate memory, and load each cert in the file into the trust store
  *  Returns 0 on success, or S2N error codes on failure. */
-int s2n_x509_trust_store_from_ca_file(
-    struct s2n_x509_trust_store *store, const char *ca_pem_filename, const char *ca_dir);
+int s2n_x509_trust_store_from_ca_file(struct s2n_x509_trust_store *store, const char *ca_pem_filename, const char *ca_dir);
 
 /** Cleans up, and frees any underlying memory in the trust store. */
 void s2n_x509_trust_store_wipe(struct s2n_x509_trust_store *store);
@@ -93,8 +93,7 @@ int s2n_x509_validator_init_no_x509_validation(struct s2n_x509_validator *valida
  *  the verify host callback to determine if a subject name or alternative name from the cert should be trusted.
  *  Returns 0 on success, and an S2N_ERR_* on failure.
  */
-int s2n_x509_validator_init(
-    struct s2n_x509_validator *validator, struct s2n_x509_trust_store *trust_store, uint8_t check_ocsp);
+int s2n_x509_validator_init(struct s2n_x509_validator *validator, struct s2n_x509_trust_store *trust_store, uint8_t check_ocsp);
 
 /**
  * Sets the maximum depth for a cert chain that can be used at validation.
@@ -115,14 +114,15 @@ int s2n_x509_validator_wipe(struct s2n_x509_validator *validator);
  * s2n_x509_validator_validate_cert_stapled_ocsp_response().
  */
 S2N_RESULT s2n_x509_validator_validate_cert_chain(struct s2n_x509_validator *validator, struct s2n_connection *conn,
-    uint8_t *cert_chain_in, uint32_t cert_chain_len, s2n_pkey_type *pkey_type, struct s2n_pkey *public_key_out);
+                                                  uint8_t *cert_chain_in, uint32_t cert_chain_len, s2n_pkey_type *pkey_type,
+                                                  struct s2n_pkey *public_key_out);
 
 /**
  * Validates an ocsp response against the most recent certificate chain. Also verifies the timestamps on the response. This function can only be
  * called once per instance of an s2n_x509_validator and only after a successful call to s2n_x509_validator_validate_cert_chain().
  */
-S2N_RESULT s2n_x509_validator_validate_cert_stapled_ocsp_response(
-    struct s2n_x509_validator *validator, struct s2n_connection *conn, const uint8_t *ocsp_response, uint32_t size);
+S2N_RESULT s2n_x509_validator_validate_cert_stapled_ocsp_response(struct s2n_x509_validator *validator,  struct s2n_connection *conn,
+                                                                  const uint8_t *ocsp_response, uint32_t size);
 
 /**
  * Checks whether the peer's certificate chain has been received and validated.
@@ -137,5 +137,4 @@ bool s2n_x509_validator_is_cert_chain_validated(const struct s2n_x509_validator 
 S2N_RESULT s2n_validate_certificate_signature(struct s2n_connection *conn, X509 *x509_cert);
 
 /* Checks to see if a certificate has a signature algorithm that's in our certificate_signature_preferences list */
-S2N_RESULT s2n_validate_sig_scheme_supported(
-    struct s2n_connection *conn, X509 *x509_cert, const struct s2n_signature_preferences *cert_sig_preferences);
+S2N_RESULT s2n_validate_sig_scheme_supported(struct s2n_connection *conn, X509 *x509_cert, const struct s2n_signature_preferences *cert_sig_preferences);

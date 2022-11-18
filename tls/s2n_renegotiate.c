@@ -73,7 +73,8 @@ int s2n_renegotiate_wipe(struct s2n_connection *conn)
     /* Save the crypto parameters.
      * We need to continue encrypting / decrypting with the old secure parameters.
      */
-    DEFER_CLEANUP(struct s2n_crypto_parameters *secure_crypto_params = conn->secure, s2n_crypto_parameters_free);
+    DEFER_CLEANUP(struct s2n_crypto_parameters *secure_crypto_params = conn->secure,
+            s2n_crypto_parameters_free);
     conn->secure = NULL;
 
     /* Save the fragment length so we continue properly fragmenting our records
@@ -154,8 +155,8 @@ int s2n_renegotiate_wipe(struct s2n_connection *conn)
     return S2N_SUCCESS;
 }
 
-static S2N_RESULT s2n_renegotiate_read_app_data(struct s2n_connection *conn, uint8_t *app_data_buf,
-    ssize_t app_data_buf_size, ssize_t *app_data_size, s2n_blocked_status *blocked)
+static S2N_RESULT s2n_renegotiate_read_app_data(struct s2n_connection *conn, uint8_t *app_data_buf, ssize_t app_data_buf_size,
+        ssize_t *app_data_size, s2n_blocked_status *blocked)
 {
     RESULT_ENSURE_REF(blocked);
 
@@ -168,7 +169,7 @@ static S2N_RESULT s2n_renegotiate_read_app_data(struct s2n_connection *conn, uin
 }
 
 int s2n_renegotiate(struct s2n_connection *conn, uint8_t *app_data_buf, ssize_t app_data_buf_size,
-    ssize_t *app_data_size, s2n_blocked_status *blocked)
+        ssize_t *app_data_size, s2n_blocked_status *blocked)
 {
     POSIX_GUARD_RESULT(s2n_renegotiate_validate(conn));
 
@@ -179,8 +180,8 @@ int s2n_renegotiate(struct s2n_connection *conn, uint8_t *app_data_buf, ssize_t 
      * We can't read the next handshake record until we drain the buffer.
      */
     if (s2n_peek(conn) > 0) {
-        POSIX_GUARD_RESULT(
-            s2n_renegotiate_read_app_data(conn, app_data_buf, app_data_buf_size, app_data_size, blocked));
+        POSIX_GUARD_RESULT(s2n_renegotiate_read_app_data(conn,
+                app_data_buf, app_data_buf_size, app_data_size, blocked));
     }
 
     int result = s2n_negotiate(conn, blocked);
@@ -189,8 +190,8 @@ int s2n_renegotiate(struct s2n_connection *conn, uint8_t *app_data_buf, ssize_t 
      * pass it back to the application.
      */
     if (result != S2N_SUCCESS && s2n_errno == S2N_ERR_APP_DATA_BLOCKED) {
-        POSIX_GUARD_RESULT(
-            s2n_renegotiate_read_app_data(conn, app_data_buf, app_data_buf_size, app_data_size, blocked));
+        POSIX_GUARD_RESULT(s2n_renegotiate_read_app_data(conn,
+                app_data_buf, app_data_buf_size, app_data_size, blocked));
     }
 
     return result;

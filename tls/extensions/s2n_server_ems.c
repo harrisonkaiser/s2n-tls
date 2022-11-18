@@ -13,11 +13,12 @@
  * permissions and limitations under the License.
  */
 
-#include <stdint.h>
 #include <sys/param.h>
+#include <stdint.h>
 
-#include "tls/extensions/s2n_ems.h"
 #include "tls/s2n_tls.h"
+#include "tls/extensions/s2n_ems.h"
+
 #include "utils/s2n_safety.h"
 
 static int s2n_server_ems_recv(struct s2n_connection *conn, struct s2n_stuffer *extension);

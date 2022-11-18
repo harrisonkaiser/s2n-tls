@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+
 #pragma once
 
 #include "tls/extensions/s2n_extension_type.h"
@@ -21,3 +22,4 @@ extern const s2n_extension_type s2n_client_cookie_extension;
 extern const s2n_extension_type s2n_server_cookie_extension;
 
 int s2n_cookie_send(struct s2n_connection *conn, struct s2n_stuffer *out);
+

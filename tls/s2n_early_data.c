@@ -13,22 +13,22 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/s2n_early_data.h"
-
 #include <sys/param.h>
 
-#include "tls/s2n_cipher_suites.h"
+#include "tls/s2n_early_data.h"
+
 #include "tls/s2n_connection.h"
+#include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_psk.h"
-#include "utils/s2n_mem.h"
 #include "utils/s2n_safety.h"
+#include "utils/s2n_mem.h"
 
 const s2n_early_data_state valid_previous_states[] = {
-    [S2N_EARLY_DATA_REQUESTED] = S2N_UNKNOWN_EARLY_DATA_STATE,
-    [S2N_EARLY_DATA_NOT_REQUESTED] = S2N_UNKNOWN_EARLY_DATA_STATE,
-    [S2N_EARLY_DATA_REJECTED] = S2N_EARLY_DATA_REQUESTED,
-    [S2N_EARLY_DATA_ACCEPTED] = S2N_EARLY_DATA_REQUESTED,
-    [S2N_END_OF_EARLY_DATA] = S2N_EARLY_DATA_ACCEPTED,
+        [S2N_EARLY_DATA_REQUESTED]      = S2N_UNKNOWN_EARLY_DATA_STATE,
+        [S2N_EARLY_DATA_NOT_REQUESTED]  = S2N_UNKNOWN_EARLY_DATA_STATE,
+        [S2N_EARLY_DATA_REJECTED]       = S2N_EARLY_DATA_REQUESTED,
+        [S2N_EARLY_DATA_ACCEPTED]       = S2N_EARLY_DATA_REQUESTED,
+        [S2N_END_OF_EARLY_DATA]         = S2N_EARLY_DATA_ACCEPTED,
 };
 
 S2N_RESULT s2n_connection_set_early_data_state(struct s2n_connection *conn, s2n_early_data_state next_state)
@@ -150,7 +150,7 @@ S2N_RESULT s2n_early_data_accept_or_reject(struct s2n_connection *conn)
     if (conn->config->early_data_cb) {
         conn->handshake.early_data_async_state.conn = conn;
         RESULT_ENSURE(conn->config->early_data_cb(conn, &conn->handshake.early_data_async_state) >= S2N_SUCCESS,
-            S2N_ERR_CANCELLED);
+                      S2N_ERR_CANCELLED);
         if (conn->early_data_state == S2N_EARLY_DATA_REQUESTED) {
             RESULT_BAIL(S2N_ERR_ASYNC_BLOCKED);
         }
@@ -188,8 +188,7 @@ S2N_RESULT s2n_early_data_get_server_max_size(struct s2n_connection *conn, uint3
     return S2N_RESULT_OK;
 }
 
-int s2n_connection_set_server_early_data_context(
-    struct s2n_connection *conn, const uint8_t *context, uint16_t context_size)
+int s2n_connection_set_server_early_data_context(struct s2n_connection *conn, const uint8_t *context, uint16_t context_size)
 {
     POSIX_ENSURE_REF(conn);
     if (context_size > 0) {
@@ -211,8 +210,8 @@ S2N_CLEANUP_RESULT s2n_early_data_config_free(struct s2n_early_data_config *conf
     return S2N_RESULT_OK;
 }
 
-int s2n_psk_configure_early_data(struct s2n_psk *psk, uint32_t max_early_data_size, uint8_t cipher_suite_first_byte,
-    uint8_t cipher_suite_second_byte)
+int s2n_psk_configure_early_data(struct s2n_psk *psk, uint32_t max_early_data_size,
+        uint8_t cipher_suite_first_byte, uint8_t cipher_suite_second_byte)
 {
     POSIX_ENSURE_REF(psk);
 
@@ -265,9 +264,10 @@ S2N_RESULT s2n_early_data_config_clone(struct s2n_psk *new_psk, struct s2n_early
     new_psk->early_data_config.context = config_copy.context;
 
     /* Clone / realloc blobs */
-    RESULT_GUARD_POSIX(s2n_psk_set_application_protocol(
-        new_psk, old_config->application_protocol.data, old_config->application_protocol.size));
-    RESULT_GUARD_POSIX(s2n_psk_set_early_data_context(new_psk, old_config->context.data, old_config->context.size));
+    RESULT_GUARD_POSIX(s2n_psk_set_application_protocol(new_psk, old_config->application_protocol.data,
+            old_config->application_protocol.size));
+    RESULT_GUARD_POSIX(s2n_psk_set_early_data_context(new_psk, old_config->context.data,
+            old_config->context.size));
 
     return S2N_RESULT_OK;
 }
@@ -277,7 +277,7 @@ int s2n_connection_get_early_data_status(struct s2n_connection *conn, s2n_early_
     POSIX_ENSURE_REF(conn);
     POSIX_ENSURE_REF(status);
 
-    switch (conn->early_data_state) {
+    switch(conn->early_data_state) {
         case S2N_EARLY_DATA_STATES_COUNT:
             break;
         case S2N_EARLY_DATA_NOT_REQUESTED:
@@ -319,7 +319,7 @@ int s2n_connection_get_remaining_early_data_size(struct s2n_connection *conn, ui
     POSIX_ENSURE_REF(allowed_early_data_size);
     *allowed_early_data_size = 0;
 
-    switch (conn->early_data_state) {
+    switch(conn->early_data_state) {
         case S2N_EARLY_DATA_STATES_COUNT:
         case S2N_EARLY_DATA_NOT_REQUESTED:
         case S2N_EARLY_DATA_REJECTED:
@@ -360,7 +360,7 @@ int s2n_connection_get_max_early_data_size(struct s2n_connection *conn, uint32_t
     }
 
     struct s2n_psk *first_psk = NULL;
-    POSIX_GUARD_RESULT(s2n_array_get(&conn->psk_params.psk_list, 0, (void **) &first_psk));
+    POSIX_GUARD_RESULT(s2n_array_get(&conn->psk_params.psk_list, 0, (void**) &first_psk));
     POSIX_ENSURE_REF(first_psk);
     *max_early_data_size = first_psk->early_data_config.max_early_data_size;
 

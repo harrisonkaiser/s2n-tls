@@ -13,15 +13,16 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/extensions/s2n_client_alpn.h"
-
-#include <stdint.h>
 #include <sys/param.h>
+#include <stdint.h>
+
+#include "tls/extensions/s2n_client_alpn.h"
 
 #include "tls/extensions/s2n_extension_type.h"
 #include "tls/s2n_protocol_preferences.h"
 #include "tls/s2n_tls.h"
 #include "tls/s2n_tls_parameters.h"
+
 #include "utils/s2n_safety.h"
 
 bool s2n_client_alpn_should_send(struct s2n_connection *conn);
@@ -42,7 +43,7 @@ bool s2n_client_alpn_should_send(struct s2n_connection *conn)
     struct s2n_blob *client_app_protocols;
 
     return s2n_connection_get_protocol_preferences(conn, &client_app_protocols) == S2N_SUCCESS
-        && client_app_protocols->size != 0 && client_app_protocols->data != NULL;
+            && client_app_protocols->size != 0 && client_app_protocols->data != NULL;
 }
 
 static int s2n_client_alpn_send(struct s2n_connection *conn, struct s2n_stuffer *out)
@@ -74,7 +75,7 @@ static int s2n_client_alpn_recv(struct s2n_connection *conn, struct s2n_stuffer 
         /* Malformed length, ignore the extension */
         return S2N_SUCCESS;
     }
-
+    
     struct s2n_blob client_protocols = { 0 };
     POSIX_GUARD(s2n_blob_init(&client_protocols, s2n_stuffer_raw_read(extension, wire_size), wire_size));
 

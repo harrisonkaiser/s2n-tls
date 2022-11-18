@@ -14,6 +14,7 @@
  */
 
 #include "api/s2n.h"
+
 #include "tls/s2n_alerts.h"
 #include "tls/s2n_connection.h"
 #include "utils/s2n_safety.h"

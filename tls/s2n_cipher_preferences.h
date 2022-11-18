@@ -16,7 +16,6 @@
 #pragma once
 
 #include <stdint.h>
-
 #include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_kem.h"
 #include "tls/s2n_tls13.h"
@@ -126,3 +125,4 @@ extern const struct s2n_cipher_preferences cipher_preferences_pq_tls_1_0_2021_05
 extern const struct s2n_cipher_preferences cipher_preferences_pq_tls_1_0_2021_05_26;
 
 extern const struct s2n_cipher_preferences cipher_preferences_null;
+

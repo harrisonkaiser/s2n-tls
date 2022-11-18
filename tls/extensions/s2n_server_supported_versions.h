@@ -13,10 +13,11 @@
  * permissions and limitations under the License.
  */
 
+
 #pragma once
 
-#include "stuffer/s2n_stuffer.h"
 #include "tls/s2n_connection.h"
+#include "stuffer/s2n_stuffer.h"
 
 extern const s2n_extension_type s2n_server_supported_versions_extension;
 

@@ -16,6 +16,7 @@
 #pragma once
 
 #include "api/s2n.h"
+
 #include "crypto/s2n_hmac.h"
 #include "stuffer/s2n_stuffer.h"
 #include "tls/s2n_early_data.h"
@@ -82,10 +83,11 @@ struct s2n_offered_psk_list {
 S2N_RESULT s2n_finish_psk_extension(struct s2n_connection *conn);
 
 int s2n_psk_calculate_binder_hash(struct s2n_connection *conn, s2n_hmac_algorithm hmac_alg,
-    const struct s2n_blob *partial_client_hello, struct s2n_blob *output_binder_hash);
-int s2n_psk_calculate_binder(struct s2n_psk *psk, const struct s2n_blob *binder_hash, struct s2n_blob *output_binder);
-int s2n_psk_verify_binder(struct s2n_connection *conn, struct s2n_psk *psk, const struct s2n_blob *partial_client_hello,
-    struct s2n_blob *binder_to_verify);
+        const struct s2n_blob *partial_client_hello, struct s2n_blob *output_binder_hash);
+int s2n_psk_calculate_binder(struct s2n_psk *psk, const struct s2n_blob *binder_hash,
+        struct s2n_blob *output_binder);
+int s2n_psk_verify_binder(struct s2n_connection *conn, struct s2n_psk *psk,
+        const struct s2n_blob *partial_client_hello, struct s2n_blob *binder_to_verify);
 
 S2N_RESULT s2n_connection_set_psk_type(struct s2n_connection *conn, s2n_psk_type type);
 S2N_RESULT s2n_psk_validate_keying_material(struct s2n_connection *conn);
