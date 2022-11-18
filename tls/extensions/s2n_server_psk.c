@@ -13,14 +13,14 @@
  * permissions and limitations under the License.
  */
 
-#include <sys/param.h>
-#include <stdint.h>
-
-#include "tls/s2n_tls.h"
 #include "tls/extensions/s2n_server_psk.h"
 
-#include "utils/s2n_safety.h"
+#include <stdint.h>
+#include <sys/param.h>
+
+#include "tls/s2n_tls.h"
 #include "utils/s2n_bitmap.h"
+#include "utils/s2n_safety.h"
 
 static bool s2n_server_psk_should_send(struct s2n_connection *conn);
 static int s2n_server_psk_send(struct s2n_connection *conn, struct s2n_stuffer *out);
@@ -81,8 +81,8 @@ static int s2n_server_psk_recv(struct s2n_connection *conn, struct s2n_stuffer *
     POSIX_ENSURE(chosen_psk_wire_index < conn->psk_params.psk_list.len, S2N_ERR_INVALID_ARGUMENT);
     conn->psk_params.chosen_psk_wire_index = chosen_psk_wire_index;
 
-    POSIX_GUARD_RESULT(s2n_array_get(&conn->psk_params.psk_list, conn->psk_params.chosen_psk_wire_index,
-                                 (void **)&conn->psk_params.chosen_psk));
+    POSIX_GUARD_RESULT(s2n_array_get(
+        &conn->psk_params.psk_list, conn->psk_params.chosen_psk_wire_index, (void **) &conn->psk_params.chosen_psk));
 
     return S2N_SUCCESS;
 }

@@ -15,34 +15,36 @@
 
 #pragma once
 
-#include "utils/s2n_annotations.h"
 #include "sidetrail.h"
+#include "utils/s2n_annotations.h"
 
 void __VERIFIER_assume(int);
 
 #define MEMCOPY_COST 2
 void *memcpy(void *str1, const void *str2, size_t n);
 
-void *s2n_sidetrail_memset(void * ptr, int value, size_t num);
+void *s2n_sidetrail_memset(void *ptr, int value, size_t num);
 
-#define __S2N_ENSURE( cond, action )                       __VERIFIER_assume((cond))
-#define __S2N_ENSURE_DEBUG( cond, action )                 __VERIFIER_assume((cond))
+#define __S2N_ENSURE(cond, action) __VERIFIER_assume((cond))
+#define __S2N_ENSURE_DEBUG(cond, action) __VERIFIER_assume((cond))
 
-#define __S2N_ENSURE_PRECONDITION( result )                S2N_RESULT_OK
-#define __S2N_ENSURE_POSTCONDITION( result )               S2N_RESULT_OK
+#define __S2N_ENSURE_PRECONDITION(result) S2N_RESULT_OK
+#define __S2N_ENSURE_POSTCONDITION(result) S2N_RESULT_OK
 
-#define __S2N_ENSURE_SAFE_MEMCPY( d , s , n , guard )      do { memcpy((d), (s), (n)); } while(0)
+#define __S2N_ENSURE_SAFE_MEMCPY(d, s, n, guard) \
+    do {                                         \
+        memcpy((d), (s), (n));                   \
+    } while (0)
 
-#define __S2N_ENSURE_SAFE_MEMSET( d , c , n , guard )      \
-  do {                                                     \
-    __typeof( n ) __tmp_n = ( n );                         \
-    if ( __tmp_n ) {                                       \
-      __typeof( d ) __tmp_d = ( d );                       \
-      guard( __tmp_d );                                    \
-      s2n_sidetrail_memset( __tmp_d, (c), __tmp_n);        \
-    }                                                      \
-  } while(0)
-
+#define __S2N_ENSURE_SAFE_MEMSET(d, c, n, guard)         \
+    do {                                                 \
+        __typeof(n) __tmp_n = (n);                       \
+        if (__tmp_n) {                                   \
+            __typeof(d) __tmp_d = (d);                   \
+            guard(__tmp_d);                              \
+            s2n_sidetrail_memset(__tmp_d, (c), __tmp_n); \
+        }                                                \
+    } while (0)
 
 /**
  * The C runtime does not give a way to check these properties,

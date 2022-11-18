@@ -24,7 +24,7 @@ typedef struct {
     uint16_t extension_type;
     struct s2n_blob extension;
     uint16_t wire_index;
-    unsigned processed:1;
+    unsigned processed : 1;
 } s2n_parsed_extension;
 
 typedef struct {
@@ -51,7 +51,7 @@ int s2n_extension_list_send(s2n_extension_list_id list_type, struct s2n_connecti
 int s2n_extension_list_recv(s2n_extension_list_id list_type, struct s2n_connection *conn, struct s2n_stuffer *in);
 
 int s2n_extension_process(const s2n_extension_type *extension_type, struct s2n_connection *conn,
-        s2n_parsed_extensions_list *parsed_extension_list);
-int s2n_extension_list_process(s2n_extension_list_id list_type, struct s2n_connection *conn,
-        s2n_parsed_extensions_list *parsed_extension_list);
+    s2n_parsed_extensions_list *parsed_extension_list);
+int s2n_extension_list_process(
+    s2n_extension_list_id list_type, struct s2n_connection *conn, s2n_parsed_extensions_list *parsed_extension_list);
 int s2n_extension_list_parse(struct s2n_stuffer *in, s2n_parsed_extensions_list *parsed_extension_list);

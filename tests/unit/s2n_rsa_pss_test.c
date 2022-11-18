@@ -13,25 +13,26 @@
  * permissions and limitations under the License.
  */
 
-#include "s2n_test.h"
-#include "testlib/s2n_testlib.h"
+#include "crypto/s2n_rsa_pss.h"
 
 #include "crypto/s2n_certificate.h"
 #include "crypto/s2n_dhe.h"
-#include "crypto/s2n_rsa_pss.h"
+#include "s2n_test.h"
 #include "stuffer/s2n_stuffer.h"
-#include "tls/s2n_connection.h"
+#include "testlib/s2n_testlib.h"
 #include "tls/s2n_config.h"
+#include "tls/s2n_connection.h"
 #include "utils/s2n_random.h"
 
-int s2n_flip_random_bit(struct s2n_blob *blob) {
+int s2n_flip_random_bit(struct s2n_blob *blob)
+{
     /* Flip a random bit in the blob */
     uint64_t byte_flip_pos;
     POSIX_GUARD_RESULT(s2n_public_random(blob->size, &byte_flip_pos));
     uint64_t bit_flip_pos;
     POSIX_GUARD_RESULT(s2n_public_random(8, &bit_flip_pos));
 
-    uint8_t mask = 0x01 << (uint8_t)bit_flip_pos;
+    uint8_t mask = 0x01 << (uint8_t) bit_flip_pos;
     blob->data[byte_flip_pos] ^= mask;
 
     return 0;
@@ -60,7 +61,7 @@ int main(int argc, char **argv)
         char *cert_chain_pem;
         char *private_key_pem;
         struct s2n_cert_chain_and_key *chain_and_key;
-        struct s2n_pkey public_key = {0};
+        struct s2n_pkey public_key = { 0 };
         s2n_pkey_type pkey_type = S2N_PKEY_TYPE_UNKNOWN;
 
         EXPECT_NOT_NULL(cert_chain_pem = malloc(S2N_MAX_TEST_PEM_SIZE));
@@ -75,7 +76,8 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_cert_chain_and_key_load_pem(chain_and_key, cert_chain_pem, private_key_pem));
 
         /* Load the Public Key */
-        EXPECT_SUCCESS(s2n_asn1der_to_public_key_and_type(&public_key, &pkey_type, &chain_and_key->cert_chain->head->raw));
+        EXPECT_SUCCESS(
+            s2n_asn1der_to_public_key_and_type(&public_key, &pkey_type, &chain_and_key->cert_chain->head->raw));
         EXPECT_EQUAL(pkey_type, S2N_PKEY_TYPE_RSA_PSS);
 
         /* Sign and Verify a Random Value to ensure that Public and Private Key Matches */
@@ -101,20 +103,22 @@ int main(int argc, char **argv)
         char *leaf_cert_chain_pem;
         char *root_private_key_pem;
         struct s2n_cert_chain_and_key *misconfigured_chain_and_key;
-        struct s2n_pkey public_key = {0};
+        struct s2n_pkey public_key = { 0 };
 
         EXPECT_NOT_NULL(leaf_cert_chain_pem = malloc(S2N_MAX_TEST_PEM_SIZE));
         EXPECT_NOT_NULL(root_private_key_pem = malloc(S2N_MAX_TEST_PEM_SIZE));
         EXPECT_NOT_NULL(server_config = s2n_config_new());
 
-        EXPECT_SUCCESS(s2n_read_test_pem(S2N_RSA_PSS_2048_SHA256_LEAF_CERT, leaf_cert_chain_pem, S2N_MAX_TEST_PEM_SIZE));
+        EXPECT_SUCCESS(
+            s2n_read_test_pem(S2N_RSA_PSS_2048_SHA256_LEAF_CERT, leaf_cert_chain_pem, S2N_MAX_TEST_PEM_SIZE));
 
         /* Incorrectly reading the CA's Private Key from disk, not the Leaf's Private Key */
         EXPECT_SUCCESS(s2n_read_test_pem(S2N_RSA_PSS_2048_SHA256_CA_KEY, root_private_key_pem, S2N_MAX_TEST_PEM_SIZE));
         EXPECT_NOT_NULL(misconfigured_chain_and_key = s2n_cert_chain_and_key_new());
 
         /* Attempting to Load RSA_PSS Certificate with wrong RSA_PSS Key should fail */
-        EXPECT_FAILURE(s2n_cert_chain_and_key_load_pem(misconfigured_chain_and_key, leaf_cert_chain_pem, root_private_key_pem));
+        EXPECT_FAILURE(
+            s2n_cert_chain_and_key_load_pem(misconfigured_chain_and_key, leaf_cert_chain_pem, root_private_key_pem));
 
         /* Release Resources */
         EXPECT_SUCCESS(s2n_cert_chain_and_key_free(misconfigured_chain_and_key));
@@ -132,7 +136,7 @@ int main(int argc, char **argv)
         char *cert_chain_pem;
         char *private_key_pem;
         struct s2n_cert_chain_and_key *chain_and_key;
-        struct s2n_pkey public_key = {0};
+        struct s2n_pkey public_key = { 0 };
         s2n_pkey_type pkey_type = S2N_PKEY_TYPE_UNKNOWN;
 
         EXPECT_NOT_NULL(cert_chain_pem = malloc(S2N_MAX_TEST_PEM_SIZE));
@@ -147,7 +151,8 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_cert_chain_and_key_set_private_key(chain_and_key, private_key_pem));
 
         /* Parse the leaf cert for the public key and certificate type */
-        EXPECT_SUCCESS(s2n_asn1der_to_public_key_and_type(&public_key, &pkey_type, &chain_and_key->cert_chain->head->raw));
+        EXPECT_SUCCESS(
+            s2n_asn1der_to_public_key_and_type(&public_key, &pkey_type, &chain_and_key->cert_chain->head->raw));
         EXPECT_NOT_EQUAL(pkey_type, S2N_PKEY_TYPE_UNKNOWN);
         EXPECT_SUCCESS(s2n_cert_set_cert_type(chain_and_key->cert_chain->head, pkey_type));
 
@@ -162,12 +167,12 @@ int main(int argc, char **argv)
             EXPECT_OK(s2n_get_private_random_data(&random_msg));
 
             /* Sign/Verify API's only accept Hashes, so hash our Random Data */
-            DEFER_CLEANUP(struct s2n_hash_state sign_hash = {0}, s2n_hash_free);
+            DEFER_CLEANUP(struct s2n_hash_state sign_hash = { 0 }, s2n_hash_free);
             EXPECT_SUCCESS(s2n_hash_new(&sign_hash));
             EXPECT_SUCCESS(s2n_hash_init(&sign_hash, S2N_HASH_SHA256));
             EXPECT_SUCCESS(s2n_hash_update(&sign_hash, random_msg.data, random_msg.size));
 
-            DEFER_CLEANUP(struct s2n_hash_state verify_hash = {0}, s2n_hash_free);
+            DEFER_CLEANUP(struct s2n_hash_state verify_hash = { 0 }, s2n_hash_free);
             EXPECT_SUCCESS(s2n_hash_new(&verify_hash));
             EXPECT_SUCCESS(s2n_hash_init(&verify_hash, S2N_HASH_SHA256));
             EXPECT_SUCCESS(s2n_hash_update(&verify_hash, random_msg.data, random_msg.size));
@@ -200,8 +205,8 @@ int main(int argc, char **argv)
         char *leaf_private_key_pem;
         struct s2n_cert_chain_and_key *root_chain_and_key;
         struct s2n_cert_chain_and_key *leaf_chain_and_key;
-        struct s2n_pkey root_public_key = {0};
-        struct s2n_pkey leaf_public_key = {0};
+        struct s2n_pkey root_public_key = { 0 };
+        struct s2n_pkey leaf_public_key = { 0 };
         s2n_pkey_type root_pkey_type = S2N_PKEY_TYPE_UNKNOWN;
         s2n_pkey_type leaf_pkey_type = S2N_PKEY_TYPE_UNKNOWN;
 
@@ -214,11 +219,12 @@ int main(int argc, char **argv)
 
         EXPECT_SUCCESS(s2n_read_test_pem(S2N_RSA_PSS_2048_SHA256_CA_CERT, root_cert_chain_pem, S2N_MAX_TEST_PEM_SIZE));
         EXPECT_SUCCESS(s2n_read_test_pem(S2N_RSA_PSS_2048_SHA256_CA_KEY, root_private_key_pem, S2N_MAX_TEST_PEM_SIZE));
-        EXPECT_SUCCESS(s2n_read_test_pem(S2N_RSA_PSS_2048_SHA256_LEAF_CERT, leaf_cert_chain_pem, S2N_MAX_TEST_PEM_SIZE));
-        EXPECT_SUCCESS(s2n_read_test_pem(S2N_RSA_PSS_2048_SHA256_LEAF_KEY, leaf_private_key_pem, S2N_MAX_TEST_PEM_SIZE));
+        EXPECT_SUCCESS(
+            s2n_read_test_pem(S2N_RSA_PSS_2048_SHA256_LEAF_CERT, leaf_cert_chain_pem, S2N_MAX_TEST_PEM_SIZE));
+        EXPECT_SUCCESS(
+            s2n_read_test_pem(S2N_RSA_PSS_2048_SHA256_LEAF_KEY, leaf_private_key_pem, S2N_MAX_TEST_PEM_SIZE));
         EXPECT_NOT_NULL(root_chain_and_key = s2n_cert_chain_and_key_new());
         EXPECT_NOT_NULL(leaf_chain_and_key = s2n_cert_chain_and_key_new());
-
 
         EXPECT_SUCCESS(s2n_cert_chain_and_key_set_cert_chain(root_chain_and_key, root_cert_chain_pem));
         EXPECT_SUCCESS(s2n_cert_chain_and_key_set_private_key(root_chain_and_key, root_private_key_pem));
@@ -226,8 +232,10 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_cert_chain_and_key_set_private_key(leaf_chain_and_key, leaf_private_key_pem));
 
         /* Parse the cert for the public key and certificate type */
-        EXPECT_SUCCESS(s2n_asn1der_to_public_key_and_type(&root_public_key, &root_pkey_type, &root_chain_and_key->cert_chain->head->raw));
-        EXPECT_SUCCESS(s2n_asn1der_to_public_key_and_type(&leaf_public_key, &leaf_pkey_type, &leaf_chain_and_key->cert_chain->head->raw));
+        EXPECT_SUCCESS(s2n_asn1der_to_public_key_and_type(
+            &root_public_key, &root_pkey_type, &root_chain_and_key->cert_chain->head->raw));
+        EXPECT_SUCCESS(s2n_asn1der_to_public_key_and_type(
+            &leaf_public_key, &leaf_pkey_type, &leaf_chain_and_key->cert_chain->head->raw));
         EXPECT_NOT_EQUAL(root_pkey_type, S2N_PKEY_TYPE_UNKNOWN);
         EXPECT_NOT_EQUAL(leaf_pkey_type, S2N_PKEY_TYPE_UNKNOWN);
 
@@ -250,12 +258,12 @@ int main(int argc, char **argv)
             EXPECT_OK(s2n_get_private_random_data(&random_msg));
 
             /* Sign/Verify API's only accept Hashes, so hash our Random Data */
-            DEFER_CLEANUP(struct s2n_hash_state sign_hash = {0}, s2n_hash_free);
+            DEFER_CLEANUP(struct s2n_hash_state sign_hash = { 0 }, s2n_hash_free);
             EXPECT_SUCCESS(s2n_hash_new(&sign_hash));
             EXPECT_SUCCESS(s2n_hash_init(&sign_hash, S2N_HASH_SHA256));
             EXPECT_SUCCESS(s2n_hash_update(&sign_hash, random_msg.data, random_msg.size));
 
-            DEFER_CLEANUP(struct s2n_hash_state verify_hash = {0}, s2n_hash_free);
+            DEFER_CLEANUP(struct s2n_hash_state verify_hash = { 0 }, s2n_hash_free);
             EXPECT_SUCCESS(s2n_hash_new(&verify_hash));
             EXPECT_SUCCESS(s2n_hash_init(&verify_hash, S2N_HASH_SHA256));
             EXPECT_SUCCESS(s2n_hash_update(&verify_hash, random_msg.data, random_msg.size));
@@ -289,7 +297,7 @@ int main(int argc, char **argv)
         char *cert_chain_pem;
         char *private_key_pem;
         struct s2n_cert_chain_and_key *chain_and_key;
-        struct s2n_pkey public_key = {0};
+        struct s2n_pkey public_key = { 0 };
         s2n_pkey_type pkey_type = S2N_PKEY_TYPE_UNKNOWN;
 
         EXPECT_NOT_NULL(cert_chain_pem = malloc(S2N_MAX_TEST_PEM_SIZE));
@@ -304,7 +312,8 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_cert_chain_and_key_set_private_key(chain_and_key, private_key_pem));
 
         /* Parse the leaf cert for the public key and certificate type */
-        EXPECT_SUCCESS(s2n_asn1der_to_public_key_and_type(&public_key, &pkey_type, &chain_and_key->cert_chain->head->raw));
+        EXPECT_SUCCESS(
+            s2n_asn1der_to_public_key_and_type(&public_key, &pkey_type, &chain_and_key->cert_chain->head->raw));
         EXPECT_NOT_EQUAL(pkey_type, S2N_PKEY_TYPE_UNKNOWN);
         EXPECT_SUCCESS(s2n_cert_set_cert_type(chain_and_key->cert_chain->head, pkey_type));
 
@@ -319,7 +328,7 @@ int main(int argc, char **argv)
             EXPECT_OK(s2n_get_private_random_data(&random_msg));
 
             /* Sign/Verify API's only accept Hashes, so hash our Random Data */
-            DEFER_CLEANUP(struct s2n_hash_state sign_hash = {0}, s2n_hash_free);
+            DEFER_CLEANUP(struct s2n_hash_state sign_hash = { 0 }, s2n_hash_free);
             EXPECT_SUCCESS(s2n_hash_new(&sign_hash));
             EXPECT_SUCCESS(s2n_hash_init(&sign_hash, S2N_HASH_SHA256));
             EXPECT_SUCCESS(s2n_hash_update(&sign_hash, random_msg.data, random_msg.size));
@@ -327,7 +336,7 @@ int main(int argc, char **argv)
             /* Flip a random bit in the message before verification */
             EXPECT_SUCCESS(s2n_flip_random_bit(&random_msg));
 
-            DEFER_CLEANUP(struct s2n_hash_state verify_hash = {0}, s2n_hash_free);
+            DEFER_CLEANUP(struct s2n_hash_state verify_hash = { 0 }, s2n_hash_free);
             EXPECT_SUCCESS(s2n_hash_new(&verify_hash));
             EXPECT_SUCCESS(s2n_hash_init(&verify_hash, S2N_HASH_SHA256));
             EXPECT_SUCCESS(s2n_hash_update(&verify_hash, random_msg.data, random_msg.size));

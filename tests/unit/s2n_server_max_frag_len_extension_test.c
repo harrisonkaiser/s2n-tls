@@ -14,7 +14,6 @@
  */
 
 #include "s2n_test.h"
-
 #include "tls/extensions/s2n_server_max_fragment_length.h"
 #include "tls/s2n_tls.h"
 
@@ -95,8 +94,8 @@ int main(int argc, char **argv)
         conn->negotiated_mfl_code = S2N_TLS_MAX_FRAG_LEN_1024;
         EXPECT_SUCCESS(s2n_server_max_fragment_length_extension.send(conn, &stuffer));
 
-        EXPECT_FAILURE_WITH_ERRNO(s2n_server_max_fragment_length_extension.recv(conn, &stuffer),
-                S2N_ERR_MAX_FRAG_LEN_MISMATCH);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_server_max_fragment_length_extension.recv(conn, &stuffer), S2N_ERR_MAX_FRAG_LEN_MISMATCH);
 
         EXPECT_SUCCESS(s2n_stuffer_free(&stuffer));
         EXPECT_SUCCESS(s2n_connection_free(conn));

@@ -14,10 +14,8 @@
  */
 
 #include "api/s2n.h"
-
-#include "tls/extensions/s2n_early_data_indication.h"
-
 #include "stuffer/s2n_stuffer.h"
+#include "tls/extensions/s2n_early_data_indication.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_early_data.h"
 #include "utils/s2n_safety.h"
@@ -26,7 +24,7 @@ static bool s2n_nst_early_data_indication_should_send(struct s2n_connection *con
 {
     uint32_t server_max_early_data = 0;
     return s2n_result_is_ok(s2n_early_data_get_server_max_size(conn, &server_max_early_data))
-            && server_max_early_data > 0;
+        && server_max_early_data > 0;
 }
 
 /**

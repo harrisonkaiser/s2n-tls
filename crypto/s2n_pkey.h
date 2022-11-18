@@ -17,11 +17,10 @@
 
 #include <openssl/evp.h>
 
-#include "crypto/s2n_signature.h"
 #include "crypto/s2n_ecdsa.h"
 #include "crypto/s2n_hash.h"
 #include "crypto/s2n_rsa.h"
-
+#include "crypto/s2n_signature.h"
 #include "utils/s2n_blob.h"
 #include "utils/s2n_result.h"
 
@@ -45,13 +44,13 @@ struct s2n_pkey {
     EVP_PKEY *pkey;
 
     S2N_RESULT (*size)(const struct s2n_pkey *key, uint32_t *size_out);
-    int (*sign)(const struct s2n_pkey *priv_key, s2n_signature_algorithm sig_alg,
-            struct s2n_hash_state *digest, struct s2n_blob *signature);
-    int (*verify)(const struct s2n_pkey *pub_key, s2n_signature_algorithm sig_alg,
-            struct s2n_hash_state *digest, struct s2n_blob *signature);
+    int (*sign)(const struct s2n_pkey *priv_key, s2n_signature_algorithm sig_alg, struct s2n_hash_state *digest,
+        struct s2n_blob *signature);
+    int (*verify)(const struct s2n_pkey *pub_key, s2n_signature_algorithm sig_alg, struct s2n_hash_state *digest,
+        struct s2n_blob *signature);
     int (*encrypt)(const struct s2n_pkey *key, struct s2n_blob *in, struct s2n_blob *out);
     int (*decrypt)(const struct s2n_pkey *key, struct s2n_blob *in, struct s2n_blob *out);
-    int (*match)(const struct s2n_pkey *pub_key, const struct s2n_pkey *priv_key); 
+    int (*match)(const struct s2n_pkey *pub_key, const struct s2n_pkey *priv_key);
     int (*free)(struct s2n_pkey *key);
     int (*check_key)(const struct s2n_pkey *key);
 };
@@ -61,10 +60,10 @@ int s2n_pkey_setup_for_type(struct s2n_pkey *pkey, s2n_pkey_type pkey_type);
 int s2n_pkey_check_key_exists(const struct s2n_pkey *pkey);
 
 S2N_RESULT s2n_pkey_size(const struct s2n_pkey *pkey, uint32_t *size_out);
-int s2n_pkey_sign(const struct s2n_pkey *pkey, s2n_signature_algorithm sig_alg,
-        struct s2n_hash_state *digest, struct s2n_blob *signature);
-int s2n_pkey_verify(const struct s2n_pkey *pkey, s2n_signature_algorithm sig_alg,
-        struct s2n_hash_state *digest, struct s2n_blob *signature);
+int s2n_pkey_sign(const struct s2n_pkey *pkey, s2n_signature_algorithm sig_alg, struct s2n_hash_state *digest,
+    struct s2n_blob *signature);
+int s2n_pkey_verify(const struct s2n_pkey *pkey, s2n_signature_algorithm sig_alg, struct s2n_hash_state *digest,
+    struct s2n_blob *signature);
 int s2n_pkey_encrypt(const struct s2n_pkey *pkey, struct s2n_blob *in, struct s2n_blob *out);
 int s2n_pkey_decrypt(const struct s2n_pkey *pkey, struct s2n_blob *in, struct s2n_blob *out);
 int s2n_pkey_match(const struct s2n_pkey *pub_key, const struct s2n_pkey *priv_key);

@@ -17,13 +17,12 @@
 
 #include <stdint.h>
 
-#include "crypto/s2n_hmac.h"
 #include "crypto/s2n_hkdf.h"
+#include "crypto/s2n_hmac.h"
 #include "stuffer/s2n_stuffer.h"
-#include "tls/s2n_tls_parameters.h"
 #include "tls/s2n_psk.h"
+#include "tls/s2n_tls_parameters.h"
 #include "utils/s2n_blob.h"
-#include "utils/s2n_safety.h"
 #include "utils/s2n_mem.h"
 #include "utils/s2n_safety.h"
 
@@ -76,15 +75,18 @@ extern const struct s2n_blob s2n_tls13_label_finished;
 extern const struct s2n_blob s2n_tls13_label_traffic_secret_key;
 extern const struct s2n_blob s2n_tls13_label_traffic_secret_iv;
 
-#define s2n_tls13_key_blob(name, bytes) \
-    s2n_stack_blob(name, bytes, S2N_TLS13_SECRET_MAX_LEN)
+#define s2n_tls13_key_blob(name, bytes) s2n_stack_blob(name, bytes, S2N_TLS13_SECRET_MAX_LEN)
 
 int s2n_tls13_keys_init(struct s2n_tls13_keys *handshake, s2n_hmac_algorithm alg);
 int s2n_tls13_keys_free(struct s2n_tls13_keys *keys);
 
-int s2n_tls13_derive_traffic_keys(struct s2n_tls13_keys *handshake, struct s2n_blob *secret, struct s2n_blob *key, struct s2n_blob *iv);
-int s2n_tls13_derive_finished_key(struct s2n_tls13_keys *keys, struct s2n_blob *secret_key, struct s2n_blob *output_finish_key);
-int s2n_tls13_calculate_finished_mac(struct s2n_tls13_keys *keys, struct s2n_blob *finished_key, struct s2n_hash_state *hash_state, struct s2n_blob *finished_verify);
-int s2n_tls13_update_application_traffic_secret(struct s2n_tls13_keys *keys, struct s2n_blob *old_secret, struct s2n_blob *new_secret);
+int s2n_tls13_derive_traffic_keys(
+    struct s2n_tls13_keys *handshake, struct s2n_blob *secret, struct s2n_blob *key, struct s2n_blob *iv);
+int s2n_tls13_derive_finished_key(
+    struct s2n_tls13_keys *keys, struct s2n_blob *secret_key, struct s2n_blob *output_finish_key);
+int s2n_tls13_calculate_finished_mac(struct s2n_tls13_keys *keys, struct s2n_blob *finished_key,
+    struct s2n_hash_state *hash_state, struct s2n_blob *finished_verify);
+int s2n_tls13_update_application_traffic_secret(
+    struct s2n_tls13_keys *keys, struct s2n_blob *old_secret, struct s2n_blob *new_secret);
 S2N_RESULT s2n_tls13_derive_session_ticket_secret(struct s2n_tls13_keys *keys, struct s2n_blob *resumption_secret,
-        struct s2n_blob *ticket_nonce, struct s2n_blob *secret_blob);
+    struct s2n_blob *ticket_nonce, struct s2n_blob *secret_blob);

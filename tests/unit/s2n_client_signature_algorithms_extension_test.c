@@ -13,17 +13,15 @@
  * permissions and limitations under the License.
  */
 
-#include "s2n_test.h"
-#include "testlib/s2n_testlib.h"
-
 #include <stdint.h>
 
+#include "s2n_test.h"
+#include "stuffer/s2n_stuffer.h"
+#include "testlib/s2n_testlib.h"
+#include "tls/extensions/s2n_client_signature_algorithms.h"
 #include "tls/s2n_config.h"
 #include "tls/s2n_connection.h"
-#include "tls/extensions/s2n_client_signature_algorithms.h"
 #include "tls/s2n_tls.h"
-
-#include "stuffer/s2n_stuffer.h"
 #include "utils/s2n_safety.h"
 
 int main(int argc, char **argv)
@@ -34,8 +32,8 @@ int main(int argc, char **argv)
     EXPECT_NOT_NULL(config = s2n_config_new());
 
     struct s2n_cert_chain_and_key *chain_and_key;
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
-            S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(
+        s2n_test_cert_chain_and_key_new(&chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
     EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(config, chain_and_key));
 
     /* Test should_send */
@@ -66,8 +64,8 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_client_signature_algorithms_extension.recv(server_conn, &io));
         EXPECT_EQUAL(s2n_stuffer_data_available(&io), 0);
 
-        EXPECT_EQUAL(server_conn->handshake_params.client_sig_hash_algs.len,
-                s2n_supported_sig_schemes_count(client_conn));
+        EXPECT_EQUAL(
+            server_conn->handshake_params.client_sig_hash_algs.len, s2n_supported_sig_schemes_count(client_conn));
 
         s2n_stuffer_free(&io);
         s2n_connection_free(client_conn);
@@ -94,8 +92,8 @@ int main(int argc, char **argv)
         conn->actual_protocol_version = S2N_TLS13;
         EXPECT_SUCCESS(s2n_client_signature_algorithms_extension.recv(conn, &signature_algorithms_extension));
         EXPECT_EQUAL(conn->handshake_params.client_sig_hash_algs.len, sig_hash_algs.len);
-        EXPECT_FAILURE(s2n_choose_sig_scheme_from_peer_preference_list(conn, &conn->handshake_params.client_sig_hash_algs,
-                                &conn->handshake_params.conn_sig_scheme));
+        EXPECT_FAILURE(s2n_choose_sig_scheme_from_peer_preference_list(
+            conn, &conn->handshake_params.client_sig_hash_algs, &conn->handshake_params.conn_sig_scheme));
 
         EXPECT_SUCCESS(s2n_stuffer_free(&signature_algorithms_extension));
         EXPECT_SUCCESS(s2n_connection_free(conn));
@@ -116,14 +114,14 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_stuffer_alloc(&signature_algorithms_extension, 2 + (sig_hash_algs.len * 2)));
         EXPECT_SUCCESS(s2n_stuffer_write_uint16(&signature_algorithms_extension, sig_hash_algs.len * 2));
         for (int i = 0; i < sig_hash_algs.len; i++) {
-                EXPECT_SUCCESS(s2n_stuffer_write_uint16(&signature_algorithms_extension, sig_hash_algs.iana_list[i]));
+            EXPECT_SUCCESS(s2n_stuffer_write_uint16(&signature_algorithms_extension, sig_hash_algs.iana_list[i]));
         }
 
         /* If a valid algorithm is offered among unknown algorithms, the valid one should be chosen */
         EXPECT_SUCCESS(s2n_client_signature_algorithms_extension.recv(conn, &signature_algorithms_extension));
         EXPECT_EQUAL(conn->handshake_params.client_sig_hash_algs.len, sig_hash_algs.len);
-        EXPECT_SUCCESS(s2n_choose_sig_scheme_from_peer_preference_list(conn, &conn->handshake_params.client_sig_hash_algs,
-                                &conn->handshake_params.conn_sig_scheme));
+        EXPECT_SUCCESS(s2n_choose_sig_scheme_from_peer_preference_list(
+            conn, &conn->handshake_params.client_sig_hash_algs, &conn->handshake_params.conn_sig_scheme));
         EXPECT_EQUAL(conn->handshake_params.conn_sig_scheme.iana_value, TLS_SIGNATURE_SCHEME_RSA_PKCS1_SHA384);
 
         EXPECT_SUCCESS(s2n_stuffer_free(&signature_algorithms_extension));

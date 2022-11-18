@@ -15,9 +15,7 @@
 
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
-
 #include "tls/s2n_renegotiate.h"
-
 #include "tls/s2n_tls.h"
 #include "utils/s2n_safety.h"
 #include "utils/s2n_socket.h"
@@ -30,14 +28,15 @@
  * before and after the server hello.
  */
 enum S2N_TEST_APP_DATA_CASES {
-    S2N_TEST_APP_DATA_BEFORE_RENEG          = 1,
-    S2N_TEST_APP_DATA_BEFORE_SERVER_HELLO   = 2,
-    S2N_TEST_APP_DATA_AFTER_SERVER_HELLO    = 4,
-    S2N_TEST_MAX_TEST_CASES                 = 8,
+    S2N_TEST_APP_DATA_BEFORE_RENEG = 1,
+    S2N_TEST_APP_DATA_BEFORE_SERVER_HELLO = 2,
+    S2N_TEST_APP_DATA_AFTER_SERVER_HELLO = 4,
+    S2N_TEST_MAX_TEST_CASES = 8,
 };
 #define S2N_TEST_APP_DATA_LEN 10
 
-static S2N_RESULT s2n_renegotiate_test_server_and_client(struct s2n_connection *server_conn, struct s2n_connection *client_conn)
+static S2N_RESULT s2n_renegotiate_test_server_and_client(
+    struct s2n_connection *server_conn, struct s2n_connection *client_conn)
 {
     ssize_t app_data_read = 0;
     uint8_t recv_buffer[1] = { 0 };
@@ -56,8 +55,8 @@ int main(int argc, char *argv[])
     BEGIN_TEST();
 
     DEFER_CLEANUP(struct s2n_cert_chain_and_key *chain_and_key = NULL, s2n_cert_chain_and_key_ptr_free);
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
-            S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(
+        s2n_test_cert_chain_and_key_new(&chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
 
     DEFER_CLEANUP(struct s2n_config *config = s2n_config_new(), s2n_config_ptr_free);
     EXPECT_NOT_NULL(config);
@@ -118,8 +117,9 @@ int main(int argc, char *argv[])
         EXPECT_EQUAL(s2n_send(server_conn, app_data, sizeof(app_data), &blocked), sizeof(app_data));
 
         /* Client receives ApplicationData */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
-                S2N_ERR_APP_DATA_BLOCKED);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
+            S2N_ERR_APP_DATA_BLOCKED);
         EXPECT_EQUAL(blocked, S2N_BLOCKED_ON_APPLICATION_DATA);
         EXPECT_EQUAL(app_data_read, sizeof(app_data));
         EXPECT_BYTEARRAY_EQUAL(recv_buffer, app_data, sizeof(app_data));
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
         /* Client receives first part of ApplicationData */
         const size_t first_read_len = 2;
         EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, first_read_len, &app_data_read, &blocked),
-                S2N_ERR_APP_DATA_BLOCKED);
+            S2N_ERR_APP_DATA_BLOCKED);
         EXPECT_EQUAL(blocked, S2N_BLOCKED_ON_APPLICATION_DATA);
         EXPECT_EQUAL(app_data_read, first_read_len);
         EXPECT_BYTEARRAY_EQUAL(recv_buffer, app_data, first_read_len);
@@ -169,15 +169,17 @@ int main(int argc, char *argv[])
 
         /* Client receives second part of ApplicationData */
         EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer + first_read_len,
-                sizeof(app_data) - first_read_len, &app_data_read, &blocked), S2N_ERR_APP_DATA_BLOCKED);
+                                      sizeof(app_data) - first_read_len, &app_data_read, &blocked),
+            S2N_ERR_APP_DATA_BLOCKED);
         EXPECT_EQUAL(blocked, S2N_BLOCKED_ON_APPLICATION_DATA);
         EXPECT_EQUAL(app_data_read, sizeof(app_data) - first_read_len);
         EXPECT_BYTEARRAY_EQUAL(recv_buffer, app_data, sizeof(app_data));
 
         /* Client waits for more data */
         for (size_t i = 0; i < 10; i++) {
-            EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer),
-                    &app_data_read, &blocked), S2N_ERR_IO_BLOCKED);
+            EXPECT_FAILURE_WITH_ERRNO(
+                s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
+                S2N_ERR_IO_BLOCKED);
             EXPECT_EQUAL(blocked, S2N_BLOCKED_ON_READ);
             EXPECT_EQUAL(app_data_read, 0);
         }
@@ -217,8 +219,9 @@ int main(int argc, char *argv[])
 
         /* Client receives ApplicationData */
         for (size_t i = 0; i < app_data_record_count; i++) {
-            EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer),
-                    &app_data_read, &blocked), S2N_ERR_APP_DATA_BLOCKED);
+            EXPECT_FAILURE_WITH_ERRNO(
+                s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
+                S2N_ERR_APP_DATA_BLOCKED);
             EXPECT_EQUAL(blocked, S2N_BLOCKED_ON_APPLICATION_DATA);
             EXPECT_EQUAL(app_data_read, sizeof(app_data));
             EXPECT_BYTEARRAY_EQUAL(recv_buffer, app_data, sizeof(app_data));
@@ -255,8 +258,9 @@ int main(int argc, char *argv[])
         EXPECT_SUCCESS(s2n_renegotiate_wipe(server_conn));
 
         /* Client writes ClientHello */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
-                S2N_ERR_IO_BLOCKED);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
+            S2N_ERR_IO_BLOCKED);
         EXPECT_EQUAL(s2n_conn_get_current_message_type(client_conn), SERVER_HELLO);
         EXPECT_EQUAL(blocked, S2N_BLOCKED_ON_READ);
 
@@ -270,8 +274,9 @@ int main(int argc, char *argv[])
         EXPECT_EQUAL(s2n_send(server_conn, app_data, sizeof(app_data), &blocked), sizeof(app_data));
 
         /* Client rejects ApplicationData */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
-                S2N_ERR_BAD_MESSAGE);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
+            S2N_ERR_BAD_MESSAGE);
         EXPECT_NOT_EQUAL(s2n_conn_get_current_message_type(server_conn), SERVER_HELLO);
         EXPECT_TRUE(IS_NEGOTIATED(server_conn));
     }
@@ -299,8 +304,9 @@ int main(int argc, char *argv[])
         EXPECT_SUCCESS(s2n_renegotiate_wipe(server_conn));
 
         /* Client writes ClientHello */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
-                S2N_ERR_IO_BLOCKED);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
+            S2N_ERR_IO_BLOCKED);
         EXPECT_EQUAL(s2n_conn_get_current_message_type(client_conn), SERVER_HELLO);
         EXPECT_EQUAL(blocked, S2N_BLOCKED_ON_READ);
 
@@ -316,8 +322,9 @@ int main(int argc, char *argv[])
         EXPECT_FAILURE_WITH_ERRNO(s2n_negotiate(server_conn, &blocked), S2N_ERR_IO_BLOCKED);
 
         /* Client rejects unexpected message */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
-                S2N_ERR_BAD_MESSAGE);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
+            S2N_ERR_BAD_MESSAGE);
         EXPECT_EQUAL(s2n_conn_get_current_message_type(client_conn), SERVER_HELLO);
     }
 
@@ -349,8 +356,9 @@ int main(int argc, char *argv[])
         /* Verify send is blocked on write */
         ssize_t app_data_read = 0;
         for (size_t i = 0; i < 10; i++) {
-            EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
-                    S2N_ERR_IO_BLOCKED);
+            EXPECT_FAILURE_WITH_ERRNO(
+                s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
+                S2N_ERR_IO_BLOCKED);
             EXPECT_EQUAL(blocked, S2N_BLOCKED_ON_WRITE);
             EXPECT_EQUAL(app_data_read, 0);
         }
@@ -359,8 +367,9 @@ int main(int argc, char *argv[])
         EXPECT_SUCCESS(s2n_stuffer_growable_alloc(&output, 0));
 
         /* Verify send blocks on read */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
-                S2N_ERR_IO_BLOCKED);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
+            S2N_ERR_IO_BLOCKED);
         EXPECT_EQUAL(blocked, S2N_BLOCKED_ON_READ);
         EXPECT_EQUAL(app_data_read, 0);
     }
@@ -370,9 +379,7 @@ int main(int argc, char *argv[])
      * We want to ensure that s2n_renegotiate can handle ApplicationData at any time.
      */
     {
-        uint8_t messages[][S2N_TEST_APP_DATA_LEN] = {
-                "one", "two", "three"
-        };
+        uint8_t messages[][S2N_TEST_APP_DATA_LEN] = { "one", "two", "three" };
         EXPECT_EQUAL(1 << s2n_array_len(messages), S2N_TEST_MAX_TEST_CASES);
 
         /* Sanity checks
@@ -407,7 +414,8 @@ int main(int argc, char *argv[])
             /* Before Renegotiation */
             {
                 if (app_data_case & S2N_TEST_APP_DATA_BEFORE_RENEG) {
-                    EXPECT_EQUAL(s2n_send(server_conn, messages[send_i], S2N_TEST_APP_DATA_LEN, &blocked), S2N_TEST_APP_DATA_LEN);
+                    EXPECT_EQUAL(s2n_send(server_conn, messages[send_i], S2N_TEST_APP_DATA_LEN, &blocked),
+                        S2N_TEST_APP_DATA_LEN);
                     send_i++;
                 }
 
@@ -438,7 +446,8 @@ int main(int argc, char *argv[])
             /* Server: ClientHello recv, ServerHello sent */
             {
                 if (app_data_case & S2N_TEST_APP_DATA_BEFORE_SERVER_HELLO) {
-                    EXPECT_EQUAL(s2n_send(server_conn, messages[send_i], S2N_TEST_APP_DATA_LEN, &blocked), S2N_TEST_APP_DATA_LEN);
+                    EXPECT_EQUAL(s2n_send(server_conn, messages[send_i], S2N_TEST_APP_DATA_LEN, &blocked),
+                        S2N_TEST_APP_DATA_LEN);
                     send_i++;
                 }
 
@@ -451,14 +460,16 @@ int main(int argc, char *argv[])
                  * We specifically don't increment sent_i, because we won't use this data.
                  */
                 if (app_data_case & S2N_TEST_APP_DATA_AFTER_SERVER_HELLO) {
-                    EXPECT_EQUAL(s2n_send(server_conn, messages[send_i], S2N_TEST_APP_DATA_LEN, &blocked), S2N_TEST_APP_DATA_LEN);
+                    EXPECT_EQUAL(s2n_send(server_conn, messages[send_i], S2N_TEST_APP_DATA_LEN, &blocked),
+                        S2N_TEST_APP_DATA_LEN);
                 }
             }
 
             /* Client: ApplicationData recv */
             while (send_i > 0 && recv_i < send_i) {
-                EXPECT_FAILURE_WITH_ERRNO(s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
-                        S2N_ERR_APP_DATA_BLOCKED);
+                EXPECT_FAILURE_WITH_ERRNO(
+                    s2n_renegotiate(client_conn, recv_buffer, sizeof(recv_buffer), &app_data_read, &blocked),
+                    S2N_ERR_APP_DATA_BLOCKED);
                 EXPECT_EQUAL(blocked, S2N_BLOCKED_ON_APPLICATION_DATA);
                 EXPECT_EQUAL(s2n_conn_get_current_message_type(client_conn), SERVER_HELLO);
                 EXPECT_EQUAL(app_data_read, S2N_TEST_APP_DATA_LEN);

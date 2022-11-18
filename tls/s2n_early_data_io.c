@@ -15,11 +15,10 @@
 
 #include <sys/param.h>
 
-#include "tls/s2n_early_data.h"
-
 #include "tls/s2n_connection.h"
-#include "utils/s2n_safety.h"
+#include "tls/s2n_early_data.h"
 #include "utils/s2n_mem.h"
+#include "utils/s2n_safety.h"
 
 int s2n_end_of_early_data_send(struct s2n_connection *conn)
 {
@@ -50,11 +49,11 @@ int s2n_end_of_early_data_recv(struct s2n_connection *conn)
 bool s2n_early_data_is_trial_decryption_allowed(struct s2n_connection *conn, uint8_t record_type)
 {
     return conn && (conn->early_data_state == S2N_EARLY_DATA_REJECTED)
-            && record_type == TLS_APPLICATION_DATA
-            /* Only servers receive early data. */
-            && (conn->mode == S2N_SERVER)
-            /* Early data is only expected during the handshake. */
-            && (s2n_conn_get_current_message_type(conn) != APPLICATION_DATA);
+        && record_type == TLS_APPLICATION_DATA
+        /* Only servers receive early data. */
+        && (conn->mode == S2N_SERVER)
+        /* Early data is only expected during the handshake. */
+        && (s2n_conn_get_current_message_type(conn) != APPLICATION_DATA);
 }
 
 static bool s2n_is_early_data_io(struct s2n_connection *conn)
@@ -72,10 +71,8 @@ static bool s2n_is_early_data_io(struct s2n_connection *conn)
      * they are aware of early data, either because early data is currently expected
      * or early data is in a state that indicates that early data was previously expected.
      */
-    if (conn->early_data_expected
-            || (conn->mode == S2N_CLIENT && conn->early_data_state == S2N_EARLY_DATA_REQUESTED)
-            || conn->early_data_state == S2N_EARLY_DATA_ACCEPTED
-            || conn->early_data_state == S2N_END_OF_EARLY_DATA) {
+    if (conn->early_data_expected || (conn->mode == S2N_CLIENT && conn->early_data_state == S2N_EARLY_DATA_REQUESTED)
+        || conn->early_data_state == S2N_EARLY_DATA_ACCEPTED || conn->early_data_state == S2N_END_OF_EARLY_DATA) {
         return true;
     }
     return false;
@@ -115,8 +112,9 @@ S2N_RESULT s2n_early_data_validate_send(struct s2n_connection *conn, uint32_t by
 
     RESULT_ENSURE(conn->early_data_expected, S2N_ERR_EARLY_DATA_NOT_ALLOWED);
     RESULT_ENSURE(conn->mode == S2N_CLIENT, S2N_ERR_EARLY_DATA_NOT_ALLOWED);
-    RESULT_ENSURE(conn->early_data_state == S2N_EARLY_DATA_REQUESTED
-            || conn->early_data_state == S2N_EARLY_DATA_ACCEPTED, S2N_ERR_EARLY_DATA_NOT_ALLOWED);
+    RESULT_ENSURE(
+        conn->early_data_state == S2N_EARLY_DATA_REQUESTED || conn->early_data_state == S2N_EARLY_DATA_ACCEPTED,
+        S2N_ERR_EARLY_DATA_NOT_ALLOWED);
 
     uint32_t allowed_early_data_size = 0;
     RESULT_GUARD_POSIX(s2n_connection_get_remaining_early_data_size(conn, &allowed_early_data_size));
@@ -143,11 +141,11 @@ static bool s2n_early_data_can_continue(struct s2n_connection *conn)
 {
     uint32_t remaining_early_data_size = 0;
     return s2n_connection_get_remaining_early_data_size(conn, &remaining_early_data_size) >= S2N_SUCCESS
-            && remaining_early_data_size > 0;
+        && remaining_early_data_size > 0;
 }
 
-S2N_RESULT s2n_send_early_data_impl(struct s2n_connection *conn, const uint8_t *data, ssize_t data_len,
-        ssize_t *data_sent, s2n_blocked_status *blocked)
+S2N_RESULT s2n_send_early_data_impl(
+    struct s2n_connection *conn, const uint8_t *data, ssize_t data_len, ssize_t *data_sent, s2n_blocked_status *blocked)
 {
     RESULT_ENSURE_REF(conn);
     RESULT_ENSURE_REF(blocked);
@@ -204,8 +202,8 @@ S2N_RESULT s2n_send_early_data_impl(struct s2n_connection *conn, const uint8_t *
     return S2N_RESULT_OK;
 }
 
-int s2n_send_early_data(struct s2n_connection *conn, const uint8_t *data, ssize_t data_len,
-        ssize_t *data_sent, s2n_blocked_status *blocked)
+int s2n_send_early_data(
+    struct s2n_connection *conn, const uint8_t *data, ssize_t data_len, ssize_t *data_sent, s2n_blocked_status *blocked)
 {
     POSIX_ENSURE_REF(conn);
 
@@ -223,7 +221,7 @@ int s2n_send_early_data(struct s2n_connection *conn, const uint8_t *data, ssize_
 }
 
 S2N_RESULT s2n_recv_early_data_impl(struct s2n_connection *conn, uint8_t *data, ssize_t max_data_len,
-        ssize_t *data_received, s2n_blocked_status *blocked)
+    ssize_t *data_received, s2n_blocked_status *blocked)
 {
     RESULT_ENSURE_REF(conn);
     RESULT_ENSURE_REF(blocked);
@@ -237,7 +235,7 @@ S2N_RESULT s2n_recv_early_data_impl(struct s2n_connection *conn, uint8_t *data, 
         return S2N_RESULT_OK;
     }
 
-    while(s2n_negotiate(conn, blocked) < S2N_SUCCESS) {
+    while (s2n_negotiate(conn, blocked) < S2N_SUCCESS) {
         if (s2n_error_get_type(s2n_errno) != S2N_ERR_T_BLOCKED) {
             return S2N_RESULT_ERROR;
         } else if (max_data_len <= *data_received) {
@@ -251,16 +249,15 @@ S2N_RESULT s2n_recv_early_data_impl(struct s2n_connection *conn, uint8_t *data, 
             }
         }
 
-        ssize_t recv_result = s2n_recv(conn, data + *data_received,
-                max_data_len - *data_received, blocked);
+        ssize_t recv_result = s2n_recv(conn, data + *data_received, max_data_len - *data_received, blocked);
         RESULT_GUARD_POSIX(recv_result);
         *data_received += recv_result;
     }
     return S2N_RESULT_OK;
 }
 
-int s2n_recv_early_data(struct s2n_connection *conn, uint8_t *data, ssize_t max_data_len,
-        ssize_t *data_received, s2n_blocked_status *blocked)
+int s2n_recv_early_data(struct s2n_connection *conn, uint8_t *data, ssize_t max_data_len, ssize_t *data_received,
+    s2n_blocked_status *blocked)
 {
     /* Calling this method indicates that we expect early data. */
     POSIX_GUARD(s2n_connection_set_early_data_expected(conn));

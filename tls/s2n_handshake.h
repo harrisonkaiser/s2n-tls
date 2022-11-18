@@ -16,42 +16,40 @@
 #pragma once
 
 #include <stdint.h>
-#include "api/s2n.h"
 
+#include "api/s2n.h"
+#include "crypto/s2n_certificate.h"
+#include "crypto/s2n_hash.h"
+#include "stuffer/s2n_stuffer.h"
 #include "tls/s2n_crypto.h"
 #include "tls/s2n_handshake_hashes.h"
 #include "tls/s2n_handshake_type.h"
 #include "tls/s2n_signature_algorithms.h"
 #include "tls/s2n_tls_parameters.h"
 
-#include "stuffer/s2n_stuffer.h"
-
-#include "crypto/s2n_certificate.h"
-#include "crypto/s2n_hash.h"
-
 /* From RFC 8446: https://tools.ietf.org/html/rfc8446#appendix-B.3 */
-#define TLS_HELLO_REQUEST              0
-#define TLS_CLIENT_HELLO               1
-#define TLS_SERVER_HELLO               2
-#define TLS_SERVER_NEW_SESSION_TICKET  4
-#define TLS_END_OF_EARLY_DATA          5
-#define TLS_ENCRYPTED_EXTENSIONS       8
-#define TLS_CERTIFICATE               11
-#define TLS_SERVER_KEY                12
-#define TLS_CERT_REQ                  13
-#define TLS_SERVER_HELLO_DONE         14
-#define TLS_CERT_VERIFY               15
-#define TLS_CLIENT_KEY                16
-#define TLS_FINISHED                  20
-#define TLS_SERVER_CERT_STATUS        22
-#define TLS_SERVER_SESSION_LOOKUP     23
-#define TLS_KEY_UPDATE                24
-#define TLS_NPN                       67
-#define TLS_MESSAGE_HASH             254
+#define TLS_HELLO_REQUEST 0
+#define TLS_CLIENT_HELLO 1
+#define TLS_SERVER_HELLO 2
+#define TLS_SERVER_NEW_SESSION_TICKET 4
+#define TLS_END_OF_EARLY_DATA 5
+#define TLS_ENCRYPTED_EXTENSIONS 8
+#define TLS_CERTIFICATE 11
+#define TLS_SERVER_KEY 12
+#define TLS_CERT_REQ 13
+#define TLS_SERVER_HELLO_DONE 14
+#define TLS_CERT_VERIFY 15
+#define TLS_CLIENT_KEY 16
+#define TLS_FINISHED 20
+#define TLS_SERVER_CERT_STATUS 22
+#define TLS_SERVER_SESSION_LOOKUP 23
+#define TLS_KEY_UPDATE 24
+#define TLS_NPN 67
+#define TLS_MESSAGE_HASH 254
 
 /* This is the list of message types that we support */
 typedef enum {
-    CLIENT_HELLO=0,
+    CLIENT_HELLO = 0,
     SERVER_HELLO,
     SERVER_CERT,
     SERVER_NEW_SESSION_TICKET,
@@ -176,16 +174,16 @@ struct s2n_handshake {
     struct s2n_offered_early_data early_data_async_state;
 
     /* Indicates the CLIENT_HELLO message has been completely received */
-    unsigned client_hello_received:1;
+    unsigned client_hello_received : 1;
 
     /* Indicates the handshake blocked while trying to read or write data, and has been paused */
-    unsigned paused:1;
+    unsigned paused : 1;
 
     /* Set to 1 if the RSA verification failed */
-    unsigned rsa_failed:1;
+    unsigned rsa_failed : 1;
 
     /* Indicates that this is a renegotiation handshake */
-    unsigned renegotiation:1;
+    unsigned renegotiation : 1;
 };
 
 /* Only used in our test cases. */
@@ -195,12 +193,15 @@ message_type_t s2n_conn_get_current_message_type(struct s2n_connection *conn);
 int s2n_handshake_require_all_hashes(struct s2n_handshake *handshake);
 uint8_t s2n_handshake_is_hash_required(struct s2n_handshake *handshake, s2n_hash_algorithm hash_alg);
 int s2n_conn_update_required_handshake_hashes(struct s2n_connection *conn);
-S2N_RESULT s2n_handshake_copy_hash_state(struct s2n_connection *conn, s2n_hash_algorithm hash_alg, struct s2n_hash_state *hash_state);
+S2N_RESULT s2n_handshake_copy_hash_state(
+    struct s2n_connection *conn, s2n_hash_algorithm hash_alg, struct s2n_hash_state *hash_state);
 S2N_RESULT s2n_handshake_reset_hash_state(struct s2n_connection *conn, s2n_hash_algorithm hash_alg);
 int s2n_conn_find_name_matching_certs(struct s2n_connection *conn);
 int s2n_create_wildcard_hostname(struct s2n_stuffer *hostname, struct s2n_stuffer *output);
-struct s2n_cert_chain_and_key *s2n_get_compatible_cert_chain_and_key(struct s2n_connection *conn, const s2n_pkey_type cert_type);
-S2N_RESULT s2n_negotiate_until_message(struct s2n_connection *conn, s2n_blocked_status *blocked, message_type_t end_message);
+struct s2n_cert_chain_and_key *s2n_get_compatible_cert_chain_and_key(
+    struct s2n_connection *conn, const s2n_pkey_type cert_type);
+S2N_RESULT s2n_negotiate_until_message(
+    struct s2n_connection *conn, s2n_blocked_status *blocked, message_type_t end_message);
 S2N_RESULT s2n_handshake_validate(const struct s2n_handshake *s2n_handshake);
 S2N_RESULT s2n_handshake_set_finished_len(struct s2n_connection *conn, uint8_t len);
 bool s2n_handshake_is_renegotiation(struct s2n_connection *conn);

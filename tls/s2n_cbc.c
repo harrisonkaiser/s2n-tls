@@ -13,18 +13,15 @@
  * permissions and limitations under the License.
  */
 
-#include <sys/param.h>
 #include <stdint.h>
-
-#include "error/s2n_errno.h"
-
-#include "utils/s2n_safety.h"
-#include "utils/s2n_mem.h"
+#include <sys/param.h>
 
 #include "crypto/s2n_hmac.h"
-
+#include "error/s2n_errno.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_record.h"
+#include "utils/s2n_mem.h"
+#include "utils/s2n_safety.h"
 
 /* A TLS CBC record looks like ..
  *
@@ -78,7 +75,8 @@ int s2n_verify_cbc(struct s2n_connection *conn, struct s2n_hmac_state *hmac, str
      */
     POSIX_GUARD(s2n_hmac_reset(hmac));
     POSIX_GUARD(s2n_hmac_update(hmac, decrypted->data, currently_in_hash_block));
-    POSIX_GUARD(s2n_hmac_update(hmac, decrypted->data + payload_length + mac_digest_size, decrypted->size - payload_length - mac_digest_size - 1));
+    POSIX_GUARD(s2n_hmac_update(hmac, decrypted->data + payload_length + mac_digest_size,
+        decrypted->size - payload_length - mac_digest_size - 1));
 
     /* SSLv3 doesn't specify what the padding should actually be */
     if (conn->actual_protocol_version == S2N_SSLv3) {

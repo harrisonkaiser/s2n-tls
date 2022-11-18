@@ -18,27 +18,25 @@
                      s2n_rsa_client_key_recv s2n_dhe_client_key_recv
                      s2n_ecdhe_client_key_recv s2n_kem_client_key_recv */
 
-#include <stdint.h>
-
 #include <openssl/crypto.h>
 #include <openssl/err.h>
-
-#include "tls/s2n_kem.h"
-#include "tls/s2n_client_key_exchange.h"
-#include "tls/s2n_kex.h"
-#include "tls/s2n_security_policies.h"
+#include <stdint.h>
 
 #include "api/s2n.h"
+#include "s2n_test.h"
 #include "stuffer/s2n_stuffer.h"
+#include "testlib/s2n_testlib.h"
 #include "tls/s2n_cipher_preferences.h"
 #include "tls/s2n_cipher_suites.h"
+#include "tls/s2n_client_key_exchange.h"
 #include "tls/s2n_connection.h"
+#include "tls/s2n_kem.h"
+#include "tls/s2n_kex.h"
+#include "tls/s2n_security_policies.h"
 #include "tls/s2n_tls.h"
 #include "utils/s2n_safety.h"
-#include "s2n_test.h"
-#include "testlib/s2n_testlib.h"
 
-static const uint8_t TLS_VERSIONS[] = {S2N_TLS10, S2N_TLS11, S2N_TLS12};
+static const uint8_t TLS_VERSIONS[] = { S2N_TLS10, S2N_TLS11, S2N_TLS12 };
 
 /* Connection setup variables */
 uint8_t *cert_chain_pem = NULL;
@@ -81,7 +79,8 @@ int s2n_fuzz_init(int *argc, char **argv[])
     POSIX_ENSURE_REF(config);
     POSIX_ENSURE_REF(chain_and_key);
 
-    s2n_cert_chain_and_key_load_pem_bytes(chain_and_key, cert_chain_pem, cert_chain_len, private_key_pem, private_key_len);
+    s2n_cert_chain_and_key_load_pem_bytes(
+        chain_and_key, cert_chain_pem, cert_chain_len, private_key_pem, private_key_len);
     s2n_config_add_cert_chain_and_key_to_store(config, chain_and_key);
     s2n_config_add_dhparams(config, dhparams_pem);
 
@@ -121,12 +120,14 @@ int s2n_fuzz_test(const uint8_t *buf, size_t len)
     POSIX_GUARD(s2n_connection_get_ecc_preferences(server_conn, &ecc_preferences));
     POSIX_ENSURE_REF(ecc_preferences);
 
-    if (server_conn->secure->cipher_suite->key_exchange_alg->client_key_recv == s2n_ecdhe_client_key_recv || server_conn->secure->cipher_suite->key_exchange_alg->client_key_recv == s2n_hybrid_client_key_recv) {
+    if (server_conn->secure->cipher_suite->key_exchange_alg->client_key_recv == s2n_ecdhe_client_key_recv
+        || server_conn->secure->cipher_suite->key_exchange_alg->client_key_recv == s2n_hybrid_client_key_recv) {
         server_conn->kex_params.server_ecc_evp_params.negotiated_curve = ecc_preferences->ecc_curves[0];
         s2n_ecc_evp_generate_ephemeral_key(&server_conn->kex_params.server_ecc_evp_params);
     }
 
-    if (server_conn->secure->cipher_suite->key_exchange_alg->client_key_recv == s2n_kem_client_key_recv || server_conn->secure->cipher_suite->key_exchange_alg->client_key_recv == s2n_hybrid_client_key_recv) {
+    if (server_conn->secure->cipher_suite->key_exchange_alg->client_key_recv == s2n_kem_client_key_recv
+        || server_conn->secure->cipher_suite->key_exchange_alg->client_key_recv == s2n_hybrid_client_key_recv) {
         server_conn->kex_params.kem_params.kem = &s2n_kyber_512_r3;
     }
 

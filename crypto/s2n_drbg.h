@@ -48,7 +48,7 @@ struct s2n_drbg {
  * S2N_AES_256_CTR_NO_DF_PR is a deterministic random bit generator using AES 256 in counter mode (AES_128_CTR). It does not
  * use a derivation function on the seed but does have prediction resistance.
  */
-typedef enum {S2N_AES_128_CTR_NO_DF_PR, S2N_AES_256_CTR_NO_DF_PR} s2n_drbg_mode;
+typedef enum { S2N_AES_128_CTR_NO_DF_PR, S2N_AES_256_CTR_NO_DF_PR } s2n_drbg_mode;
 
 /* Per NIST SP 800-90C 6.3
  *
@@ -58,7 +58,8 @@ typedef enum {S2N_AES_128_CTR_NO_DF_PR, S2N_AES_256_CTR_NO_DF_PR} s2n_drbg_mode;
  * The security strength provided by s2n's DRBG is either 128 or 256 bits
  * depending on the s2n_drbg_mode passed in.
  */
-S2N_RESULT s2n_drbg_instantiate(struct s2n_drbg *drbg, struct s2n_blob *personalization_string, const s2n_drbg_mode mode);
+S2N_RESULT s2n_drbg_instantiate(
+    struct s2n_drbg *drbg, struct s2n_blob *personalization_string, const s2n_drbg_mode mode);
 S2N_RESULT s2n_drbg_generate(struct s2n_drbg *drbg, struct s2n_blob *returned_bits);
 S2N_RESULT s2n_drbg_wipe(struct s2n_drbg *drbg);
 S2N_RESULT s2n_drbg_bytes_used(struct s2n_drbg *drbg, uint64_t *bytes_used);

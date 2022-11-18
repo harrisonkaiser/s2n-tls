@@ -13,8 +13,9 @@
  * permissions and limitations under the License.
  */
 
-#include "tls/s2n_connection.h"
 #include "tls/s2n_handshake_type.h"
+
+#include "tls/s2n_connection.h"
 #include "utils/s2n_safety.h"
 
 S2N_RESULT s2n_handshake_type_set_flag(struct s2n_connection *conn, s2n_handshake_type_flag flag)
@@ -47,8 +48,7 @@ S2N_RESULT s2n_handshake_type_unset_tls12_flag(struct s2n_connection *conn, s2n_
 
 bool s2n_handshake_type_check_tls12_flag(struct s2n_connection *conn, s2n_tls12_handshake_type_flag flag)
 {
-    return conn && s2n_connection_get_protocol_version(conn) < S2N_TLS13
-            && (conn->handshake.handshake_type & flag);
+    return conn && s2n_connection_get_protocol_version(conn) < S2N_TLS13 && (conn->handshake.handshake_type & flag);
 }
 
 S2N_RESULT s2n_handshake_type_set_tls13_flag(struct s2n_connection *conn, s2n_tls13_handshake_type_flag flag)
@@ -61,8 +61,7 @@ S2N_RESULT s2n_handshake_type_set_tls13_flag(struct s2n_connection *conn, s2n_tl
 
 bool s2n_handshake_type_check_tls13_flag(struct s2n_connection *conn, s2n_tls13_handshake_type_flag flag)
 {
-    return s2n_connection_get_protocol_version(conn) >= S2N_TLS13
-            && (conn->handshake.handshake_type & flag);
+    return s2n_connection_get_protocol_version(conn) >= S2N_TLS13 && (conn->handshake.handshake_type & flag);
 }
 
 S2N_RESULT s2n_handshake_type_reset(struct s2n_connection *conn)

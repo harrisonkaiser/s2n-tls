@@ -15,7 +15,6 @@
 
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
-
 #include "tls/extensions/s2n_client_session_ticket.h"
 #include "tls/s2n_resume.h"
 
@@ -95,8 +94,8 @@ int main(int argc, char **argv)
         EXPECT_EQUAL(server_conn->session_ticket_status, S2N_NO_TICKET);
         EXPECT_SUCCESS(s2n_client_session_ticket_extension.recv(server_conn, &stuffer));
         EXPECT_EQUAL(server_conn->session_ticket_status, S2N_DECRYPT_TICKET);
-        EXPECT_BYTEARRAY_EQUAL(server_conn->client_ticket_to_decrypt.blob.data,
-                test_ticket, s2n_array_len(test_ticket));
+        EXPECT_BYTEARRAY_EQUAL(
+            server_conn->client_ticket_to_decrypt.blob.data, test_ticket, s2n_array_len(test_ticket));
 
         EXPECT_SUCCESS(s2n_stuffer_free(&stuffer));
         EXPECT_SUCCESS(s2n_connection_free(server_conn));

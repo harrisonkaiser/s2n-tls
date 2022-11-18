@@ -15,9 +15,10 @@
 
 #pragma once
 
-#include "api/s2n.h"
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
+
+#include "api/s2n.h"
 #include "utils/s2n_ensure.h"
 
 /*

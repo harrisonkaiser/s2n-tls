@@ -16,22 +16,18 @@
 #include <stdint.h>
 #include <sys/param.h>
 
-#include "error/s2n_errno.h"
-
-#include "tls/s2n_cipher_suites.h"
-#include "tls/s2n_connection.h"
-#include "tls/s2n_record.h"
-#include "tls/s2n_crypto.h"
-
-#include "stuffer/s2n_stuffer.h"
-
-#include "crypto/s2n_sequence.h"
 #include "crypto/s2n_cipher.h"
 #include "crypto/s2n_hmac.h"
-
-#include "utils/s2n_safety.h"
-#include "utils/s2n_random.h"
+#include "crypto/s2n_sequence.h"
+#include "error/s2n_errno.h"
+#include "stuffer/s2n_stuffer.h"
+#include "tls/s2n_cipher_suites.h"
+#include "tls/s2n_connection.h"
+#include "tls/s2n_crypto.h"
+#include "tls/s2n_record.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_random.h"
+#include "utils/s2n_safety.h"
 
 extern uint8_t s2n_unknown_protocol_version;
 
@@ -59,7 +55,8 @@ static S2N_RESULT s2n_tls_record_overhead(struct s2n_connection *conn, uint16_t 
     } else if (active->cipher_suite->record_alg->cipher->type == S2N_AEAD) {
         extra += active->cipher_suite->record_alg->cipher->io.aead.tag_size;
         extra += active->cipher_suite->record_alg->cipher->io.aead.record_iv_size;
-    } else if (active->cipher_suite->record_alg->cipher->type == S2N_COMPOSITE && conn->actual_protocol_version > S2N_TLS10) {
+    } else if (active->cipher_suite->record_alg->cipher->type == S2N_COMPOSITE
+        && conn->actual_protocol_version > S2N_TLS10) {
         extra += active->cipher_suite->record_alg->cipher->io.comp.record_iv_size;
     }
 
@@ -76,6 +73,7 @@ S2N_RESULT s2n_record_max_write_payload_size(struct s2n_connection *conn, uint16
     RESULT_ENSURE_REF(conn);
     RESULT_ENSURE_REF(conn->config);
     RESULT_ENSURE_MUT(max_fragment_size);
+    RESULT_ENSURE(conn->max_outgoing_fragment_length > 0, S2N_ERR_FRAGMENT_LENGTH_TOO_SMALL);
 
     *max_fragment_size = MIN(conn->max_outgoing_fragment_length, S2N_TLS_MAXIMUM_FRAGMENT_LENGTH);
 
@@ -93,9 +91,6 @@ S2N_RESULT s2n_record_max_write_payload_size(struct s2n_connection *conn, uint16
         }
     }
 
-    /* Ensure that we don't reserve too little space.  */
-    RESULT_ENSURE(*max_fragment_size >= S2N_MAX_FRAGMENT_LENGTH_MIN, S2N_ERR_FRAGMENT_LENGTH_TOO_SMALL);
-
     return S2N_RESULT_OK;
 }
 
@@ -104,7 +99,7 @@ S2N_RESULT s2n_record_max_write_size(struct s2n_connection *conn, uint16_t max_f
     RESULT_ENSURE_REF(conn);
     RESULT_ENSURE_MUT(max_record_size);
 
-    if(!IS_NEGOTIATED(conn)) {
+    if (!IS_NEGOTIATED(conn)) {
         *max_record_size = S2N_TLS_MAX_RECORD_LEN_FOR(max_fragment_size);
     } else if (conn->actual_protocol_version < S2N_TLS13) {
         *max_record_size = S2N_TLS12_MAX_RECORD_LEN_FOR(max_fragment_size);
@@ -164,7 +159,7 @@ int s2n_record_write_protocol_version(struct s2n_connection *conn, struct s2n_st
 {
     uint8_t record_protocol_version = conn->actual_protocol_version;
     if (conn->server_protocol_version == s2n_unknown_protocol_version
-            && conn->early_data_state != S2N_EARLY_DATA_REQUESTED) {
+        && conn->early_data_state != S2N_EARLY_DATA_REQUESTED) {
         /* Some legacy TLS implementations can't handle records with protocol version higher than TLS1.0.
          * To provide maximum compatibility, send record version as TLS1.0 if server protocol version isn't
          * established yet, which happens only during ClientHello message. Note, this has no effect on
@@ -186,50 +181,46 @@ int s2n_record_write_protocol_version(struct s2n_connection *conn, struct s2n_st
     return 0;
 }
 
-static inline int s2n_record_encrypt(
-    struct s2n_connection *conn,
-    const struct s2n_cipher_suite *cipher_suite,
-    struct s2n_session_key *session_key,
-    struct s2n_blob *iv,
-    struct s2n_blob *aad,
-    struct s2n_blob *en,
+static inline int s2n_record_encrypt(struct s2n_connection *conn, const struct s2n_cipher_suite *cipher_suite,
+    struct s2n_session_key *session_key, struct s2n_blob *iv, struct s2n_blob *aad, struct s2n_blob *en,
     uint8_t *implicit_iv, uint16_t block_size)
 {
     POSIX_ENSURE_REF(en->data);
 
     switch (cipher_suite->record_alg->cipher->type) {
-    case S2N_STREAM:
-        POSIX_GUARD(cipher_suite->record_alg->cipher->io.stream.encrypt(session_key, en, en));
-        break;
-    case S2N_CBC:
-        POSIX_GUARD(cipher_suite->record_alg->cipher->io.cbc.encrypt(session_key, iv, en, en));
+        case S2N_STREAM:
+            POSIX_GUARD(cipher_suite->record_alg->cipher->io.stream.encrypt(session_key, en, en));
+            break;
+        case S2N_CBC:
+            POSIX_GUARD(cipher_suite->record_alg->cipher->io.cbc.encrypt(session_key, iv, en, en));
 
-        /* Copy the last encrypted block to be the next IV */
-        if (conn->actual_protocol_version < S2N_TLS11) {
+            /* Copy the last encrypted block to be the next IV */
+            if (conn->actual_protocol_version < S2N_TLS11) {
+                POSIX_ENSURE_GTE(en->size, block_size);
+                POSIX_CHECKED_MEMCPY(implicit_iv, en->data + en->size - block_size, block_size);
+            }
+            break;
+        case S2N_AEAD:
+            POSIX_GUARD(cipher_suite->record_alg->cipher->io.aead.encrypt(session_key, iv, aad, en, en));
+            break;
+        case S2N_COMPOSITE:
+            /* This will: compute mac, append padding, append padding length, and encrypt */
+            POSIX_GUARD(cipher_suite->record_alg->cipher->io.comp.encrypt(session_key, iv, en, en));
+
+            /* Copy the last encrypted block to be the next IV */
             POSIX_ENSURE_GTE(en->size, block_size);
             POSIX_CHECKED_MEMCPY(implicit_iv, en->data + en->size - block_size, block_size);
-        }
-        break;
-    case S2N_AEAD:
-        POSIX_GUARD(cipher_suite->record_alg->cipher->io.aead.encrypt(session_key, iv, aad, en, en));
-        break;
-    case S2N_COMPOSITE:
-        /* This will: compute mac, append padding, append padding length, and encrypt */
-        POSIX_GUARD(cipher_suite->record_alg->cipher->io.comp.encrypt(session_key, iv, en, en));
-
-        /* Copy the last encrypted block to be the next IV */
-        POSIX_ENSURE_GTE(en->size, block_size);
-        POSIX_CHECKED_MEMCPY(implicit_iv, en->data + en->size - block_size, block_size);
-        break;
-    default:
-        POSIX_BAIL(S2N_ERR_CIPHER_TYPE);
-        break;
+            break;
+        default:
+            POSIX_BAIL(S2N_ERR_CIPHER_TYPE);
+            break;
     }
 
     return 0;
 }
 
-int s2n_record_writev(struct s2n_connection *conn, uint8_t content_type, const struct iovec *in, int in_count, size_t offs, size_t to_write)
+int s2n_record_writev(struct s2n_connection *conn, uint8_t content_type, const struct iovec *in, int in_count,
+    size_t offs, size_t to_write)
 {
     struct s2n_blob iv = { 0 };
     uint8_t padding = 0;
@@ -325,15 +316,16 @@ int s2n_record_writev(struct s2n_connection *conn, uint8_t content_type, const s
      */
     struct s2n_blob record_blob = { 0 };
     struct s2n_stuffer record_stuffer = { 0 };
-    POSIX_GUARD(s2n_blob_init(&record_blob,
-            conn->out.blob.data + conn->out.write_cursor,
-            s2n_stuffer_space_remaining(&conn->out)));
+    POSIX_GUARD(s2n_blob_init(
+        &record_blob, conn->out.blob.data + conn->out.write_cursor, s2n_stuffer_space_remaining(&conn->out)));
     POSIX_GUARD(s2n_stuffer_init(&record_stuffer, &record_blob));
 
     /* Now that we know the length, start writing the record */
-    POSIX_GUARD(s2n_stuffer_write_uint8(&record_stuffer, is_tls13_record ?
-        /* tls 1.3 opaque type */ TLS_APPLICATION_DATA :
-        /* actual content_type */ content_type ));
+    POSIX_GUARD(s2n_stuffer_write_uint8(&record_stuffer,
+        is_tls13_record ?
+                        /* tls 1.3 opaque type */ TLS_APPLICATION_DATA
+                        :
+                        /* actual content_type */ content_type));
     POSIX_GUARD(s2n_record_write_protocol_version(conn, &record_stuffer));
 
     /* First write a header that has the payload length, this is for the MAC */
@@ -359,8 +351,8 @@ int s2n_record_writev(struct s2n_connection *conn, uint8_t content_type, const s
 
         /* Outputs number of extra bytes required for MAC and padding */
         int pad_and_mac_len;
-        POSIX_GUARD(cipher_suite->record_alg->cipher->io.comp.initial_hmac(session_key, sequence_number, content_type, conn->actual_protocol_version,
-                                                                     payload_and_eiv_len, &pad_and_mac_len));
+        POSIX_GUARD(cipher_suite->record_alg->cipher->io.comp.initial_hmac(session_key, sequence_number, content_type,
+            conn->actual_protocol_version, payload_and_eiv_len, &pad_and_mac_len));
         extra += pad_and_mac_len;
     }
 
@@ -372,28 +364,31 @@ int s2n_record_writev(struct s2n_connection *conn, uint8_t content_type, const s
     /* Rewrite the length to be the actual fragment length */
     const uint16_t actual_fragment_length = data_bytes_to_take + padding + extra;
     /* ensure actual_fragment_length + S2N_TLS_RECORD_HEADER_LENGTH <= max record length */
-    const uint16_t max_record_length = is_tls13_record ? S2N_TLS13_MAXIMUM_RECORD_LENGTH : S2N_TLS_MAXIMUM_RECORD_LENGTH;
-    S2N_ERROR_IF(actual_fragment_length + S2N_TLS_RECORD_HEADER_LENGTH > max_record_length, S2N_ERR_RECORD_LENGTH_TOO_LARGE);
+    const uint16_t max_record_length =
+        is_tls13_record ? S2N_TLS13_MAXIMUM_RECORD_LENGTH : S2N_TLS_MAXIMUM_RECORD_LENGTH;
+    S2N_ERROR_IF(
+        actual_fragment_length + S2N_TLS_RECORD_HEADER_LENGTH > max_record_length, S2N_ERR_RECORD_LENGTH_TOO_LARGE);
     POSIX_GUARD(s2n_stuffer_wipe_n(&record_stuffer, 2));
     POSIX_GUARD(s2n_stuffer_write_uint16(&record_stuffer, actual_fragment_length));
 
     /* If we're AEAD, write the sequence number as an IV, and generate the AAD */
     if (cipher_suite->record_alg->cipher->type == S2N_AEAD) {
-        struct s2n_stuffer iv_stuffer = {0};
+        struct s2n_stuffer iv_stuffer = { 0 };
         s2n_blob_init(&iv, aad_iv, sizeof(aad_iv));
         POSIX_GUARD(s2n_stuffer_init(&iv_stuffer, &iv));
 
         if (cipher_suite->record_alg->flags & S2N_TLS12_AES_GCM_AEAD_NONCE) {
             /* Partially explicit nonce. See RFC 5288 Section 3 */
             POSIX_GUARD(s2n_stuffer_write_bytes(&record_stuffer, sequence_number, S2N_TLS_SEQUENCE_NUM_LEN));
-            POSIX_GUARD(s2n_stuffer_write_bytes(&iv_stuffer, implicit_iv, cipher_suite->record_alg->cipher->io.aead.fixed_iv_size));
+            POSIX_GUARD(s2n_stuffer_write_bytes(
+                &iv_stuffer, implicit_iv, cipher_suite->record_alg->cipher->io.aead.fixed_iv_size));
             POSIX_GUARD(s2n_stuffer_write_bytes(&iv_stuffer, sequence_number, S2N_TLS_SEQUENCE_NUM_LEN));
         } else if (cipher_suite->record_alg->flags & S2N_TLS12_CHACHA_POLY_AEAD_NONCE || is_tls13_record) {
             /* Fully implicit nonce. See RFC7905 Section 2 */
             uint8_t four_zeroes[4] = { 0 };
             POSIX_GUARD(s2n_stuffer_write_bytes(&iv_stuffer, four_zeroes, 4));
             POSIX_GUARD(s2n_stuffer_write_bytes(&iv_stuffer, sequence_number, S2N_TLS_SEQUENCE_NUM_LEN));
-            for(int i = 0; i < cipher_suite->record_alg->cipher->io.aead.fixed_iv_size; i++) {
+            for (int i = 0; i < cipher_suite->record_alg->cipher->io.aead.fixed_iv_size; i++) {
                 aad_iv[i] = aad_iv[i] ^ implicit_iv[i];
             }
         } else {
@@ -403,11 +398,13 @@ int s2n_record_writev(struct s2n_connection *conn, uint8_t content_type, const s
         /* Set the IV size to the amount of data written */
         iv.size = s2n_stuffer_data_available(&iv_stuffer);
         if (is_tls13_record) {
-            POSIX_GUARD_RESULT(s2n_tls13_aead_aad_init(data_bytes_to_take + S2N_TLS_CONTENT_TYPE_LENGTH, cipher_suite->record_alg->cipher->io.aead.tag_size, &aad));
+            POSIX_GUARD_RESULT(s2n_tls13_aead_aad_init(data_bytes_to_take + S2N_TLS_CONTENT_TYPE_LENGTH,
+                cipher_suite->record_alg->cipher->io.aead.tag_size, &aad));
         } else {
             POSIX_GUARD_RESULT(s2n_aead_aad_init(conn, sequence_number, content_type, data_bytes_to_take, &aad));
         }
-    } else if (cipher_suite->record_alg->cipher->type == S2N_CBC || cipher_suite->record_alg->cipher->type == S2N_COMPOSITE) {
+    } else if (cipher_suite->record_alg->cipher->type == S2N_CBC
+        || cipher_suite->record_alg->cipher->type == S2N_COMPOSITE) {
         s2n_blob_init(&iv, implicit_iv, block_size);
 
         /* For TLS1.1/1.2; write the IV with random data */
@@ -442,7 +439,7 @@ int s2n_record_writev(struct s2n_connection *conn, uint8_t content_type, const s
     }
 
     /* We are done with this sequence number, so we can increment it */
-    struct s2n_blob seq = {.data = sequence_number,.size = S2N_TLS_SEQUENCE_NUM_LEN };
+    struct s2n_blob seq = { .data = sequence_number, .size = S2N_TLS_SEQUENCE_NUM_LEN };
     POSIX_GUARD(s2n_increment_sequence_number(&seq));
 
     /* Write the plaintext data */
@@ -479,30 +476,31 @@ int s2n_record_writev(struct s2n_connection *conn, uint8_t content_type, const s
 
     uint16_t encrypted_length = data_bytes_to_take + mac_digest_size;
     switch (cipher_suite->record_alg->cipher->type) {
-    case S2N_AEAD:
-        POSIX_GUARD(s2n_stuffer_skip_write(&record_stuffer, cipher_suite->record_alg->cipher->io.aead.record_iv_size));
-        encrypted_length += cipher_suite->record_alg->cipher->io.aead.tag_size;
-        if (is_tls13_record) {
-            /* one extra byte for content type */
-            encrypted_length += S2N_TLS_CONTENT_TYPE_LENGTH;
-        }
-        break;
-    case S2N_CBC:
-        if (conn->actual_protocol_version > S2N_TLS10) {
-            /* Leave the IV alone and unencrypted */
-            POSIX_GUARD(s2n_stuffer_skip_write(&record_stuffer, iv.size));
-        }
-        /* Encrypt the padding and the padding length byte too */
-        encrypted_length += padding + 1;
-        break;
-    case S2N_COMPOSITE:
-        /* Composite CBC expects a pointer starting at explicit IV: [Explicit IV | fragment | MAC | padding | padding len ]
+        case S2N_AEAD:
+            POSIX_GUARD(
+                s2n_stuffer_skip_write(&record_stuffer, cipher_suite->record_alg->cipher->io.aead.record_iv_size));
+            encrypted_length += cipher_suite->record_alg->cipher->io.aead.tag_size;
+            if (is_tls13_record) {
+                /* one extra byte for content type */
+                encrypted_length += S2N_TLS_CONTENT_TYPE_LENGTH;
+            }
+            break;
+        case S2N_CBC:
+            if (conn->actual_protocol_version > S2N_TLS10) {
+                /* Leave the IV alone and unencrypted */
+                POSIX_GUARD(s2n_stuffer_skip_write(&record_stuffer, iv.size));
+            }
+            /* Encrypt the padding and the padding length byte too */
+            encrypted_length += padding + 1;
+            break;
+        case S2N_COMPOSITE:
+            /* Composite CBC expects a pointer starting at explicit IV: [Explicit IV | fragment | MAC | padding | padding len ]
         * extra will account for the explicit IV len(if applicable), MAC digest len, padding len + padding byte.
         */
-        encrypted_length += extra;
-        break;
-    default:
-        break;
+            encrypted_length += extra;
+            break;
+        default:
+            break;
     }
 
     /* Check that stuffer have enough space to write encrypted record, because raw_write cannot expand tainted stuffer */

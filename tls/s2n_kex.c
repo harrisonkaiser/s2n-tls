@@ -14,6 +14,7 @@
  */
 
 #include "tls/s2n_kex.h"
+
 #include "pq-crypto/s2n_pq.h"
 #include "tls/s2n_cipher_preferences.h"
 #include "tls/s2n_cipher_suites.h"
@@ -24,7 +25,8 @@
 #include "tls/s2n_tls.h"
 #include "utils/s2n_safety.h"
 
-static S2N_RESULT s2n_check_rsa_key(const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
+static S2N_RESULT s2n_check_rsa_key(
+    const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
 {
     RESULT_ENSURE_REF(cipher_suite);
     RESULT_ENSURE_REF(conn);
@@ -35,7 +37,8 @@ static S2N_RESULT s2n_check_rsa_key(const struct s2n_cipher_suite *cipher_suite,
     return S2N_RESULT_OK;
 }
 
-static S2N_RESULT s2n_check_dhe(const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
+static S2N_RESULT s2n_check_dhe(
+    const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
 {
     RESULT_ENSURE_REF(cipher_suite);
     RESULT_ENSURE_REF(conn);
@@ -47,7 +50,8 @@ static S2N_RESULT s2n_check_dhe(const struct s2n_cipher_suite *cipher_suite, str
     return S2N_RESULT_OK;
 }
 
-static S2N_RESULT s2n_check_ecdhe(const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
+static S2N_RESULT s2n_check_ecdhe(
+    const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
 {
     RESULT_ENSURE_REF(cipher_suite);
     RESULT_ENSURE_REF(conn);
@@ -58,7 +62,8 @@ static S2N_RESULT s2n_check_ecdhe(const struct s2n_cipher_suite *cipher_suite, s
     return S2N_RESULT_OK;
 }
 
-static S2N_RESULT s2n_check_kem(const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
+static S2N_RESULT s2n_check_kem(
+    const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
 {
     RESULT_ENSURE_REF(cipher_suite);
     RESULT_ENSURE_REF(conn);
@@ -89,14 +94,16 @@ static S2N_RESULT s2n_check_kem(const struct s2n_cipher_suite *cipher_suite, str
     const struct s2n_kem *chosen_kem = NULL;
     if (client_kem_pref_list == NULL || client_kem_pref_list->data == NULL) {
         /* If the client did not send a PQ KEM extension, then the server can pick its preferred parameter */
-        if (s2n_choose_kem_without_peer_pref_list(cipher_suite->iana_value, kem_preferences->kems,
-                kem_preferences->kem_count, &chosen_kem) != S2N_SUCCESS) {
+        if (s2n_choose_kem_without_peer_pref_list(
+                cipher_suite->iana_value, kem_preferences->kems, kem_preferences->kem_count, &chosen_kem)
+            != S2N_SUCCESS) {
             return S2N_RESULT_OK;
         }
     } else {
         /* If the client did send a PQ KEM extension, then the server must find a mutually supported parameter. */
         if (s2n_choose_kem_with_peer_pref_list(cipher_suite->iana_value, client_kem_pref_list, kem_preferences->kems,
-                kem_preferences->kem_count, &chosen_kem) != S2N_SUCCESS) {
+                kem_preferences->kem_count, &chosen_kem)
+            != S2N_SUCCESS) {
             return S2N_RESULT_OK;
         }
     }
@@ -120,12 +127,12 @@ static S2N_RESULT s2n_configure_kem(const struct s2n_cipher_suite *cipher_suite,
     const struct s2n_kem *chosen_kem = NULL;
     if (proposed_kems == NULL || proposed_kems->data == NULL) {
         /* If the client did not send a PQ KEM extension, then the server can pick its preferred parameter */
-        RESULT_GUARD_POSIX(s2n_choose_kem_without_peer_pref_list(cipher_suite->iana_value, kem_preferences->kems,
-                kem_preferences->kem_count, &chosen_kem));
+        RESULT_GUARD_POSIX(s2n_choose_kem_without_peer_pref_list(
+            cipher_suite->iana_value, kem_preferences->kems, kem_preferences->kem_count, &chosen_kem));
     } else {
         /* If the client did send a PQ KEM extension, then the server must find a mutually supported parameter. */
-        RESULT_GUARD_POSIX(s2n_choose_kem_with_peer_pref_list(cipher_suite->iana_value, proposed_kems, kem_preferences->kems,
-                kem_preferences->kem_count, &chosen_kem));
+        RESULT_GUARD_POSIX(s2n_choose_kem_with_peer_pref_list(
+            cipher_suite->iana_value, proposed_kems, kem_preferences->kems, kem_preferences->kem_count, &chosen_kem));
     }
 
     conn->kex_params.kem_params.kem = chosen_kem;
@@ -137,7 +144,8 @@ static S2N_RESULT s2n_no_op_configure(const struct s2n_cipher_suite *cipher_suit
     return S2N_RESULT_OK;
 }
 
-static S2N_RESULT s2n_check_hybrid_ecdhe_kem(const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
+static S2N_RESULT s2n_check_hybrid_ecdhe_kem(
+    const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
 {
     RESULT_ENSURE_REF(cipher_suite);
     RESULT_ENSURE_REF(conn);
@@ -213,7 +221,8 @@ const struct s2n_kex s2n_hybrid_ecdhe_kem = {
     .prf = &s2n_hybrid_prf_master_secret,
 };
 
-S2N_RESULT s2n_kex_supported(const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
+S2N_RESULT s2n_kex_supported(
+    const struct s2n_cipher_suite *cipher_suite, struct s2n_connection *conn, bool *is_supported)
 {
     RESULT_ENSURE_REF(cipher_suite);
     RESULT_ENSURE_REF(cipher_suite->key_exchange_alg);
@@ -248,7 +257,8 @@ S2N_RESULT s2n_kex_is_ephemeral(const struct s2n_kex *kex, bool *is_ephemeral)
     return S2N_RESULT_OK;
 }
 
-S2N_RESULT s2n_kex_server_key_recv_parse_data(const struct s2n_kex *kex, struct s2n_connection *conn, struct s2n_kex_raw_server_data *raw_server_data)
+S2N_RESULT s2n_kex_server_key_recv_parse_data(
+    const struct s2n_kex *kex, struct s2n_connection *conn, struct s2n_kex_raw_server_data *raw_server_data)
 {
     RESULT_ENSURE_REF(kex);
     RESULT_ENSURE_REF(kex->server_key_recv_parse_data);
@@ -260,8 +270,8 @@ S2N_RESULT s2n_kex_server_key_recv_parse_data(const struct s2n_kex *kex, struct 
     return S2N_RESULT_OK;
 }
 
-S2N_RESULT s2n_kex_server_key_recv_read_data(const struct s2n_kex *kex, struct s2n_connection *conn, struct s2n_blob *data_to_verify,
-        struct s2n_kex_raw_server_data *raw_server_data)
+S2N_RESULT s2n_kex_server_key_recv_read_data(const struct s2n_kex *kex, struct s2n_connection *conn,
+    struct s2n_blob *data_to_verify, struct s2n_kex_raw_server_data *raw_server_data)
 {
     RESULT_ENSURE_REF(kex);
     RESULT_ENSURE_REF(kex->server_key_recv_read_data);
@@ -273,7 +283,8 @@ S2N_RESULT s2n_kex_server_key_recv_read_data(const struct s2n_kex *kex, struct s
     return S2N_RESULT_OK;
 }
 
-S2N_RESULT s2n_kex_server_key_send(const struct s2n_kex *kex, struct s2n_connection *conn, struct s2n_blob *data_to_sign)
+S2N_RESULT s2n_kex_server_key_send(
+    const struct s2n_kex *kex, struct s2n_connection *conn, struct s2n_blob *data_to_sign)
 {
     RESULT_ENSURE_REF(kex);
     RESULT_ENSURE_REF(kex->server_key_send);

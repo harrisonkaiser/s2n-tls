@@ -15,10 +15,10 @@
 
 #pragma once
 
+#include <openssl/x509v3.h>
+
 #include "api/s2n.h"
 #include "utils/s2n_result.h"
-
-#include <openssl/x509v3.h>
 
 struct s2n_x509_validator;
 
@@ -26,10 +26,7 @@ struct s2n_crl {
     X509_CRL *crl;
 };
 
-typedef enum {
-    AWAITING_RESPONSE,
-    FINISHED
-} crl_lookup_callback_status;
+typedef enum { AWAITING_RESPONSE, FINISHED } crl_lookup_callback_status;
 
 struct s2n_crl_lookup {
     crl_lookup_callback_status status;
@@ -38,7 +35,7 @@ struct s2n_crl_lookup {
     struct s2n_crl *crl;
 };
 
-typedef int (*s2n_crl_lookup_callback) (struct s2n_crl_lookup *lookup, void *context);
+typedef int (*s2n_crl_lookup_callback)(struct s2n_crl_lookup *lookup, void *context);
 
 /* TODO: APIs are part of an unfinished CRL validation feature and are temporarily hidden
  * https://github.com/aws/s2n-tls/issues/3499 */
@@ -54,5 +51,5 @@ int s2n_crl_lookup_ignore(struct s2n_crl_lookup *lookup);
 
 S2N_RESULT s2n_crl_handle_lookup_callback_result(struct s2n_x509_validator *validator);
 S2N_RESULT s2n_crl_invoke_lookup_callbacks(struct s2n_connection *conn, struct s2n_x509_validator *validator);
-S2N_RESULT s2n_crl_get_crls_from_lookup_list(struct s2n_x509_validator *validator, STACK_OF(X509_CRL) *crl_stack);
+S2N_RESULT s2n_crl_get_crls_from_lookup_list(struct s2n_x509_validator *validator, STACK_OF(X509_CRL) * crl_stack);
 int s2n_crl_ossl_verify_callback(int default_ossl_ret, X509_STORE_CTX *ctx);

@@ -20,7 +20,8 @@
 #include "utils/s2n_result.h"
 
 typedef int (*s2n_async_pkey_sign_complete)(struct s2n_connection *conn, struct s2n_blob *signature);
-typedef int (*s2n_async_pkey_decrypt_complete)(struct s2n_connection *conn, bool rsa_failed, struct s2n_blob *decrypted);
+typedef int (*s2n_async_pkey_decrypt_complete)(
+    struct s2n_connection *conn, bool rsa_failed, struct s2n_blob *decrypted);
 
 struct s2n_async_pkey_op;
 
@@ -53,8 +54,9 @@ struct s2n_async_pkey_op;
  * perform any of the operations to follow after s2n_async* call. To enforce that there are no operations after the
  * call, we use a macro which directly returns the result of s2n_async* operation forcing compiler to error out on
  * unreachable code and forcing developer to use on_complete function instead */
-#define S2N_ASYNC_PKEY_DECRYPT(conn, encrypted, init_decrypted, on_complete) \
-    return s2n_result_is_ok(s2n_async_pkey_decrypt(conn, encrypted, init_decrypted, on_complete)) ? S2N_SUCCESS : S2N_FAILURE;
+#define S2N_ASYNC_PKEY_DECRYPT(conn, encrypted, init_decrypted, on_complete)                                    \
+    return s2n_result_is_ok(s2n_async_pkey_decrypt(conn, encrypted, init_decrypted, on_complete)) ? S2N_SUCCESS \
+                                                                                                  : S2N_FAILURE;
 
 #define S2N_ASYNC_PKEY_SIGN(conn, sig_alg, digest, on_complete) \
     return s2n_result_is_ok(s2n_async_pkey_sign(conn, sig_alg, digest, on_complete)) ? S2N_SUCCESS : S2N_FAILURE;
@@ -70,8 +72,8 @@ int s2n_async_pkey_op_set_output(struct s2n_async_pkey_op *op, const uint8_t *da
 int s2n_async_pkey_op_set_validation_mode(struct s2n_async_pkey_op *op, s2n_async_pkey_validation_mode mode);
 
 S2N_RESULT s2n_async_pkey_verify_signature(struct s2n_connection *conn, s2n_signature_algorithm sig_alg,
-                                    struct s2n_hash_state *digest, struct s2n_blob *signature);
-S2N_RESULT s2n_async_pkey_decrypt(struct s2n_connection *conn, struct s2n_blob *encrypted, struct s2n_blob *init_decrypted,
-                           s2n_async_pkey_decrypt_complete on_complete);
-S2N_RESULT s2n_async_pkey_sign(struct s2n_connection *conn, s2n_signature_algorithm sig_alg, struct s2n_hash_state *digest,
-                        s2n_async_pkey_sign_complete on_complete);
+    struct s2n_hash_state *digest, struct s2n_blob *signature);
+S2N_RESULT s2n_async_pkey_decrypt(struct s2n_connection *conn, struct s2n_blob *encrypted,
+    struct s2n_blob *init_decrypted, s2n_async_pkey_decrypt_complete on_complete);
+S2N_RESULT s2n_async_pkey_sign(struct s2n_connection *conn, s2n_signature_algorithm sig_alg,
+    struct s2n_hash_state *digest, s2n_async_pkey_sign_complete on_complete);

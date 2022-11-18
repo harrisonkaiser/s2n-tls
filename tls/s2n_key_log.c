@@ -68,7 +68,8 @@ S2N_RESULT s2n_key_log_hex_encode(struct s2n_stuffer *output, uint8_t *bytes, si
     return S2N_RESULT_OK;
 }
 
-S2N_RESULT s2n_key_log_tls13_secret(struct s2n_connection *conn, const struct s2n_blob *secret, s2n_secret_type_t secret_type)
+S2N_RESULT s2n_key_log_tls13_secret(
+    struct s2n_connection *conn, const struct s2n_blob *secret, s2n_secret_type_t secret_type)
 {
     RESULT_ENSURE_REF(conn);
     RESULT_ENSURE_REF(conn->config);
@@ -114,10 +115,7 @@ S2N_RESULT s2n_key_log_tls13_secret(struct s2n_connection *conn, const struct s2
             return S2N_RESULT_OK;
     }
 
-    const uint8_t len
-        = label_size
-        + S2N_TLS_RANDOM_DATA_LEN * HEX_ENCODING_SIZE
-        + 1 /* SPACE */
+    const uint8_t len = label_size + S2N_TLS_RANDOM_DATA_LEN * HEX_ENCODING_SIZE + 1 /* SPACE */
         + secret->size * HEX_ENCODING_SIZE;
 
     DEFER_CLEANUP(struct s2n_stuffer output, s2n_stuffer_free);
@@ -150,10 +148,7 @@ S2N_RESULT s2n_key_log_tls12_secret(struct s2n_connection *conn)
     const uint8_t label[] = "CLIENT_RANDOM ";
     const uint8_t label_size = sizeof(label) - 1;
 
-    const uint8_t len
-        = label_size
-        + S2N_TLS_RANDOM_DATA_LEN * HEX_ENCODING_SIZE
-        + 1 /* SPACE */
+    const uint8_t len = label_size + S2N_TLS_RANDOM_DATA_LEN * HEX_ENCODING_SIZE + 1 /* SPACE */
         + S2N_TLS_SECRET_LEN * HEX_ENCODING_SIZE;
 
     DEFER_CLEANUP(struct s2n_stuffer output, s2n_stuffer_free);
@@ -171,4 +166,3 @@ S2N_RESULT s2n_key_log_tls12_secret(struct s2n_connection *conn)
 
     return S2N_RESULT_OK;
 }
-

@@ -18,22 +18,22 @@
 static S2N_RESULT s2n_validate_negotiate_result(bool success, bool peer_is_done, bool *is_done)
 {
     /* If we succeeded, we're done. */
-    if(success) {
-       *is_done = true;
-       return S2N_RESULT_OK;
+    if (success) {
+        *is_done = true;
+        return S2N_RESULT_OK;
     }
 
     /* If we failed for any error other than 'blocked', propagate the error. */
-    if(s2n_error_get_type(s2n_errno) != S2N_ERR_T_BLOCKED) {
+    if (s2n_error_get_type(s2n_errno) != S2N_ERR_T_BLOCKED) {
         return S2N_RESULT_ERROR;
     }
 
-    if(s2n_errno == S2N_ERR_ASYNC_BLOCKED) {
+    if (s2n_errno == S2N_ERR_ASYNC_BLOCKED) {
         return S2N_RESULT_ERROR;
     }
 
     /* If we're blocked but our peer is done writing, propagate the error. */
-    if(peer_is_done) {
+    if (peer_is_done) {
         return S2N_RESULT_ERROR;
     }
 
@@ -59,7 +59,7 @@ int s2n_negotiate_test_server_and_client(struct s2n_connection *server_conn, str
 }
 
 S2N_RESULT s2n_negotiate_test_server_and_client_with_early_data(struct s2n_connection *server_conn,
-        struct s2n_connection *client_conn, struct s2n_blob *early_data_to_send, struct s2n_blob *early_data_received)
+    struct s2n_connection *client_conn, struct s2n_blob *early_data_to_send, struct s2n_blob *early_data_received)
 {
     bool server_done = false, client_done = false;
     s2n_blocked_status blocked = S2N_NOT_BLOCKED;
@@ -76,12 +76,14 @@ S2N_RESULT s2n_negotiate_test_server_and_client_with_early_data(struct s2n_conne
      */
     do {
         bool client_success = (s2n_send_early_data(client_conn, early_data_to_send->data + total_data_sent,
-                early_data_to_send->size - total_data_sent, &data_sent, &blocked) >= S2N_SUCCESS);
+                                   early_data_to_send->size - total_data_sent, &data_sent, &blocked)
+            >= S2N_SUCCESS);
         total_data_sent += data_sent;
         RESULT_GUARD(s2n_validate_negotiate_result(client_success, server_done, &client_done));
 
         bool server_success = (s2n_recv_early_data(server_conn, early_data_received->data + total_data_recv,
-                early_data_received->size - total_data_recv, &data_recv, &blocked) >= S2N_SUCCESS);
+                                   early_data_received->size - total_data_recv, &data_recv, &blocked)
+            >= S2N_SUCCESS);
         total_data_recv += data_recv;
         /* We pass in client_done==false to avoid the server erroring on blocked IO.
          * The s2n_negotiate calls later will resolve that blocked condition. */
@@ -94,8 +96,8 @@ S2N_RESULT s2n_negotiate_test_server_and_client_with_early_data(struct s2n_conne
     return S2N_RESULT_OK;
 }
 
-S2N_RESULT s2n_negotiate_test_server_and_client_until_message(struct s2n_connection *server_conn,
-        struct s2n_connection *client_conn, message_type_t message_type)
+S2N_RESULT s2n_negotiate_test_server_and_client_until_message(
+    struct s2n_connection *server_conn, struct s2n_connection *client_conn, message_type_t message_type)
 {
     bool server_done = false, client_done = false;
     s2n_blocked_status blocked = S2N_NOT_BLOCKED;
@@ -127,7 +129,7 @@ int s2n_shutdown_test_server_and_client(struct s2n_connection *server_conn, stru
             server_rc = s2n_shutdown(server_conn, &server_blocked);
 
             if (s2n_error_get_type(s2n_errno) != S2N_ERR_T_BLOCKED || client_done) {
-/* Success, fatal error, or the peer is done and we're still blocked. */
+                /* Success, fatal error, or the peer is done and we're still blocked. */
                 server_done = 1;
             }
         }
@@ -136,7 +138,7 @@ int s2n_shutdown_test_server_and_client(struct s2n_connection *server_conn, stru
             client_rc = s2n_shutdown(client_conn, &client_blocked);
 
             if (s2n_error_get_type(s2n_errno) != S2N_ERR_T_BLOCKED || server_done) {
-/* Success, fatal error, or the peer is done and we're still blocked. */
+                /* Success, fatal error, or the peer is done and we're still blocked. */
                 client_done = 1;
             }
         }

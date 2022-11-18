@@ -17,7 +17,6 @@
 #include <string.h>
 
 #include "crypto/s2n_hash.h"
-
 #include "utils/s2n_blob.h"
 #include "utils/s2n_result.h"
 
@@ -29,5 +28,6 @@ extern S2N_RESULT s2n_map_add(struct s2n_map *map, struct s2n_blob *key, struct 
 extern S2N_RESULT s2n_map_put(struct s2n_map *map, struct s2n_blob *key, struct s2n_blob *value);
 extern S2N_RESULT s2n_map_complete(struct s2n_map *map);
 extern S2N_RESULT s2n_map_unlock(struct s2n_map *map);
-extern S2N_RESULT s2n_map_lookup(const struct s2n_map *map, struct s2n_blob *key, struct s2n_blob *value, bool *key_found);
+extern S2N_RESULT s2n_map_lookup(
+    const struct s2n_map *map, struct s2n_blob *key, struct s2n_blob *value, bool *key_found);
 extern S2N_RESULT s2n_map_free(struct s2n_map *map);

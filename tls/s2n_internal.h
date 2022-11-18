@@ -16,11 +16,10 @@
 #pragma once
 
 #if ((__GNUC__ >= 4) || defined(__clang__)) && defined(S2N_EXPORTS)
-#    define S2N_PRIVATE_API __attribute__((visibility("default")))
+    #define S2N_PRIVATE_API __attribute__((visibility("default")))
 #else
-#    define S2N_PRIVATE_API
+    #define S2N_PRIVATE_API
 #endif /* __GNUC__ >= 4 || defined(__clang__) */
-
 
 #include <stdint.h>
 

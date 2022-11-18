@@ -13,11 +13,12 @@
  * permissions and limitations under the License.
  */
 
+#include "tls/extensions/s2n_server_certificate_status.h"
+
 #include "tls/s2n_config.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_tls.h"
 #include "tls/s2n_x509_validator.h"
-#include "tls/extensions/s2n_server_certificate_status.h"
 #include "utils/s2n_safety.h"
 
 #define U24_SIZE 3
@@ -88,8 +89,8 @@ int s2n_server_certificate_status_recv(struct s2n_connection *conn, struct s2n_s
     POSIX_GUARD(s2n_realloc(&conn->status_response, status_size));
     POSIX_GUARD(s2n_stuffer_read_bytes(in, conn->status_response.data, status_size));
 
-    POSIX_GUARD_RESULT(s2n_x509_validator_validate_cert_stapled_ocsp_response(&conn->x509_validator, conn,
-            conn->status_response.data, conn->status_response.size));
+    POSIX_GUARD_RESULT(s2n_x509_validator_validate_cert_stapled_ocsp_response(
+        &conn->x509_validator, conn, conn->status_response.data, conn->status_response.size));
 
     return S2N_SUCCESS;
 }

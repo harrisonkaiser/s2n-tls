@@ -15,13 +15,12 @@
 
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
-
 #include "tls/s2n_tls.h"
 
 static const uint8_t hello_request_msg[] = {
     /* message header */
-    TLS_HELLO_REQUEST,    /* msg_type = hello_request */
-    0, 0, 0,              /* length = 0 */
+    TLS_HELLO_REQUEST, /* msg_type = hello_request */
+    0, 0, 0, /* length = 0 */
     /* empty message body */
 };
 
@@ -89,12 +88,12 @@ int main(int argc, char **argv)
     BEGIN_TEST();
 
     static struct s2n_cert_chain_and_key *chain_and_key = NULL;
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
-            S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(
+        s2n_test_cert_chain_and_key_new(&chain_and_key, S2N_DEFAULT_TEST_CERT_CHAIN, S2N_DEFAULT_TEST_PRIVATE_KEY));
 
     DEFER_CLEANUP(struct s2n_cert_chain_and_key *ecdsa_chain_and_key = NULL, s2n_cert_chain_and_key_ptr_free);
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&ecdsa_chain_and_key,
-            S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
+        &ecdsa_chain_and_key, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
 
     DEFER_CLEANUP(struct s2n_config *config = s2n_config_new(), s2n_config_ptr_free);
     EXPECT_NOT_NULL(config);
@@ -111,13 +110,11 @@ int main(int argc, char **argv)
 
     /* Test: Hello requests received during the handshake are a no-op */
     {
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
@@ -128,8 +125,7 @@ int main(int argc, char **argv)
 
         /* Start the handshake.
          * We should be able to receive the hello request in the middle of the handshake. */
-        EXPECT_OK(s2n_negotiate_test_server_and_client_until_message(server_conn, client_conn,
-                SERVER_HELLO_DONE));
+        EXPECT_OK(s2n_negotiate_test_server_and_client_until_message(server_conn, client_conn, SERVER_HELLO_DONE));
         EXPECT_EQUAL(server_conn->server, server_conn->initial);
 
         /* Send a hello request */
@@ -141,14 +137,12 @@ int main(int argc, char **argv)
 
     /* Test: Hello requests received during the handshake are an error for TLS1.3 */
     if (s2n_is_tls13_fully_supported()) {
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_cipher_preferences(client_conn, "default_tls13"));
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_cipher_preferences(server_conn, "default_tls13"));
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
@@ -159,16 +153,14 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_connection_set_io_pair(server_conn, &io_pair));
 
         /* Start the handshake */
-        EXPECT_OK(s2n_negotiate_test_server_and_client_until_message(server_conn, client_conn,
-                SERVER_HELLO));
+        EXPECT_OK(s2n_negotiate_test_server_and_client_until_message(server_conn, client_conn, SERVER_HELLO));
 
         /* Send a hello request.
          * We should be able to receive the hello request before the version is negotiated. */
         EXPECT_OK(s2n_send_client_hello_request(server_conn));
 
         /* Continue the handshake */
-        EXPECT_OK(s2n_negotiate_test_server_and_client_until_message(server_conn, client_conn,
-                ENCRYPTED_EXTENSIONS));
+        EXPECT_OK(s2n_negotiate_test_server_and_client_until_message(server_conn, client_conn, ENCRYPTED_EXTENSIONS));
 
         /* Send a hello request.
          * We should NOT be able to receive the hello request after TLS1.3 is negotiated */
@@ -177,8 +169,7 @@ int main(int argc, char **argv)
         EXPECT_OK(s2n_send_client_hello_request(server_conn));
 
         /* Handshake should fail because the HelloRequest is unexpected in TLS1.3 */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_negotiate_test_server_and_client(server_conn, client_conn),
-                S2N_ERR_BAD_MESSAGE);
+        EXPECT_FAILURE_WITH_ERRNO(s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_BAD_MESSAGE);
     }
 
     /* Test: Hello requests received after the handshake can be ignored.
@@ -194,13 +185,11 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(config_with_warns, chain_and_key));
         EXPECT_SUCCESS(s2n_config_set_alert_behavior(config_with_warns, S2N_ALERT_IGNORE_WARNINGS));
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config_with_warns));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config_with_warns));
 
@@ -239,14 +228,12 @@ int main(int argc, char **argv)
      *# client may, if it wishes, respond with a no_renegotiation alert.
      **/
     {
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
         EXPECT_NULL(client_conn->config->renegotiate_request_cb);
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
@@ -287,14 +274,12 @@ int main(int argc, char **argv)
     {
         struct s2n_test_reneg_req_ctx ctx = { .app_decision = S2N_RENEGOTIATE_REJECT };
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config_with_reneg_cb));
         EXPECT_SUCCESS(s2n_config_set_renegotiate_request_cb(config_with_reneg_cb, s2n_test_reneg_req_cb, &ctx));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
@@ -331,14 +316,12 @@ int main(int argc, char **argv)
     {
         struct s2n_test_reneg_req_ctx ctx = { .app_decision = S2N_RENEGOTIATE_ACCEPT };
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config_with_reneg_cb));
         EXPECT_SUCCESS(s2n_config_set_renegotiate_request_cb(config_with_reneg_cb, s2n_test_reneg_req_cb, &ctx));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
@@ -369,14 +352,12 @@ int main(int argc, char **argv)
     {
         struct s2n_test_reneg_req_ctx ctx = { .app_decision = S2N_RENEGOTIATE_IGNORE };
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config_with_reneg_cb));
         EXPECT_SUCCESS(s2n_config_set_renegotiate_request_cb(config_with_reneg_cb, s2n_test_reneg_req_cb, &ctx));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
@@ -421,14 +402,12 @@ int main(int argc, char **argv)
     {
         struct s2n_test_reneg_req_ctx ctx = { .app_decision = S2N_RENEGOTIATE_ACCEPT };
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config_with_reneg_cb));
         EXPECT_SUCCESS(s2n_config_set_renegotiate_request_cb(config_with_reneg_cb, s2n_test_reneg_req_cb, &ctx));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
@@ -460,14 +439,12 @@ int main(int argc, char **argv)
     {
         struct s2n_test_reneg_req_ctx ctx = { .app_decision = S2N_RENEGOTIATE_ACCEPT };
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config_with_reneg_cb));
         EXPECT_SUCCESS(s2n_config_set_renegotiate_request_cb(config_with_reneg_cb, s2n_test_reneg_req_cb, &ctx));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
@@ -508,15 +485,13 @@ int main(int argc, char **argv)
     if (s2n_hash_is_available(S2N_HASH_MD5)) {
         struct s2n_test_reneg_req_ctx ctx = { .app_decision = S2N_RENEGOTIATE_REJECT };
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config_with_reneg_cb));
         EXPECT_SUCCESS(s2n_connection_set_cipher_preferences(client_conn, "test_all"));
         EXPECT_SUCCESS(s2n_config_set_renegotiate_request_cb(config_with_reneg_cb, s2n_test_reneg_req_cb, &ctx));
 
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
         EXPECT_SUCCESS(s2n_connection_set_cipher_preferences(server_conn, "test_all"));

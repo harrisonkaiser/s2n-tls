@@ -13,20 +13,16 @@
  * permissions and limitations under the License.
  */
 
-#include "s2n_test.h"
-
-#include "testlib/s2n_testlib.h"
-
+#include <errno.h>
+#include <stdint.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <stdint.h>
 
 #include "api/s2n.h"
-#include <errno.h>
-
+#include "s2n_test.h"
+#include "testlib/s2n_testlib.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_handshake.h"
-
 #include "utils/s2n_bitmap.h"
 
 #define MAX_KEY_LEN 32
@@ -45,7 +41,8 @@ struct session_cache_entry {
 
 struct session_cache_entry session_cache[256];
 
-int cache_store_callback(struct s2n_connection *conn, void *ctx, uint64_t ttl, const void *key, uint64_t key_size, const void *value, uint64_t value_size)
+int cache_store_callback(struct s2n_connection *conn, void *ctx, uint64_t ttl, const void *key, uint64_t key_size,
+    const void *value, uint64_t value_size)
 {
     struct session_cache_entry *cache = ctx;
 
@@ -56,7 +53,7 @@ int cache_store_callback(struct s2n_connection *conn, void *ctx, uint64_t ttl, c
         return -1;
     }
 
-    uint8_t idx = ((const uint8_t *)key)[0];
+    uint8_t idx = ((const uint8_t *) key)[0];
 
     EXPECT_MEMCPY_SUCCESS(cache[idx].key, key, key_size);
     EXPECT_MEMCPY_SUCCESS(cache[idx].value, value, value_size);
@@ -67,7 +64,8 @@ int cache_store_callback(struct s2n_connection *conn, void *ctx, uint64_t ttl, c
     return 0;
 }
 
-int cache_retrieve_callback(struct s2n_connection *conn, void *ctx, const void *key, uint64_t key_size, void *value, uint64_t * value_size)
+int cache_retrieve_callback(
+    struct s2n_connection *conn, void *ctx, const void *key, uint64_t key_size, void *value, uint64_t *value_size)
 {
     struct session_cache_entry *cache = ctx;
 
@@ -75,7 +73,7 @@ int cache_retrieve_callback(struct s2n_connection *conn, void *ctx, const void *
         return -1;
     }
 
-    uint8_t idx = ((const uint8_t *)key)[0];
+    uint8_t idx = ((const uint8_t *) key)[0];
 
     if (cache[idx].lock) {
         /* here we mock a remote connection/event blocking the handshake
@@ -111,7 +109,7 @@ int cache_delete_callback(struct s2n_connection *conn, void *ctx, const void *ke
         return -1;
     }
 
-    uint8_t idx = ((const uint8_t *)key)[0];
+    uint8_t idx = ((const uint8_t *) key)[0];
 
     if (cache[idx].key_len == 0) {
         return 0;
@@ -191,7 +189,8 @@ void mock_client(struct s2n_test_io_pair *io_pair)
         result = 5;
     }
 
-    if (s2n_connection_get_session(conn, serialized_session_state, serialized_session_state_length) != serialized_session_state_length) {
+    if (s2n_connection_get_session(conn, serialized_session_state, serialized_session_state_length)
+        != serialized_session_state_length) {
         result = 6;
     }
 
@@ -205,7 +204,7 @@ void mock_client(struct s2n_test_io_pair *io_pair)
     }
 
     int shutdown_rc = -1;
-    while(shutdown_rc != 0) {
+    while (shutdown_rc != 0) {
         shutdown_rc = s2n_shutdown(conn, &blocked);
     }
 
@@ -237,7 +236,7 @@ void mock_client(struct s2n_test_io_pair *io_pair)
     }
 
     shutdown_rc = -1;
-    while(shutdown_rc != 0) {
+    while (shutdown_rc != 0) {
         shutdown_rc = s2n_shutdown(conn, &blocked);
     }
 
@@ -306,12 +305,10 @@ int main(int argc, char **argv)
     uint8_t session_id_from_server[MAX_KEY_LEN];
     uint8_t session_id_from_client[MAX_KEY_LEN];
 
-     /* aes keys. Used for session ticket/session data encryption. Taken from test vectors in https://tools.ietf.org/html/rfc5869 */
+    /* aes keys. Used for session ticket/session data encryption. Taken from test vectors in https://tools.ietf.org/html/rfc5869 */
     uint8_t ticket_key_name[16] = "2018.07.26.15\0";
-    uint8_t ticket_key[32] = {0x19, 0xef, 0x24, 0xa3, 0x2c, 0x71, 0x7b, 0x16, 0x7f, 0x33,
-                             0xa9, 0x1d, 0x6f, 0x64, 0x8b, 0xdf, 0x96, 0x59, 0x67, 0x76,
-                             0xaf, 0xdb, 0x63, 0x77, 0xac, 0x43, 0x4c, 0x1c, 0x29, 0x3c,
-                             0xcb, 0x04};
+    uint8_t ticket_key[32] = { 0x19, 0xef, 0x24, 0xa3, 0x2c, 0x71, 0x7b, 0x16, 0x7f, 0x33, 0xa9, 0x1d, 0x6f, 0x64, 0x8b,
+        0xdf, 0x96, 0x59, 0x67, 0x76, 0xaf, 0xdb, 0x63, 0x77, 0xac, 0x43, 0x4c, 0x1c, 0x29, 0x3c, 0xcb, 0x04 };
 
     BEGIN_TEST();
     EXPECT_NOT_NULL(cert_chain_pem = malloc(S2N_MAX_TEST_PEM_SIZE));
@@ -357,7 +354,8 @@ int main(int argc, char **argv)
          */
         POSIX_GUARD(s2n_config_set_session_cache_onoff(config, 1));
         POSIX_GUARD(config->wall_clock(config->sys_clock_ctx, &now));
-        EXPECT_SUCCESS(s2n_config_add_ticket_crypto_key(config, ticket_key_name, strlen((char*)ticket_key_name), ticket_key, sizeof(ticket_key), now/ONE_SEC_IN_NANOS));
+        EXPECT_SUCCESS(s2n_config_add_ticket_crypto_key(config, ticket_key_name, strlen((char *) ticket_key_name),
+            ticket_key, sizeof(ticket_key), now / ONE_SEC_IN_NANOS));
 
         EXPECT_SUCCESS(s2n_connection_set_config(conn, config));
 
@@ -377,7 +375,8 @@ int main(int argc, char **argv)
         /* Make sure the get_session_id and get_session_id_length APIs are
          * working as expected */
         EXPECT_EQUAL(s2n_connection_get_session_id_length(conn), MAX_KEY_LEN);
-        EXPECT_EQUAL(s2n_connection_get_session_id(conn, session_id_from_server, MAX_KEY_LEN), s2n_connection_get_session_id_length(conn));
+        EXPECT_EQUAL(s2n_connection_get_session_id(conn, session_id_from_server, MAX_KEY_LEN),
+            s2n_connection_get_session_id_length(conn));
 
         /* Make sure we did a full TLS1.2 handshake */
         EXPECT_TRUE(IS_FULL_HANDSHAKE(conn));
@@ -392,7 +391,7 @@ int main(int argc, char **argv)
         do {
             shutdown_rc = s2n_shutdown(conn, &blocked);
             EXPECT_TRUE(shutdown_rc == 0 || (errno == EAGAIN && blocked));
-        } while(shutdown_rc != 0);
+        } while (shutdown_rc != 0);
 
         /* Clean up */
         EXPECT_SUCCESS(s2n_connection_free(conn));
@@ -419,7 +418,8 @@ int main(int argc, char **argv)
         /* Make sure the get_session_id and get_session_id_length APIs are
          * working as expected */
         EXPECT_EQUAL(s2n_connection_get_session_id_length(conn), MAX_KEY_LEN);
-        EXPECT_EQUAL(s2n_connection_get_session_id(conn, session_id_from_client, MAX_KEY_LEN), s2n_connection_get_session_id_length(conn));
+        EXPECT_EQUAL(s2n_connection_get_session_id(conn, session_id_from_client, MAX_KEY_LEN),
+            s2n_connection_get_session_id_length(conn));
         EXPECT_EQUAL(0, memcmp(session_id_from_client, session_id_from_server, MAX_KEY_LEN));
 
         /* Make sure we did a abbreviated handshake */
@@ -435,7 +435,7 @@ int main(int argc, char **argv)
         do {
             shutdown_rc = s2n_shutdown(conn, &blocked);
             EXPECT_TRUE(shutdown_rc == 0 || (errno == EAGAIN && blocked));
-        } while(shutdown_rc != 0);
+        } while (shutdown_rc != 0);
 
         /* Clean up */
         EXPECT_SUCCESS(s2n_connection_free(conn));
@@ -512,7 +512,8 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_connection_set_session(client_conn, tls12_session_ticket, tls12_session_ticket_len));
 
         /* Server will block the first time cache is accessed */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_ASYNC_BLOCKED);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_ASYNC_BLOCKED);
 
         /* Resumed connection is successful and EMS is not negotiated */
         EXPECT_SUCCESS(s2n_negotiate_test_server_and_client(server_conn, client_conn));
@@ -572,10 +573,12 @@ int main(int argc, char **argv)
         client_conn->ems_negotiated = false;
 
         /* Server will block the first time cache is accessed */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_ASYNC_BLOCKED);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_ASYNC_BLOCKED);
 
         /* Server did not receive the EMS extension from client */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_MISSING_EXTENSION);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_MISSING_EXTENSION);
 
         EXPECT_SUCCESS(s2n_connection_free(client_conn));
         EXPECT_SUCCESS(s2n_connection_free(server_conn));
@@ -641,7 +644,8 @@ int main(int argc, char **argv)
         client_conn->ems_negotiated = true;
 
         /* Server will block the first time cache is accessed */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_ASYNC_BLOCKED);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_ASYNC_BLOCKED);
 
         /* Fallback to full handshake */
         EXPECT_SUCCESS(s2n_negotiate_test_server_and_client(server_conn, client_conn));

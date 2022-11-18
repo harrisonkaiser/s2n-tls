@@ -13,13 +13,13 @@
  * permissions and limitations under the License.
  */
 
+#include "tls/extensions/s2n_cookie.h"
+
 #include <sys/param.h>
 
 #include "s2n_test.h"
 #include "testlib/s2n_testlib.h"
-
 #include "tls/s2n_handshake_type.h"
-#include "tls/extensions/s2n_cookie.h"
 #include "utils/s2n_random.h"
 #include "utils/s2n_safety.h"
 
@@ -49,8 +49,7 @@ int main()
      *#     HelloRetryRequest.
      **/
     {
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(client_conn);
 
         /* Not sent without a cookie */
@@ -65,8 +64,7 @@ int main()
      * (cookie will never be present in production)
      */
     {
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
 
         /* Not sent without a cookie */
@@ -79,12 +77,10 @@ int main()
 
     /* Test: client can parse server cookie extension */
     for (size_t i = 0; i < TEST_COOKIE_COUNT; i++) {
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
 
         DEFER_CLEANUP(struct s2n_stuffer server_extension = { 0 }, s2n_stuffer_free);
@@ -95,8 +91,8 @@ int main()
         EXPECT_SUCCESS(s2n_server_cookie_extension.send(server_conn, &server_extension));
 
         /* Client doesn't parse extension if no retry */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_server_cookie_extension.recv(client_conn, &server_extension),
-                S2N_ERR_UNSUPPORTED_EXTENSION);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_server_cookie_extension.recv(client_conn, &server_extension), S2N_ERR_UNSUPPORTED_EXTENSION);
 
         /* Client parses extension if retry */
         client_conn->handshake.handshake_type = HELLO_RETRY_REQUEST;
@@ -106,12 +102,10 @@ int main()
 
     /* Test: client sends correctly formatted extension */
     for (size_t i = 0; i < TEST_COOKIE_COUNT; i++) {
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
 
         DEFER_CLEANUP(struct s2n_stuffer client_extension = { 0 }, s2n_stuffer_free);
@@ -124,16 +118,16 @@ int main()
         /* Sanity check: Server rejects incorrectly sized cookie */
         EXPECT_SUCCESS(s2n_dup(&test_cookies[i], &server_conn->cookie));
         server_conn->cookie.size--;
-        EXPECT_FAILURE_WITH_ERRNO(s2n_client_cookie_extension.recv(server_conn, &client_extension),
-                S2N_ERR_BAD_MESSAGE);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_client_cookie_extension.recv(server_conn, &client_extension), S2N_ERR_BAD_MESSAGE);
         EXPECT_SUCCESS(s2n_free(&server_conn->cookie));
         EXPECT_SUCCESS(s2n_stuffer_reread(&client_extension));
 
         /* Sanity check: Server rejects incorrect cookie data */
         EXPECT_SUCCESS(s2n_dup(&test_cookies[i], &server_conn->cookie));
         server_conn->cookie.data[0] = server_conn->cookie.data[0] + 1;
-        EXPECT_FAILURE_WITH_ERRNO(s2n_client_cookie_extension.recv(server_conn, &client_extension),
-                S2N_ERR_BAD_MESSAGE);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_client_cookie_extension.recv(server_conn, &client_extension), S2N_ERR_BAD_MESSAGE);
         EXPECT_SUCCESS(s2n_free(&server_conn->cookie));
         EXPECT_SUCCESS(s2n_stuffer_reread(&client_extension));
 
@@ -142,13 +136,11 @@ int main()
         EXPECT_SUCCESS(s2n_client_cookie_extension.recv(server_conn, &client_extension));
     }
 
-    DEFER_CLEANUP(struct s2n_cert_chain_and_key *chain_and_key,
-            s2n_cert_chain_and_key_ptr_free);
-    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(&chain_and_key,
-            S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
+    DEFER_CLEANUP(struct s2n_cert_chain_and_key * chain_and_key, s2n_cert_chain_and_key_ptr_free);
+    EXPECT_SUCCESS(s2n_test_cert_chain_and_key_new(
+        &chain_and_key, S2N_DEFAULT_ECDSA_TEST_CERT_CHAIN, S2N_DEFAULT_ECDSA_TEST_PRIVATE_KEY));
 
-    DEFER_CLEANUP(struct s2n_config *config = s2n_config_new(),
-            s2n_config_ptr_free);
+    DEFER_CLEANUP(struct s2n_config *config = s2n_config_new(), s2n_config_ptr_free);
     EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key_to_store(config, chain_and_key));
     EXPECT_SUCCESS(s2n_config_set_cipher_preferences(config, "default_tls13"));
     EXPECT_SUCCESS(s2n_config_disable_x509_verification(config));
@@ -165,14 +157,12 @@ int main()
 
     /* Sanity check: server fails if client does not provide expected cookie */
     {
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
         EXPECT_SUCCESS(s2n_connection_set_blinding(server_conn, S2N_SELF_SERVICE_BLINDING));
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
 
@@ -190,8 +180,9 @@ int main()
          * The first negotiate_until blocks because the client is looking for a SERVER_HELLO,
          * not the HELLO_RETRY_MESSAGE. This is fine; it's in the right place in the handshake.
          */
-        EXPECT_ERROR_WITH_ERRNO(s2n_negotiate_test_server_and_client_until_message(server_conn, client_conn, HELLO_RETRY_MSG),
-                S2N_ERR_IO_BLOCKED);
+        EXPECT_ERROR_WITH_ERRNO(
+            s2n_negotiate_test_server_and_client_until_message(server_conn, client_conn, HELLO_RETRY_MSG),
+            S2N_ERR_IO_BLOCKED);
         EXPECT_EQUAL(s2n_conn_get_current_message_type(server_conn), HELLO_RETRY_MSG);
         EXPECT_EQUAL(s2n_conn_get_current_message_type(client_conn), SERVER_HELLO);
         EXPECT_OK(s2n_negotiate_test_server_and_client_until_message(server_conn, client_conn, CLIENT_HELLO));
@@ -210,21 +201,19 @@ int main()
         EXPECT_SUCCESS(s2n_free(&client_conn->cookie));
 
         /* Continue negotiating. We should fail because of the "missing" cookie. */
-        EXPECT_FAILURE_WITH_ERRNO(s2n_negotiate_test_server_and_client(server_conn, client_conn),
-                S2N_ERR_MISSING_EXTENSION);
+        EXPECT_FAILURE_WITH_ERRNO(
+            s2n_negotiate_test_server_and_client(server_conn, client_conn), S2N_ERR_MISSING_EXTENSION);
 
         EXPECT_SUCCESS(s2n_io_pair_close(&io_pair));
     }
 
     /* Self-Talk: Server does NOT use cookies */
     {
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
 
@@ -262,13 +251,11 @@ int main()
      *# a "cookie" extension in the new ClientHello.
      */
     for (size_t i = 0; i < TEST_COOKIE_COUNT; i++) {
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
 
@@ -301,13 +288,11 @@ int main()
      * We try the handshake multiple times with different possible call patterns.
      */
     {
-        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
 
-        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT),
-                s2n_connection_ptr_free);
+        DEFER_CLEANUP(struct s2n_connection *client_conn = s2n_connection_new(S2N_CLIENT), s2n_connection_ptr_free);
         EXPECT_NOT_NULL(server_conn);
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
 
