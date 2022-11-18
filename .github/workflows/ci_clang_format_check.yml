@@ -1,22 +1,25 @@
-name: cpp-linter
-
-on: pull_request
-
+name: clang-format Check
+on: [push, pull_request]
 jobs:
-  cpp-linter:
+  formatting-check:
+    name: Formatting Check
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - 'api'
+          - 'bin'
+          - 'crypto'
+          - 'error'
+          - 'pq-crypto'
+          - 'stuffer'
+          - 'tests'
+          - 'tls'
+          - 'utils'
     steps:
       - uses: actions/checkout@v3
-      - uses: cpp-linter/cpp-linter-action@v2
-        id: linter
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run clang-format style check for C/C++/Protobuf programs.
+        uses: jidicula/clang-format-action@v4.9.0
         with:
-          style: file
-          extra-args: -Wcast-qual -pedantic -Wall -Werror -Wimplicit -Wunused -Wcomment -Wchar-subscripts -Wuninitialized -Wshadow  -Wcast-align -Wwrite-strings -Wno-missing-braces -I./ -I$./api -I$./include
-          tidy-checks: ''
-          lines-changed-only: diff
-
-      - name: Run clang-format and clang-tidy checks
-        if: steps.linter.outputs.checks-failed > 0
-        run: exit 1
+          clang-format-version: '15'
+          check-path: ${{ matrix.path }}
