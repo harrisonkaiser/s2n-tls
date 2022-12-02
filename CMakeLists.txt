@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.0)
 project (s2n C)
 
+SET(CMAKE_OSX_DEPLOYMENT_TARGET 12.0)
+
 if(POLICY CMP0077)
     cmake_policy(SET CMP0077 NEW) #option does nothing when a normal variable of the same name exists.
 endif()
@@ -34,6 +36,20 @@ version of libcrypto by interning the code and hiding symbols. This also enables
 loaded in an application with an otherwise conflicting libcrypto version." OFF)
 option(S2N_LTO, "Enables link time optimizations when building s2n-tls." OFF)
 option(S2N_STACKTRACE "Enables stacktrace functionality in s2n-tls." ON)
+
+include(FetchContent)
+
+FetchContent_Declare(
+    Corrosion
+    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
+    GIT_TAG v0.3.0 # Optionally specify a commit hash, version tag or branch here
+)
+# Set any global configuration variables such as `Rust_TOOLCHAIN` before this line!
+FetchContent_MakeAvailable(Corrosion)
+
+corrosion_import_crate(MANIFEST_PATH bin-rs/Cargo.toml)
+
+corrosion_link_libraries(bin-rs s2n)
 
 # Turn BUILD_TESTING=ON by default
 include(CTest)
