@@ -95,8 +95,8 @@ run_integration_v2_tests() {
     cd build/
     for test_name in $TOX_TEST_NAME; do
       test="${test_name//test_/}"
-      echo "Running... ctest --output-on-failure --verbose --no-tests=<error> -R ^integrationv2_${test}$"
-      ctest --output-on-failure --verbose --no-tests=<error> -R ^integrationv2_${test}$
+      echo "Running... ctest --no-tests=error --output-on-failure --verbose -R ^integrationv2_${test}$"
+      ctest --no-tests=error --output-on-failure --verbose -R ^integrationv2_${test}$
     done
 }
 
