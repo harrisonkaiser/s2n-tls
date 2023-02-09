@@ -96,7 +96,7 @@ run_integration_v2_tests() {
       test="${test_name//test_/}"
       echo "Running... cmake --build build/ --target test -- ARGS=\"--output-on-failure --verbose --no-tests=fail -R ^integrationv2_${test}$\""
       ctest --version
-      cmake --build build/ --target test -- ARGS="--output-on-failure --verbose --no-tests=fail -R ^integrationv2_${test}$"
+      cmake --build build/ --target test -- ARGS="--show-only --output-on-failure --verbose --no-tests=fail -R ^integrationv2_${test}$"
     done
 }
 
