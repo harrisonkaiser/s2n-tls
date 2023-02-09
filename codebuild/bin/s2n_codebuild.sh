@@ -94,8 +94,8 @@ run_integration_v2_tests() {
     cp -f ./build/bin/s2nd "$BASE_S2N_DIR"/bin/s2nd
     for test_name in $TOX_TEST_NAME; do
       test="${test_name//test_/}"
-      echo "Running... cmake --build build/ --target test -- ARGS=\"--output-on-failure --verbose -R integrationv2_"$test"\""
-      cmake --build build/ --target test -- ARGS="--output-on-failure --verbose -R integrationv2_"$test
+      echo "Running... cmake --build build/ --target test -- ARGS=\"--output-on-failure --verbose -R ^integrationv2_"$test"\"$"
+      cmake --build build/ --target test -- ARGS="--output-on-failure --verbose -R ^integrationv2_"$test"$"
     done
 }
 
