@@ -93,11 +93,17 @@ run_integration_v2_tests() {
     cp -f ./build/bin/s2nc "$BASE_S2N_DIR"/bin/s2nc
     cp -f ./build/bin/s2nd "$BASE_S2N_DIR"/bin/s2nd
     cd build/
+    test_failed=0
     for test_name in $TOX_TEST_NAME; do
       test="${test_name//test_/}"
       echo "Running... ctest --no-tests=error --output-on-failure --verbose -R ^integrationv2_${test}$"
       ctest --no-tests=error --output-on-failure --verbose -R ^integrationv2_${test}$
+      if [ $? -neq 0 ]
+      then
+	  test_failed=1
+      fi
     done
+    exit $test_failed
 }
 
 run_unit_tests() {
