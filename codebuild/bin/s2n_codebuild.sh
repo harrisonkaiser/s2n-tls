@@ -98,7 +98,7 @@ run_integration_v2_tests() {
       test="${test_name//test_/}"
       echo "Running... ctest --no-tests=error --output-on-failure --verbose -R ^integrationv2_${test}$"
       ctest --no-tests=error --output-on-failure --verbose -R ^integrationv2_${test}$
-      if [[ $? -neq 0 ]]
+      if [[ $? -neq 0 ]];
       then
 	  test_failed=1
       fi
