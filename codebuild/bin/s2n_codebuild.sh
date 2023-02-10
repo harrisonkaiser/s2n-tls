@@ -95,12 +95,16 @@ run_integration_v2_tests() {
     cd build/
     test_failed=0
     for test_name in $TOX_TEST_NAME; do
-      test="${test_name//test_/}"
+      test="${test_name//test_/}" 
       echo "Running... ctest --no-tests=error --output-on-failure --verbose -R ^integrationv2_${test}$"
       ctest --no-tests=error --output-on-failure --verbose -R ^integrationv2_${test}$
-      if [[ $? != 0 ]];
+      exit_code=$?
+      echo "CTest exit_code = ${exit_code}"
+      if [[ $exit_code != 0 ]];
       then
-	  test_failed=1
+	  echo "Test ${test} Failed!";
+	  exit 1;
+	  test_failed=1;
       fi
     done
     exit $test_failed
