@@ -1,4 +1,4 @@
-{ pkgs, pythonPkgs }:
+{ pkgs }:
 let pythonPkgs = pkgs.python39Packages;
     semantic-version = with pythonPkgs; buildPythonPackage rec {
       pname = "semantic_version";
@@ -82,4 +82,4 @@ pkgs.python39.withPackages(ps: with ps; [
   sslyze # ==5.0.2 TODO: check if this version is correct/if it matters
   pytest-rerunfailures
   tox
-]);
+])
