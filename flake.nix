@@ -32,23 +32,24 @@
         };
         devShells.default = pkgs.mkShell rec {
           packages = [
-            #llvmPkgs.llvm
-            #llvmPkgs.llvm-manpages
-            #llvmPkgs.libclang
+            llvmPkgs.llvm
+            llvmPkgs.llvm-manpages
+            llvmPkgs.libclang
             # llvmPkgs.clangUseLLVM -- wrapper to overwrite default compiler with clang
-            #llvmPkgs.clang-manpages
-            #pkgs.cppcheck
-            #pythonEnv
+            llvmPkgs.clang-manpages
+            pkgs.cppcheck
+            pythonEnv
             # TODO: can we use the version in bindings/rust/rust-toolchain
             # it goes against the spirit of nix to use rustup... but we might
             # have to -- using a new rust is liable to get us in trouble.
-            #pkgs.rustc
-            #pkgs.cargo
-            #pkgs.openjdk8
+            pkgs.rustc
+            pkgs.cargo
+            pkgs.openjdk8
             #openssl_0_9_8
             #openssl_1_0_2
             #openssl_1_1_1
             openssl_3_0
+            pkgs.gnutls
           ];
         };
         packages.default = packages.s2n-tls;
