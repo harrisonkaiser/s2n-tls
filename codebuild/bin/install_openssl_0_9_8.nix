@@ -2,34 +2,22 @@
   pkgs
 }:
 pkgs.stdenv.mkDerivation rec {
-  pname = "";
-  version = "";
+  pname = "openssl";
+  version = "0.9.8";
 
   src = fetchTarball {
     url = "https://www.openssl.org/source/old/0.9.x/openssl-0.9.8zh.tar.gz";
-    sha256 = "";
+    sha256 = "sha256:0h451dgk2pws957cjidjhwb2qlr0qx73klzb0n0l3x601jmw27ih";
   };
 
   buildInputs = [
-    pkgs.make
+    pkgs.gnumake
+    pkgs.perl534
   ];
 
-  configurePhase =
-    if pkgs.stdenv.hostPlatform.isLinux then ''
-        ./config -d
-        ./configure --prefix="$out"
-        ''
-    else
-      (if pkgs.stdenv.hostPlatform.isDarwin
-       then ''
-            ./Configure darwin64-x86_64-cc
-            ./configure --prefix="$out"
-            ''
-       else ''
-           echo you need to add this platform!
-           exit 1;
-         ''
-      );
+  configurePhase = ''
+    ./config --prefix=$out
+  '';
 
   buildPhase = ''
     make depend

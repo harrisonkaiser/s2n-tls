@@ -5,9 +5,9 @@ pkgs.stdenv.mkDerivation rec {
   pname = "openssl";
   version = "1.0.2";
 
-  src = fetchzip {
+  src = pkgs.fetchzip {
     url = "https://github.com/openssl/openssl/archive/OpenSSL_1_0_2-stable.zip";
-    sha256 = "";
+    sha256 = "sha256-srgZHZFSAMM+/K9MG7cK8FKx8Qhf7qqGDd+/BLQtPWk=";
   };
 
   buildInputs = [
