@@ -7,13 +7,18 @@ pkgs.stdenv.mkDerivation rec {
 
   src = pkgs.fetchzip {
     url = "https://github.com/openssl/openssl/archive/OpenSSL_1_1_1-stable.zip";
-    sha256 = "";
+    sha256 = "sha256-okouzuBmqYGGGzOhC+D4E+ht3xm5DtIKYWPpocCtnw8=";
   };
 
   buildInputs = [
     pkgs.gnumake
     pkgs.perl534
+    pkgs.coreutils
   ];
+
+  patchPhase = ''
+      substitute ./config ./config --replace /usr/bin/env ${pkgs.coreutils}/bin/env
+  '';
 
   configurePhase = ''
     ./config -d shared -g3 -fPIC              \
