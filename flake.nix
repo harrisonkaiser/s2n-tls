@@ -13,6 +13,7 @@
           openssl_1_0_2 = import codebuild/bin/install_openssl_1_0_2.nix {pkgs=pkgs;};
           openssl_1_1_1 = import codebuild/bin/install_openssl_1_1_1.nix {pkgs=pkgs;};
           openssl_3_0 = import codebuild/bin/install_openssl_3_0.nix {pkgs=pkgs;};
+          libressl = import codebuild/bin/install_libressl.nix {pkgs=pkgs;};
       in rec {
         packages.s2n-tls = pkgs.stdenv.mkDerivation {
           src = self;
@@ -48,8 +49,11 @@
             #openssl_0_9_8
             #openssl_1_0_2
             #openssl_1_1_1
-            openssl_3_0
-            pkgs.gnutls
+            #openssl_3_0
+            libressl
+            pkgs.gnutls # 3.7
+            pkgs.shellcheck
+            pkgs.boringssl
           ];
         };
         packages.default = packages.s2n-tls;
