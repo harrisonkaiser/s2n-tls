@@ -277,9 +277,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C)
 
 if (S2N_RUST_INTERNAL)
     # Import targets defined in a package or workspace manifest `Cargo.toml` file
-    corrosion_import_crate(MANIFEST_PATH s2n-tls-internals/Cargo.toml) 
+    corrosion_import_crate(MANIFEST_PATH rust-internals/Cargo.toml) 
     
-    target_link_libraries(${PROJECT_NAME} PUBLIC s2n-tls-internals)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/lib/librust_internals.a)
 endif()
 
 # Version numbers are for major updates only- we won't track minor/patch updates here.
@@ -619,9 +619,14 @@ if (BUILD_TESTING)
     file(GLOB TESTLIB_HEADERS "tests/testlib/*.h" "tests/s2n_test.h")
 
     add_library(testss2n STATIC ${TESTLIB_HEADERS} ${TESTLIB_SRC})
+    if (S2N_RUST_INTERNAL)
+        target_link_libraries(testss2n PUBLIC ${PROJECT_NAME} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/librust_internals.a)
+    else()
+        target_link_libraries(testss2n PUBLIC ${PROJECT_NAME})
+    endif()
     target_include_directories(testss2n PUBLIC tests)
     target_compile_options(testss2n PRIVATE -std=gnu99)
-    target_link_libraries(testss2n PUBLIC ${PROJECT_NAME})
+    
 
     if (S2N_INTERN_LIBCRYPTO)
         # if libcrypto was interned, rewrite libcrypto symbols so use of internal functions will link correctly
@@ -644,7 +649,11 @@ if (BUILD_TESTING)
         target_include_directories(${test_case_name} PRIVATE api)
         target_include_directories(${test_case_name} PRIVATE ./)
         target_include_directories(${test_case_name} PRIVATE tests)
-        target_link_libraries(${test_case_name} PRIVATE testss2n)
+        if (S2N_RUST_INTERNAL)
+            target_link_libraries(${test_case_name} PRIVATE testss2n  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/librust_internals.a)
+        else()
+            target_link_libraries(${test_case_name} PRIVATE testss2n)
+        endif()
         if (S2N_INTERN_LIBCRYPTO)
             # if libcrypto was interned, rewrite libcrypto symbols so use of internal functions will link correctly
             add_custom_command(
@@ -675,14 +684,22 @@ if (BUILD_TESTING)
     endforeach(test_case)
 
     add_executable(s2nc "bin/s2nc.c" "bin/echo.c" "bin/https.c" "bin/common.c")
-    target_link_libraries(s2nc ${PROJECT_NAME})
+    if (S2N_RUST_INTERNAL)
+        target_link_libraries(s2nc ${PROJECT_NAME} ${PROJECT_BINARY_DIR}/lib/librust_internals.a)
+    else()
+        target_link_libraries(s2nc ${PROJECT_NAME})
+    endif()
 
     target_include_directories(s2nc PRIVATE api)
     target_compile_options(s2nc PRIVATE -std=gnu99 -D_POSIX_C_SOURCE=200112L)
 
 
     add_executable(s2nd "bin/s2nd.c" "bin/echo.c" "bin/https.c" "bin/common.c")
-    target_link_libraries(s2nd ${PROJECT_NAME})
+    if (S2N_RUST_INTERNAL)
+        target_link_libraries(s2nd ${PROJECT_NAME} ${PROJECT_BINARY_DIR}/lib/librust_internals.a)
+    else()
+        target_link_libraries(s2nd ${PROJECT_NAME})
+    endif()
 
     target_include_directories(s2nd PRIVATE api)
     target_compile_options(s2nd PRIVATE -std=gnu99 -D_POSIX_C_SOURCE=200112L)
@@ -767,7 +784,7 @@ if (S2N_INSTALL_S2NC_S2ND)
 endif()
 
 install(
-        TARGETS ${PROJECT_NAME} s2n-tls-internals
+        TARGETS ${PROJECT_NAME} rust-internals
         EXPORT ${PROJECT_NAME}-targets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime

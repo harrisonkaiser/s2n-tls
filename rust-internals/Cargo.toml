@@ -1,5 +1,5 @@
 [package]
-name = "s2n-tls-internals"
+name = "rust-internals"
 version = "0.1.0"
 edition = "2021"
 

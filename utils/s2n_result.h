@@ -14,4 +14,4 @@
  */
 
 /* We moved this implemention into rust! */
-#include "s2n-tls-internals/s2n_result.h"
+#include "rust-internals/cheaders/utils/s2n_result.h"
