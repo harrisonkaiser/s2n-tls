@@ -41,6 +41,19 @@ option(EXPERIMENTAL_TREAT_WARNINGS_AS_ERRORS "Additional compiler warnings are t
 indicate danger points where you should verify with the S2N-TLS developers that the security of
 the library is not compromised. These warnings are currently failing for some builds; once the problems are fixed,
 they will be moved to UNSAFE_TREAT_WARNINGS_AS_ERRORS." OFF)
+option(S2N_RUST_INTERNAL "Use rust internally" ON)
+
+if(S2N_RUST_INTERNAL)
+   include(FetchContent)
+
+   FetchContent_Declare(
+    Corrosion
+    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
+    GIT_TAG v0.3.2 # Optionally specify a commit hash, version tag or branch here
+   )
+   # Set any global configuration variables such as `Rust_TOOLCHAIN` before this line!
+   FetchContent_MakeAvailable(Corrosion)
+endif()
 
 # Turn BUILD_TESTING=ON by default
 include(CTest)
@@ -261,6 +274,13 @@ file(GLOB S2N_SRC
 
 add_library(${PROJECT_NAME} ${S2N_HEADERS} ${S2N_SRC})
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C)
+
+if (S2N_RUST_INTERNAL)
+    # Import targets defined in a package or workspace manifest `Cargo.toml` file
+    corrosion_import_crate(MANIFEST_PATH s2n-tls-internals/Cargo.toml) 
+    
+    target_link_libraries(${PROJECT_NAME} PUBLIC s2n-tls-internals)
+endif()
 
 # Version numbers are for major updates only- we won't track minor/patch updates here.
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
@@ -747,7 +767,7 @@ if (S2N_INSTALL_S2NC_S2ND)
 endif()
 
 install(
-        TARGETS ${PROJECT_NAME}
+        TARGETS ${PROJECT_NAME} s2n-tls-internals
         EXPORT ${PROJECT_NAME}-targets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime
